@@ -8,7 +8,18 @@ import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.combat.CrystalDamage
+import com.github.epsilon.kernel.gameplay.combat.CrystalDamage.captureWorld
+import com.github.epsilon.kernel.gameplay.combat.CrystalDamage.damage
+import com.github.epsilon.kernel.gameplay.combat.CrystalDamage.snapshot
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -16,25 +27,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.crystalaura.*
 import com.github.epsilon.modules.impl.movement.Blink
 import com.github.epsilon.settings.group
-import com.github.epsilon.utils.combat.CrystalDamageUtils
-import com.github.epsilon.utils.combat.CrystalDamageUtils.captureWorld
-import com.github.epsilon.utils.combat.CrystalDamageUtils.damage
-import com.github.epsilon.utils.combat.CrystalDamageUtils.snapshot
-import com.github.epsilon.utils.player.ClickSlotUtils.swap
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.render.WorldToScreen
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
 import com.google.common.base.Suppliers
-import java.awt.Color
-import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.function.IntConsumer
-import kotlin.math.abs
-import kotlin.math.ceil
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
@@ -74,6 +67,14 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.function.IntConsumer
+import kotlin.math.abs
+import kotlin.math.ceil
 
 object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
@@ -438,7 +439,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             } else yawComplete = true
             if (yawComplete) rotationAim = null
             rotationRequest = target
-            RotationManager.setRotationsExact(target, Priority.High)
+            RotationManager.setRotationsExact(target, RotationPriority.High)
         }
         if (!rotationReady()) return
         if (breaking != null) {
@@ -489,7 +490,10 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         placementTask = null
     }
 
-    private fun NonNullContext.preparePlacement(targets: List<CrystalTarget>, self: CrystalDamageUtils.Snapshot): CrystalPlacement? {
+    private fun NonNullContext.preparePlacement(
+        targets: List<CrystalTarget>,
+        self: CrystalDamage.Snapshot
+    ): CrystalPlacement? {
         if (!place || !canPlace() || !canAttackWithWeakness() || targets.isEmpty()) return null
         val points = ArrayList<CrystalPlacePoint>()
         for (pos in scanPositions(player.eyePosition, ceil(placeRange + 1.0).toInt())) {
@@ -530,7 +534,10 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         )
     }
 
-    private fun NonNullContext.bestCrystal(targets: List<CrystalTarget>, self: CrystalDamageUtils.Snapshot): CrystalCandidate? {
+    private fun NonNullContext.bestCrystal(
+        targets: List<CrystalTarget>,
+        self: CrystalDamage.Snapshot
+    ): CrystalCandidate? {
         val rules = rules()
         var best: CrystalCandidate? = null
         for (entity in level.entitiesForRendering()) {
@@ -664,7 +671,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         for (entity in level.entitiesForRendering()) {
             if (entity !is LivingEntity || entity === player || !entity.isAlive || !targetType(entity) ||
                 FriendManager.isFriend(entity.name.string) || player.distanceToSqr(entity) > enemyRange * enemyRange ||
-                ignoreNakeds && CrystalDamageUtils.armorSlots.all { entity.getItemBySlot(it).isEmpty }
+                ignoreNakeds && CrystalDamage.armorSlots.all { entity.getItemBySlot(it).isEmpty }
             ) continue
             val snapshot = snapshot(entity, extrapolationTicks, assumeBestArmor)
             val nearbyShulker = shulkers && entity is Player && scanPositions(entity.position(), 3).any {
@@ -740,7 +747,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         )
     }
 
-    private fun NonNullContext.placementSpace(pos: BlockPos, self: CrystalDamageUtils.Snapshot): Boolean {
+    private fun NonNullContext.placementSpace(pos: BlockPos, self: CrystalDamage.Snapshot): Boolean {
         if (!level.isInWorldBounds(pos.above(2)) || !level.worldBorder.isWithinBounds(pos)) return false
         if (placements == PlacementsMode.Protocol && !level.isEmptyBlock(pos.above(2))) return false
         val above = pos.above()
@@ -752,7 +759,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         return spaceClear(above, self) && spaceClear(pos.above(2), self)
     }
 
-    private fun NonNullContext.spaceClear(pos: BlockPos, self: CrystalDamageUtils.Snapshot): Boolean {
+    private fun NonNullContext.spaceClear(pos: BlockPos, self: CrystalDamage.Snapshot): Boolean {
         for (entity in level.getEntities(null, AABB(pos))) {
             if (!entity.isAlive || entity is ItemEntity && ignoreItem && entity.tickCount <= 10) continue
             if (entity !is EndCrystal) return false
@@ -935,7 +942,12 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         return withSlot(slot, action, mode != SwapMode.Normal) { block(InteractionHand.MAIN_HAND) }
     }
 
-    private fun NonNullContext.withSlot(slot: Int, action: SwapActionMode, restore: Boolean, block: () -> Boolean): Boolean {
+    private fun NonNullContext.withSlot(
+        slot: Int,
+        action: SwapActionMode,
+        restore: Boolean,
+        block: () -> Boolean
+    ): Boolean {
         val inventory = player.inventory
         val previous = inventory.selectedSlot
         if (action == SwapActionMode.InvSwitch || slot >= 9) {

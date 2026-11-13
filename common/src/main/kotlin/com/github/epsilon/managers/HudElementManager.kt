@@ -13,7 +13,7 @@ import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.utils.client.ClientUtils
+import com.github.epsilon.kernel.client.ClientLifecycle
 
 object HudElementManager : AlwaysListening {
 
@@ -48,7 +48,7 @@ object HudElementManager : AlwaysListening {
     }
 
     private fun onRender2D(event: Render2DEvent.HUD) {
-        if (ClientUtils.isLoading() || mc.level == null ||
+        if (ClientLifecycle.isLoading() || mc.level == null ||
             mc.gui.screen() is HudEditorScreen
         ) return
 

@@ -1,8 +1,7 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDirectionSolver.ESCAPE_KEEP_ANGLE
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.rotation.Rotation
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
@@ -359,7 +358,7 @@ object ElytraDirectionSolver {
 
         // yaw 直接取期望方向；pitch 先 5 度粗采样，再在最优区间二分细化。
         val desiredDirection = desiredVelocity.normalize()
-        var yaw = (atan2(desiredDirection.z, desiredDirection.x)).toDegrees().toFloat() - 90.0f
+        var yaw = Math.toDegrees(atan2(desiredDirection.z, desiredDirection.x)).toFloat() - 90.0f
         yaw = Mth.wrapDegrees(yaw)
 
         var bestPitch = pitchOf(desiredDirection).coerceIn(-89.0f, 89.0f)
@@ -458,7 +457,7 @@ object ElytraDirectionSolver {
 
     private fun pitchOf(direction: Vec3): Float {
         val horizontal = maxOf(0.001, direction.horizontalDistance())
-        return -(atan2(direction.y, horizontal)).toDegrees().toFloat()
+        return -Math.toDegrees(atan2(direction.y, horizontal)).toFloat()
     }
 
     fun effectiveGravity(player: LocalPlayer): Double {

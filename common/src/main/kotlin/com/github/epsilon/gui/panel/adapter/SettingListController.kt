@@ -8,12 +8,12 @@ import com.github.epsilon.gui.panel.component.setting.*
 import com.github.epsilon.gui.panel.popup.*
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingLayoutPlanner
 import com.github.epsilon.settings.impl.BoolSetting
-import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 

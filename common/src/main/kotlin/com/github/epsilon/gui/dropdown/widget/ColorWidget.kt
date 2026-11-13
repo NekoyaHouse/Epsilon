@@ -6,11 +6,11 @@ import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.state.afterLuminCommit
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.settings.impl.ColorSetting
-import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import java.awt.Color
 import kotlin.math.roundToInt

@@ -5,12 +5,12 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.client.KeybindUtils
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.client.KeybindUtils
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult

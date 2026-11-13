@@ -4,12 +4,12 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.client.KeybindUtils
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.math.RandomRanges
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.math.MathUtils
-import kotlin.math.PI
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.BlockItem
@@ -17,6 +17,7 @@ import net.minecraft.world.level.EmptyBlockGetter
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
+import kotlin.math.PI
 
 object Eagle : Module("Eagle", Category.MOVEMENT) {
 
@@ -41,7 +42,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
             }
 
             if (sneakDelay == 0 && isOverEdge()) {
-                sneakDelay = MathUtils.getRandom(minDelay, maxDelay)
+                sneakDelay = RandomRanges.getRandom(minDelay, maxDelay)
             }
         }
 

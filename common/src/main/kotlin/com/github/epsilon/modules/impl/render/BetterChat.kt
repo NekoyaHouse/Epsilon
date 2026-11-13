@@ -6,10 +6,10 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.interfaces.ChatComponentAccessor
+import com.github.epsilon.kernel.render.animation.Animation
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.animation.Animation
-import com.github.epsilon.utils.render.animation.Easing
 import com.google.common.base.Suppliers
 import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.client.gui.navigation.ScreenRectangle

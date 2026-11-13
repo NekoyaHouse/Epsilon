@@ -11,13 +11,13 @@ import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor
+import com.github.epsilon.kernel.client.ChatMessages
+import com.github.epsilon.kernel.render.SkeletonRenderer
+import com.github.epsilon.kernel.render.WireframeEntityRenderer
+import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.player.ChatUtils
-import com.github.epsilon.utils.render.SkeletonRenderer
-import com.github.epsilon.utils.render.WireframeEntityRenderer
-import com.github.epsilon.utils.render.WorldToScreen
 import com.google.common.base.Suppliers
 import com.google.common.collect.Maps
 import com.mojang.authlib.GameProfile
@@ -69,7 +69,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                         if (ignoreBots && !mc.connection!!.onlinePlayerIds.contains(player.uuid))
                             continue
                         if (notifications) {
-                            ChatUtils.sendMessage(
+                            ChatMessages.sendMessage(
                                 player.name.string + " logged back at  X: " + player.x.toInt() +
                                         " Y: " + player.y.toInt() + " Z: " + player.z.toInt()
                             )
@@ -87,7 +87,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                     if (ignoreBots && !mc.connection!!.onlinePlayerIds.contains(player.uuid))
                         continue
                     if (notifications) {
-                        ChatUtils.sendMessage(
+                        ChatMessages.sendMessage(
                             player.name.string + " logged out at  X: " + player.x.toInt() +
                                     " Y: " + player.y.toInt() + " Z: " + player.z.toInt()
                         )

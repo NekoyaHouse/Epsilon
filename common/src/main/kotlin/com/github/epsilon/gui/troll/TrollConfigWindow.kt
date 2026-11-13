@@ -10,14 +10,13 @@ import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.panel.popup.ConfirmActionPopup
 import com.github.epsilon.gui.panel.popup.MessagePopup
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
+import com.github.epsilon.kernel.client.ConfigFolderOpener
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.ConfigManager
-import com.github.epsilon.utils.client.ConfigFolderOpener
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import java.nio.file.Path
 import java.util.function.Supplier

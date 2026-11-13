@@ -3,8 +3,8 @@ package com.github.epsilon.managers
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.elements.impl.notification.Notification
 import com.github.epsilon.elements.impl.notification.NotificationMode
+import com.github.epsilon.kernel.client.ChatMessages
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.utils.player.ChatUtils
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.util.FormattedCharSequence
@@ -114,7 +114,7 @@ object NotificationManager {
      * 为已有聊天文本应用 Epsilon 的动态前缀。
      */
     fun applyAnimatedPrefix(original: FormattedCharSequence): FormattedCharSequence {
-        return ChatUtils.applyAnimatedPrefix(original)
+        return ChatMessages.applyAnimatedPrefix(original)
     }
 
     /**
@@ -214,8 +214,8 @@ object NotificationManager {
 
     private fun sendChatMessage(message: Component, hash: Int?) {
         if (!ClientSetting.chatNotify) return
-        if (hash == null) ChatUtils.sendMessage(message)
-        else ChatUtils.sendMessage(message, hash)
+        if (hash == null) ChatMessages.sendMessage(message)
+        else ChatMessages.sendMessage(message, hash)
     }
 
     private fun makeRoomIfNeeded() {

@@ -4,49 +4,50 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PacketEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getArmorStack
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestArmorScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestAxe
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestBlock
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestCrossbow
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestPickaxe
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestPowerBow
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestProjectile
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestPunchBow
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestShapeAxe
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestShovel
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestSword
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBlockCountInInventory
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getCurrentArmorScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getFishingRod
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getInventoryStack
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getItemCount
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getItemSlot
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getItemStackSlot
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getOffhandStack
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getWorstArrow
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getWorstBlock
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getWorstProjectile
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.shouldDisableFeatures
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.ClickSlotUtils.click as clickSlot
-import com.github.epsilon.utils.player.ClickSlotUtils.dropAll as dropAllInSlot
-import com.github.epsilon.utils.player.ClickSlotUtils.shiftClick as shiftClickSlot
-import com.github.epsilon.utils.player.ClickSlotUtils.swap as swapSlot
-import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.player.InvHelper.getArmorStack
-import com.github.epsilon.utils.player.InvHelper.getBestArmorScore
-import com.github.epsilon.utils.player.InvHelper.getBestAxe
-import com.github.epsilon.utils.player.InvHelper.getBestBlock
-import com.github.epsilon.utils.player.InvHelper.getBestCrossbow
-import com.github.epsilon.utils.player.InvHelper.getBestPickaxe
-import com.github.epsilon.utils.player.InvHelper.getBestPowerBow
-import com.github.epsilon.utils.player.InvHelper.getBestProjectile
-import com.github.epsilon.utils.player.InvHelper.getBestPunchBow
-import com.github.epsilon.utils.player.InvHelper.getBestShapeAxe
-import com.github.epsilon.utils.player.InvHelper.getBestShovel
-import com.github.epsilon.utils.player.InvHelper.getBestSword
-import com.github.epsilon.utils.player.InvHelper.getBlockCountInInventory
-import com.github.epsilon.utils.player.InvHelper.getCurrentArmorScore
-import com.github.epsilon.utils.player.InvHelper.getFishingRod
-import com.github.epsilon.utils.player.InvHelper.getInventoryStack
-import com.github.epsilon.utils.player.InvHelper.getItemCount
-import com.github.epsilon.utils.player.InvHelper.getItemSlot
-import com.github.epsilon.utils.player.InvHelper.getItemStackSlot
-import com.github.epsilon.utils.player.InvHelper.getOffhandStack
-import com.github.epsilon.utils.player.InvHelper.getWorstArrow
-import com.github.epsilon.utils.player.InvHelper.getWorstBlock
-import com.github.epsilon.utils.player.InvHelper.getWorstProjectile
-import com.github.epsilon.utils.player.InvHelper.shouldDisableFeatures
-import com.github.epsilon.utils.player.PlayerUtils.isEating
-import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.network.protocol.game.*
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.*
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.click as clickSlot
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.dropAll as dropAllInSlot
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.shiftClick as shiftClickSlot
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap as swapSlot
 
 object InvManager : Module("Inv Manager", Category.PLAYER) {
 
@@ -154,7 +155,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
             inventoryOpen = false
             actionState = ActionState.IDLE
             actionConsumed = false
-            delayMs = MathUtils.getRandom(minDelay, maxDelay)
+            delayMs = RandomRanges.getRandom(minDelay, maxDelay)
             timer.reset()
         }
 
@@ -243,8 +244,8 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                     arrayOf(EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD)
                 for (i in armorSlots.indices) {
                     val stack = getArmorStack(armorSlots[i])
-                    if (InvHelper.isArmor(stack)) {
-                        if (!stack.isEmpty && canExecuteInventoryAction() && getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(
+                    if (NavenInvUtils.isArmor(stack)) {
+                        if (!stack.isEmpty && canExecuteInventoryAction() && getBestArmorScore(armorSlots[i]) > NavenInvUtils.getProtection(
                                 stack
                             )
                         ) {
@@ -254,12 +255,12 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 }
                 for (ix in 0 until player.inventory.nonEquipmentItems.size) {
                     val stack = getInventoryStack(ix)
-                    if (!stack.isEmpty && InvHelper.isArmor(stack)) {
-                        val currentItemScore = InvHelper.getProtection(stack)
+                    if (!stack.isEmpty && NavenInvUtils.isArmor(stack)) {
+                        val currentItemScore = NavenInvUtils.getProtection(stack)
                         val isBestItem =
-                            getBestArmorScore(InvHelper.getArmorSlot(stack)!!) == currentItemScore
+                            getBestArmorScore(NavenInvUtils.getArmorSlot(stack)!!) == currentItemScore
                         val isBetterItem =
-                            getCurrentArmorScore(InvHelper.getArmorSlot(stack)!!) < currentItemScore
+                            getCurrentArmorScore(NavenInvUtils.getArmorSlot(stack)!!) < currentItemScore
                         if (isBestItem && isBetterItem && canExecuteInventoryAction()) {
                             if (ix < 9) {
                                 shiftClick(ix + 36)
@@ -346,7 +347,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 val bestBlock = getBestBlock()
                 if (bestBlock != null) {
                     val slot = getItemStackSlot(bestBlock)
-                    val shouldSwap = !InvHelper.isValidStack(offHand) || offHand.count < bestBlock.count
+                    val shouldSwap = !NavenInvUtils.isValidStack(offHand) || offHand.count < bestBlock.count
                     if (shouldSwap && slot != -1 && canExecuteInventoryAction()) swapOffHand(slot)
                 }
             }
@@ -369,7 +370,10 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 val blockSlotIndex = this@InvManager.blockSlot - 1
                 val currentBlock = getInventoryStack(blockSlotIndex)
                 val bestBlock = getBestBlock()
-                if (bestBlock != null && (bestBlock.count > currentBlock.count || !InvHelper.isValidStack(currentBlock)) && this@InvManager.offhandItem != OffhandItemMode.Block) {
+                if (bestBlock != null && (bestBlock.count > currentBlock.count || !NavenInvUtils.isValidStack(
+                        currentBlock
+                    )) && this@InvManager.offhandItem != OffhandItemMode.Block
+                ) {
                     swapItem(blockSlotIndex, bestBlock)
                 }
                 if (getBlockCountInInventory().toFloat() > this@InvManager.maxBlockSize) {
@@ -382,16 +386,16 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 val currentSword = getInventoryStack(slotIndex)
                 var bestSword = getBestSword()
                 val bestShapeAxe = getBestShapeAxe()
-                if (InvHelper.getAxeDamage(bestShapeAxe) > InvHelper.getSwordDamage(bestSword)) {
+                if (NavenInvUtils.getAxeDamage(bestShapeAxe) > NavenInvUtils.getSwordDamage(bestSword)) {
                     bestSword = bestShapeAxe
                 }
                 if (bestSword != null) {
                     val currentDamage =
-                        if (InvHelper.isSword(currentSword)) InvHelper.getSwordDamage(currentSword) else InvHelper.getAxeDamage(
+                        if (NavenInvUtils.isSword(currentSword)) NavenInvUtils.getSwordDamage(currentSword) else NavenInvUtils.getAxeDamage(
                             currentSword
                         )
                     val bestWeaponDamage =
-                        if (InvHelper.isSword(bestSword)) InvHelper.getSwordDamage(bestSword) else InvHelper.getAxeDamage(
+                        if (NavenInvUtils.isSword(bestSword)) NavenInvUtils.getSwordDamage(bestSword) else NavenInvUtils.getAxeDamage(
                             bestSword
                         )
                     if (bestWeaponDamage > currentDamage) swapItem(slotIndex, bestSword)
@@ -402,9 +406,11 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 val slotIndex = this@InvManager.pickaxeSlot - 1
                 val bestPickaxe = getBestPickaxe()
                 val currentPickaxe = getInventoryStack(slotIndex)
-                if (bestPickaxe != null && InvHelper.isPickaxe(bestPickaxe) && (InvHelper.getToolScore(bestPickaxe) > InvHelper.getToolScore(
+                if (bestPickaxe != null && NavenInvUtils.isPickaxe(bestPickaxe) && (NavenInvUtils.getToolScore(
+                        bestPickaxe
+                    ) > NavenInvUtils.getToolScore(
                         currentPickaxe
-                    ) || !InvHelper.isPickaxe(currentPickaxe))
+                    ) || !NavenInvUtils.isPickaxe(currentPickaxe))
                 ) {
                     swapItem(slotIndex, bestPickaxe)
                 }
@@ -414,9 +420,9 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 val slotIndex = this@InvManager.axeSlot - 1
                 val bestAxe = getBestAxe()
                 val currentAxe = getInventoryStack(slotIndex)
-                if (bestAxe != null && InvHelper.isAxe(bestAxe) && (InvHelper.getToolScore(bestAxe) > InvHelper.getToolScore(
+                if (bestAxe != null && NavenInvUtils.isAxe(bestAxe) && (NavenInvUtils.getToolScore(bestAxe) > NavenInvUtils.getToolScore(
                         currentAxe
-                    ) || !InvHelper.isAxe(currentAxe))
+                    ) || !NavenInvUtils.isAxe(currentAxe))
                 ) {
                     swapItem(slotIndex, bestAxe)
                 }
@@ -438,36 +444,36 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
                 when (this@InvManager.preferBow) {
                     BowPriorityMode.Crossbow -> {
                         bestBow = getBestCrossbow()
-                        bestScore = InvHelper.getCrossbowScore(bestBow)
-                        currentScore = InvHelper.getCrossbowScore(currentBow)
+                        bestScore = NavenInvUtils.getCrossbowScore(bestBow)
+                        currentScore = NavenInvUtils.getCrossbowScore(currentBow)
                     }
 
                     BowPriorityMode.PowerBow -> {
                         bestBow = getBestPowerBow()
-                        bestScore = InvHelper.getPowerBowScore(bestBow)
-                        currentScore = InvHelper.getPowerBowScore(currentBow)
+                        bestScore = NavenInvUtils.getPowerBowScore(bestBow)
+                        currentScore = NavenInvUtils.getPowerBowScore(currentBow)
                     }
 
                     BowPriorityMode.PunchBow -> {
                         bestBow = getBestPunchBow()
-                        bestScore = InvHelper.getPunchBowScore(bestBow)
-                        currentScore = InvHelper.getPunchBowScore(currentBow)
+                        bestScore = NavenInvUtils.getPunchBowScore(bestBow)
+                        currentScore = NavenInvUtils.getPunchBowScore(currentBow)
                     }
                 }
                 if (bestBow == null) {
                     bestBow = getBestCrossbow()
-                    bestScore = InvHelper.getCrossbowScore(bestBow)
-                    currentScore = InvHelper.getCrossbowScore(currentBow)
+                    bestScore = NavenInvUtils.getCrossbowScore(bestBow)
+                    currentScore = NavenInvUtils.getCrossbowScore(currentBow)
                 }
                 if (bestBow == null) {
                     bestBow = getBestPowerBow()
-                    bestScore = InvHelper.getPowerBowScore(bestBow)
-                    currentScore = InvHelper.getPowerBowScore(currentBow)
+                    bestScore = NavenInvUtils.getPowerBowScore(bestBow)
+                    currentScore = NavenInvUtils.getPowerBowScore(currentBow)
                 }
                 if (bestBow == null) {
                     bestBow = getBestPunchBow()
-                    bestScore = InvHelper.getPunchBowScore(bestBow)
-                    currentScore = InvHelper.getPunchBowScore(currentBow)
+                    bestScore = NavenInvUtils.getPunchBowScore(bestBow)
+                    currentScore = NavenInvUtils.getPunchBowScore(currentBow)
                 }
                 val finalBow = bestBow
                 if (finalBow != null && bestScore > currentScore) swapItem(slotIndex, finalBow)
@@ -530,25 +536,25 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
 
     private fun NonNullContext.isItemUseful(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        if (InvHelper.isGodItem(stack)) return true
+        if (NavenInvUtils.isGodItem(stack)) return true
         if (stack.displayName.string.contains("点击使用")) return true
-        if (InvHelper.isArmor(stack)) {
-            val protection = InvHelper.getProtection(stack)
-            if (getCurrentArmorScore(InvHelper.getArmorSlot(stack)!!) >= protection) return false
-            val bestArmor = getBestArmorScore(InvHelper.getArmorSlot(stack)!!)
+        if (NavenInvUtils.isArmor(stack)) {
+            val protection = NavenInvUtils.getProtection(stack)
+            if (getCurrentArmorScore(NavenInvUtils.getArmorSlot(stack)!!) >= protection) return false
+            val bestArmor = getBestArmorScore(NavenInvUtils.getArmorSlot(stack)!!)
             return !(protection < bestArmor)
         }
-        if (InvHelper.isSword(stack)) return getBestSword() === stack
-        if (InvHelper.isPickaxe(stack)) return getBestPickaxe() === stack
-        if (InvHelper.isAxe(stack) && !InvHelper.isSharpnessAxe(stack)) {
+        if (NavenInvUtils.isSword(stack)) return getBestSword() === stack
+        if (NavenInvUtils.isPickaxe(stack)) return getBestPickaxe() === stack
+        if (NavenInvUtils.isAxe(stack) && !NavenInvUtils.isSharpnessAxe(stack)) {
             return getBestAxe() === stack
         }
-        if (InvHelper.isShovel(stack)) return getBestShovel() === stack
+        if (NavenInvUtils.isShovel(stack)) return getBestShovel() === stack
         if (stack.item is CrossbowItem) return getBestCrossbow() === stack
-        if (stack.item is BowItem && InvHelper.isPunchBow(stack)) {
+        if (stack.item is BowItem && NavenInvUtils.isPunchBow(stack)) {
             return getBestPunchBow() === stack
         }
-        if (stack.item is BowItem && InvHelper.isPowerBow(stack)) {
+        if (stack.item is BowItem && NavenInvUtils.isPowerBow(stack)) {
             return getBestPowerBow() === stack
         }
         if (stack.item is BowItem && getItemCount(Items.BOW) > 1) return false
@@ -565,7 +571,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
             return false
         }
         if (stack.item == Items.GOLDEN_APPLE || stack.item == Items.ENCHANTED_GOLDEN_APPLE) return true
-        return stack.item !is StandingAndWallBlockItem && InvHelper.isCommonItemUseful(stack)
+        return stack.item !is StandingAndWallBlockItem && NavenInvUtils.isCommonItemUseful(stack)
     }
 
     private fun NonNullContext.swapOffHand(slot: Int) {
@@ -577,7 +583,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
     }
 
     private fun NonNullContext.throwItem(item: ItemStack?): Boolean {
-        if (item != null && InvHelper.isItemValid(item) && canExecuteInventoryAction()) {
+        if (item != null && NavenInvUtils.isItemValid(item) && canExecuteInventoryAction()) {
             val itemSlot = getItemStackSlot(item)
             if (itemSlot != -1) {
                 return if (itemSlot < 9) {
@@ -592,7 +598,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
 
     private fun NonNullContext.swapItem(targetSlot: Int, bestItem: ItemStack?) {
         val currentSlot = getInventoryStack(targetSlot)
-        if (InvHelper.isItemValid(currentSlot) && bestItem !== currentSlot && canExecuteInventoryAction()) {
+        if (NavenInvUtils.isItemValid(currentSlot) && bestItem !== currentSlot && canExecuteInventoryAction()) {
             val bestItemSlot = getItemStackSlot(bestItem)
             if (bestItemSlot != -1) {
                 if (bestItemSlot < 9) {
@@ -606,7 +612,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
 
     private fun NonNullContext.swapItem(targetSlot: Int, item: Item) {
         val currentSlot = getInventoryStack(targetSlot)
-        if (InvHelper.isItemValid(currentSlot) && canExecuteInventoryAction()) {
+        if (NavenInvUtils.isItemValid(currentSlot) && canExecuteInventoryAction()) {
             val bestItemSlot = getItemSlot(item)
             if (bestItemSlot != -1) {
                 val bestItemStack = getInventoryStack(bestItemSlot)
@@ -654,7 +660,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
 
     private fun completeInventoryAction() {
         timer.reset()
-        delayMs = MathUtils.getRandom(minDelay, maxDelay)
+        delayMs = RandomRanges.getRandom(minDelay, maxDelay)
         this.inventoryOpen = true
         actionConsumed = true
         actionState = if (mode == Mode.Silent) ActionState.WAITING_FOR_INVENTORY_CLOSE else ActionState.IDLE

@@ -3,9 +3,8 @@ package com.github.epsilon.graphics.renderers
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
+import com.github.epsilon.kernel.render.ScissorUtils
 import com.github.epsilon.managers.RendererManager
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.commands.RenderPass
@@ -104,9 +103,9 @@ class ArcRenderer private constructor() : IRenderer {
         val x2 = centerX + extent
         val y2 = centerY + extent
 
-        val startRadians = (start.toDouble()).toRadians().toFloat()
-        val sweepRadians = if (sweep >= 360.0f) TAU else (sweep.toDouble()).toRadians().toFloat()
-        val gradientRotationRadians = (gradientRotationDegrees.toDouble()).toRadians().toFloat()
+        val startRadians = Math.toRadians(start.toDouble()).toFloat()
+        val sweepRadians = if (sweep >= 360.0f) TAU else Math.toRadians(sweep.toDouble()).toFloat()
+        val gradientRotationRadians = Math.toRadians(gradientRotationDegrees.toDouble()).toFloat()
         val cap = if (roundCap) 1.0f else 0.0f
 
         val startAbgr = ARGB.toABGR(startColor.rgb)

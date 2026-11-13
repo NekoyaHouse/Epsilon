@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.lib.render
 
-import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.schedulers.render2d.Render2DProperties
+import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScissor
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiTheme

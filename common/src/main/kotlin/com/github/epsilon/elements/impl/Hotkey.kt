@@ -7,15 +7,15 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.Shadow
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.kernel.render.ColorUtils
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.ColorUtils
-import com.github.epsilon.utils.render.animation.Easing
-import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
 import java.util.function.Supplier
+import com.google.common.base.Supplier as GuavaSupplier
 
 private const val ROW_HEIGHT = 16.0f
 

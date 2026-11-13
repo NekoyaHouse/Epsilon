@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.combat.elytra_combat.target
 
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatWeaponController
-import com.github.epsilon.utils.math.toDegrees
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import java.util.*
@@ -161,7 +160,7 @@ class TargetMotionTracker {
         }
 
         val dot = ab.dot(bc) / denominator
-        val angle = (acos((dot).coerceIn(-1.0, 1.0))).toDegrees()
+        val angle = Math.toDegrees(acos(dot.coerceIn(-1.0, 1.0)))
         if (angle >= STRAIGHT_ANGLE_DEGREES) {
             return TargetAction.CIRCLING
         }

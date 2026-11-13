@@ -6,6 +6,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.client.KeybindUtils
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Module
@@ -21,7 +22,6 @@ import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.modules.impl.player.*
 import com.github.epsilon.modules.impl.render.*
 import com.github.epsilon.modules.impl.render.maseffects.MasEffects
-import com.github.epsilon.utils.client.KeybindUtils
 import com.mojang.blaze3d.platform.InputConstants
 
 object ModuleManager : AlwaysListening {
@@ -65,6 +65,7 @@ object ModuleManager : AlwaysListening {
         addModule(AutoTrap)
         addModule(AutoWeapon)
         addModule(Criticals)
+        addModule(CrystalAura)
         addModule(FeetTrap)
         addModule(SelfTrap)
         addModule(ElytraCombat)
@@ -78,7 +79,6 @@ object ModuleManager : AlwaysListening {
         addModule(SilentAim)
         addModule(SpearKill)
         addModule(TriggerBot)
-        addModule(CrystalAura)
 
         // Player
         addModule(AutoArmor)

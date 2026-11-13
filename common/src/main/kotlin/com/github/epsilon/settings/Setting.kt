@@ -1,9 +1,11 @@
 package com.github.epsilon.settings
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.utils.client.PlatformRequirement
+import com.github.epsilon.kernel.client.platform.PlatformRequirement
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import kotlin.reflect.KProperty
 
 /**

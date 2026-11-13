@@ -1,8 +1,8 @@
 package com.github.epsilon.elements.impl
 
 import com.github.epsilon.elements.HudModule
-import com.github.epsilon.gui.lib.RotatedTexture
 import com.github.epsilon.graphics.text.SystemEmojiAtlas
+import com.github.epsilon.gui.lib.RotatedTexture
 import com.github.epsilon.gui.lib.UiScope
 import net.minecraft.client.DeltaTracker
 import java.awt.Color

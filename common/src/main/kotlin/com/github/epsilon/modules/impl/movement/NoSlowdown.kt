@@ -6,14 +6,13 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.events.impl.SlowdownEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.network.NetworkUtils
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.network.NetworkUtils
-import java.util.*
-import java.util.concurrent.LinkedBlockingQueue
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -26,6 +25,8 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
+import java.util.*
+import java.util.concurrent.LinkedBlockingQueue
 
 object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 

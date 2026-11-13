@@ -7,27 +7,26 @@ import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.world.hole.Hole
+import com.github.epsilon.kernel.gameplay.world.hole.HoleType
+import com.github.epsilon.kernel.gameplay.world.hole.Holes.getHole
+import com.github.epsilon.kernel.gameplay.world.hole.Holes.isBlock
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.world.hole.Hole
-import com.github.epsilon.utils.world.hole.HoleType
-import com.github.epsilon.utils.world.hole.HoleUtils.getHole
-import com.github.epsilon.utils.world.hole.HoleUtils.isBlock
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
-import net.minecraft.util.Mth
-import net.minecraft.world.phys.Vec3
 
 object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
@@ -119,8 +118,8 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
             TimerManager.set(timer.toFloat())
 
-            val yaw = cos(((getAngle(hole.middle) + 90.0f).toDouble()).toRadians())
-            val pitch = sin(((getAngle(hole.middle) + 90.0f).toDouble()).toRadians())
+            val yaw = cos(Math.toRadians((getAngle(hole.middle) + 90.0f).toDouble()))
+            val pitch = sin(Math.toRadians((getAngle(hole.middle) + 90.0f).toDouble()))
 
             if (player.x == hole.middle.x && player.z == hole.middle.z) {
                 if (player.y == hole.middle.y) {
@@ -256,7 +255,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
     private fun NonNullContext.getAngle(pos: Vec3): Float {
         val deltaX = pos.x - player.x
         val deltaZ = pos.z - player.z
-        val targetYaw = (atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f
+        val targetYaw = Math.toDegrees(atan2(deltaZ, deltaX)).toFloat() - 90.0f
         return player.yRot + Mth.wrapDegrees(targetYaw - player.yRot)
     }
 

@@ -3,12 +3,11 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.render.animation.Animation
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.animation.Animation
-import com.github.epsilon.utils.render.animation.Easing
-import java.util.*
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.particles.BlockParticleOption
 import net.minecraft.core.particles.ParticleTypes
@@ -20,6 +19,7 @@ import net.minecraft.world.entity.LightningBolt
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.animal.squid.Squid
 import net.minecraft.world.level.block.Blocks
+import java.util.*
 
 object KillEffect : Module("Kill Effect", Category.RENDER) {
 

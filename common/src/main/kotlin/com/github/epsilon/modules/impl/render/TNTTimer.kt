@@ -8,9 +8,9 @@ import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.WorldToScreen
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack

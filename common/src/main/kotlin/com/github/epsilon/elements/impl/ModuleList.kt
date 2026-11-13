@@ -1,26 +1,20 @@
 package com.github.epsilon.elements.impl
 
 import com.github.epsilon.elements.HudModule
-import com.github.epsilon.gui.lib.SegmentedShadow
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
-import com.github.epsilon.gui.lib.BlurredText
-import com.github.epsilon.gui.lib.GradientText
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.RectVerticalGradient
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
+import com.github.epsilon.kernel.render.ColorUtils
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.ColorUtils
-import com.github.epsilon.utils.render.animation.Easing
-import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
 import java.util.function.Supplier
 import kotlin.math.abs
+import com.google.common.base.Supplier as GuavaSupplier
 
 object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
 

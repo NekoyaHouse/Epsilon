@@ -3,16 +3,15 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.*
 import net.minecraft.core.component.DataComponents
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -20,6 +19,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.*
 
 object AimBot : Module("Aim Bot", Category.COMBAT) {
 
@@ -124,7 +124,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             return
         }
 
-        val targetYaw = Mth.wrapDegrees((atan2(dz, dx)).toDegrees().toFloat() - 90.0f)
+        val targetYaw = Mth.wrapDegrees(Math.toDegrees(atan2(dz, dx)).toFloat() - 90.0f)
 
         bowTargetYaw = targetYaw
         bowTargetPitch = targetPitch
@@ -132,7 +132,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         RotationManager.setRotations(
             Rotation(targetYaw, targetPitch),
             bowSmooth.toDouble(),
-            Priority.Medium
+            RotationPriority.Medium
         )
     }
 
@@ -182,10 +182,12 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
             }
 
             val deltaYaw = Mth.wrapDegrees(
-                (atan2(
-                    nearestTarget.eyePosition.z - player.z,
-                    nearestTarget.eyePosition.x - player.x
-                )).toDegrees()
+                Math.toDegrees(
+                    atan2(
+                        nearestTarget.eyePosition.z - player.z,
+                        nearestTarget.eyePosition.x - player.x
+                    )
+                )
                     .toFloat() - 90.0f - rotationYaw
             )
             var fixedDeltaYaw = deltaYaw
@@ -217,7 +219,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         if (discriminant < 0.0) return Float.NaN
 
         val tanTheta = (v2 - sqrt(discriminant)) / (g * horizontalDist)
-        return -(atan(tanTheta)).toDegrees().toFloat()
+        return -Math.toDegrees(atan(tanTheta)).toFloat()
     }
 
     private fun NonNullContext.getBestBowTarget(): Player? {

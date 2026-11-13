@@ -5,7 +5,7 @@ import com.github.epsilon.accounts.Account
 import com.github.epsilon.accounts.AccountType
 import com.github.epsilon.accounts.TokenAccount
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.utils.network.Http
+import com.github.epsilon.kernel.network.Http
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.mojang.authlib.Environment

@@ -3,27 +3,28 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
@@ -32,7 +33,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     private val fov by intSetting("Fov", 90, 1..360, 1)
     private val delay by intSetting("Delay", 500, 0..2000, 10)
     private val rotationSpeed by intSetting("Rotation Speed", 180, 1..180, 10)
-    private val rotationPriority by enumSetting("Rotation Priority", Priority.Lowest)
+    private val rotationPriority by enumSetting("Rotation RotationPriority", RotationPriority.Lowest)
 
     private val timer = TimerUtils()
     private var shouldThrow = false
@@ -113,7 +114,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
 
                     RotationManager.setRotations(rotation, rotationSpeed.toDouble(), rotationPriority)
 
-                    val hit = raytrace(rotation, maxRange) ?: return@safeEventHandler
+                    val hit = raycast(rotation, maxRange) ?: return@safeEventHandler
                     if (hit.type != HitResult.Type.ENTITY) return@safeEventHandler
 
                     // 准备槽位与投掷状态

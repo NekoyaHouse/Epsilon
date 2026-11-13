@@ -3,20 +3,20 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.EnchantmentLookup
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.testInMainHand
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
-import com.github.epsilon.utils.player.EnchantmentUtils
-import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.InvUtils.swapBack
-import com.github.epsilon.utils.player.InvUtils.testInMainHand
-import com.github.epsilon.utils.player.PlayerUtils.isEating
-import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.tags.EntityTypeTags
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.effect.MobEffects
@@ -221,8 +221,8 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
         val livingTarget = target as? LivingEntity
         if (livingTarget != null && smartShieldBreak && livingTarget.isBlocking) {
-            if (InvHelper.isAxe(currentStack)) return -1
-            val axeSlot = findInHotbar { stack -> InvHelper.isAxe(stack) }.slot
+            if (NavenInvUtils.isAxe(currentStack)) return -1
+            val axeSlot = findInHotbar { stack -> NavenInvUtils.isAxe(stack) }.slot
             if (axeSlot != -1) return axeSlot
         }
 
@@ -298,7 +298,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private fun getDurabilityScore(stack: ItemStack): Double {
         if (!stack.isDamageableItem) return 4.0
 
-        val unbreaking = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.UNBREAKING)
+        val unbreaking = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.UNBREAKING)
         if (unbreaking > 0) return unbreaking * 0.05
 
         return 0.0
@@ -342,7 +342,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
     private fun getFireAspectScore(stack: ItemStack, isOnFire: Boolean, hasFireResistance: Boolean): Double {
         if (!enchantFireAspect || isOnFire || hasFireResistance) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.FIRE_ASPECT)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.FIRE_ASPECT)
         return if (level > 0) 30.0 else 0.0
     }
 
@@ -354,7 +354,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         health: Float,
     ): Double {
         if (!enchantLooting || isPlayer) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.LOOTING)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.LOOTING)
         if (level > 0) {
             val execute = (isLiving && health < 20) || isOnFire
             return level * (if (execute) 10 else 5).toDouble()
@@ -364,7 +364,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
     private fun getSharpnessScore(stack: ItemStack, isOnFire: Boolean): Double {
         if (!enchantSharpness) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.SHARPNESS)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.SHARPNESS)
         if (level > 0) {
             val baseScore = (1 + 0.5 * (level - 1)) * 3
             return if (isOnFire) baseScore * 1.5 else baseScore
@@ -374,7 +374,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
     private fun getSmiteScore(stack: ItemStack, isUndead: Boolean, isOnFire: Boolean): Double {
         if (!enchantSmite || !isUndead) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.SMITE)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.SMITE)
         if (level > 0) {
             val baseScore = level * 5.0
             return if (isOnFire) baseScore * 1.5 else baseScore
@@ -384,7 +384,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
     private fun getBaneOfArthropodsScore(stack: ItemStack, isArthropod: Boolean, isOnFire: Boolean): Double {
         if (!enchantBaneOfArthropods || !isArthropod) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.BANE_OF_ARTHROPODS)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.BANE_OF_ARTHROPODS)
         if (level > 0) {
             val baseScore = level * 5.0
             return if (isOnFire) baseScore * 1.5 else baseScore
@@ -394,7 +394,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
     private fun getSweepingEdgeScore(stack: ItemStack): Double {
         if (!enchantSweepingEdge) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.SWEEPING_EDGE)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.SWEEPING_EDGE)
         if (level > 0) {
             return level * 3.0
         }
@@ -404,7 +404,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private fun getImpalingScore(stack: ItemStack, isAquatic: Boolean): Double {
         if (!enchantImpaling || !isAquatic) return 0.0
 
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.IMPALING)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.IMPALING)
         if (level > 0) {
             return level * 5.0
         }
@@ -413,7 +413,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
 
     private fun getBreachScore(stack: ItemStack, isLiving: Boolean, armor: Double): Double {
         if (!enchantBreach || !isLiving || armor <= 0) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.BREACH)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.BREACH)
         if (level > 0) {
             return level * armor * 0.3
         }
@@ -423,14 +423,14 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
     private fun getDensityScore(stack: ItemStack, isFalling: Boolean): Double {
         if (!enchantDensity || !isFalling) return 0.0
         val player = this.mc.player ?: return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.DENSITY)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.DENSITY)
         if (level > 0) return (50 + (level * player.fallDistance * 2)).toDouble()
         return 0.0
     }
 
     private fun getWindBurstScore(stack: ItemStack, isFalling: Boolean): Double {
         if (!enchantWindBurst || !isFalling) return 0.0
-        val level = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.WIND_BURST)
+        val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.WIND_BURST)
         if (level > 0) return level * 20.0
         return 0.0
     }
@@ -446,7 +446,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
             val stack = entity.getItemBySlot(slot)
             if (stack.isEmpty) continue
 
-            val fireProtection = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.FIRE_PROTECTION)
+            val fireProtection = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.FIRE_PROTECTION)
             if (fireProtection > 0) return true
         }
         return false

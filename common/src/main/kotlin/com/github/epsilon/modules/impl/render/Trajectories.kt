@@ -3,14 +3,13 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.gameplay.entity.ProjectileSimulator
+import com.github.epsilon.kernel.gameplay.inventory.EnchantmentLookup
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.utils.entity.ProjectileSimulator
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.player.EnchantmentUtils
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
@@ -80,7 +79,7 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
         { positionBoxes }
     ).group(renderGroup)
 
-    private val MULTISHOT_OFFSET: Double = (10.0).toRadians()
+    private val MULTISHOT_OFFSET: Double = Math.toRadians(10.0)
 
     init {
         handler<Render3DEvent> { onRender3D(it) }
@@ -105,10 +104,10 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
                 if (charged == null || charged.isEmpty) continue
 
                 val firework = charged.contains(Items.FIREWORK_ROCKET)
-                val piercing = if (firework) 0 else EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.PIERCING)
+                val piercing = if (firework) 0 else EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.PIERCING)
                 renderCrossbowPath(targetPlayer, partialTick, firework, piercing, 0.0)
 
-                if (EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.MULTISHOT) > 0) {
+                if (EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.MULTISHOT) > 0) {
                     renderCrossbowPath(targetPlayer, partialTick, firework, piercing, MULTISHOT_OFFSET)
                     renderCrossbowPath(targetPlayer, partialTick, firework, piercing, -MULTISHOT_OFFSET)
                 }

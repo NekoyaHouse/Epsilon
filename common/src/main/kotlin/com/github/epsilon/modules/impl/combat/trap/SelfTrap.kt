@@ -1,13 +1,13 @@
 package com.github.epsilon.modules.impl.combat.trap
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.kernel.jvm.*
-import java.util.*
-import kotlin.math.nextDown
+import com.github.epsilon.kernel.jvm.NonNullContext
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
+import java.util.*
+import kotlin.math.nextDown
 
 object SelfTrap : TrapBase("Self Trap", EpsilonTranslations.SelfTrap.NO_BLOCK_FOUND) {
 

@@ -4,11 +4,9 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.movement.Blink
-import java.util.*
-import kotlin.math.nextDown
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -16,6 +14,8 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
+import java.util.*
+import kotlin.math.nextDown
 
 object AutoTrap : TrapBase("Auto Trap", EpsilonTranslations.AutoTrap.NO_BLOCK_FOUND, anchorToPlayer = false) {
 

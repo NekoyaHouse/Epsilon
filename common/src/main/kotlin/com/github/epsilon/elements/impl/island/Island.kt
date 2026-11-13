@@ -6,26 +6,29 @@ import com.github.epsilon.elements.impl.island.instance.impl.*
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
-import com.github.epsilon.ffi.smtc.SmtcService
 import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.client.platform.ClientPlatform
+import com.github.epsilon.kernel.client.platform.PlatformRequirement
+import com.github.epsilon.kernel.ffi.smtc.SmtcService
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBlockCountInInventory
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer
 import com.github.epsilon.settings.platformOnly
-import com.github.epsilon.utils.client.ClientPlatform
-import com.github.epsilon.utils.client.PlatformRequirement
-import com.github.epsilon.utils.player.InvHelper.getBlockCountInInventory
 import com.google.common.base.Suppliers
-import java.awt.Color
-import java.util.function.Supplier
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
+import java.awt.Color
+import java.util.function.Supplier
 
 object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 

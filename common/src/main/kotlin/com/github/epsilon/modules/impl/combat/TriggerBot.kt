@@ -2,12 +2,11 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.math.RandomRanges
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.SwingMode
-import kotlin.math.PI
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -21,6 +20,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.PI
 
 object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
 
@@ -59,7 +59,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             gameMode.attack(player, target)
             SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
 
-            delay = MathUtils.getRandom(minDelay, maxDelay)
+            delay = RandomRanges.getRandom(minDelay, maxDelay)
         }
     }
 

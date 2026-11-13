@@ -5,11 +5,11 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor
+import com.github.epsilon.kernel.render.WireframeEntityRenderer
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.render.WireframeEntityRenderer
-import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel

@@ -5,9 +5,8 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.render.ScissorUtils
 import com.github.epsilon.managers.RendererManager
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
@@ -211,7 +210,7 @@ class TextureRenderer private constructor() : IRenderer {
         val argb = ARGB.toABGR(color.rgb)
         val x2 = x + width
         val y2 = y + height
-        val radians = (rotationDegrees.toDouble()).toRadians().toFloat()
+        val radians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
         val cos = cos(radians.toDouble()).toFloat()
         val sin = sin(radians.toDouble()).toFloat()
 

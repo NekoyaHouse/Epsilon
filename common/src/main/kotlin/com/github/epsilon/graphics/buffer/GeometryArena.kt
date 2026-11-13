@@ -9,6 +9,27 @@ import com.mojang.renderpearl.api.device.GpuDevice
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
 import java.util.TreeMap
+import kotlin.collections.ArrayDeque
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
+import kotlin.collections.List
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.filter
+import kotlin.collections.firstOrNull
+import kotlin.collections.flatMap
+import kotlin.collections.forEach
+import kotlin.collections.groupBy
+import kotlin.collections.isNotEmpty
+import kotlin.collections.iterator
+import kotlin.collections.lastIndex
+import kotlin.collections.lastOrNull
+import kotlin.collections.map
+import kotlin.collections.set
+import kotlin.collections.sortedBy
+import kotlin.collections.sumOf
+import kotlin.collections.toList
 
 /** 不覆盖已提交的分配；只有 fence 完成后空洞才重新进入分配器。 */
 class GeometryArena(

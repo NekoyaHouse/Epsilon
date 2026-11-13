@@ -1,6 +1,6 @@
 package com.github.epsilon.kernel.state
 
-import java.util.IdentityHashMap
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.reflect.KProperty
 
@@ -16,7 +16,9 @@ interface MutableState<T> : State<T> {
 object StateNotifications {
     private val pending = ConcurrentLinkedQueue<() -> Unit>()
 
-    internal fun enqueue(action: () -> Unit) { pending.add(action) }
+    internal fun enqueue(action: () -> Unit) {
+        pending.add(action)
+    }
 
     fun drain() {
         while (true) (pending.poll() ?: return).invoke()
@@ -32,18 +34,30 @@ internal class StateSource(
     private val listeners = LinkedHashSet<() -> Unit>()
     private var queued = false
 
-    @Synchronized fun read() { StateTracking.record(this, version) }
-    @Synchronized fun version(): Long = version
-    @Synchronized fun isObserved(): Boolean = listeners.isNotEmpty()
-    @Synchronized fun subscribe(listener: () -> Unit) {
+    @Synchronized
+    fun read() {
+        StateTracking.record(this, version)
+    }
+
+    @Synchronized
+    fun version(): Long = version
+
+    @Synchronized
+    fun isObserved(): Boolean = listeners.isNotEmpty()
+
+    @Synchronized
+    fun subscribe(listener: () -> Unit) {
         val first = listeners.isEmpty()
         if (listeners.add(listener) && first) onObserved()
     }
-    @Synchronized fun unsubscribe(listener: () -> Unit) {
+
+    @Synchronized
+    fun unsubscribe(listener: () -> Unit) {
         if (listeners.remove(listener) && listeners.isEmpty()) onUnobserved()
     }
 
-    @Synchronized fun changed() {
+    @Synchronized
+    fun changed() {
         version++
         if (queued) return
         queued = true
@@ -103,24 +117,38 @@ object StateTracking {
     private val reads = ThreadLocal<MutableMap<StateSource, Long>?>()
     private val building = ThreadLocal.withInitial { false }
 
-    internal fun record(source: StateSource, version: Long) { reads.get()?.putIfAbsent(source, version) }
+    internal fun record(source: StateSource, version: Long) {
+        reads.get()?.putIfAbsent(source, version)
+    }
 
     internal fun <T> collect(target: MutableMap<StateSource, Long>, block: () -> T): T {
         val previous = reads.get()
         reads.set(target)
-        return try { block() } finally { reads.set(previous) }
+        return try {
+            block()
+        } finally {
+            reads.set(previous)
+        }
     }
 
     fun <T> untracked(block: () -> T): T {
         val previous = reads.get()
         reads.set(null)
-        return try { block() } finally { reads.set(previous) }
+        return try {
+            block()
+        } finally {
+            reads.set(previous)
+        }
     }
 
     fun <T> buildingUi(block: () -> T): T {
         val previous = building.get()
         building.set(true)
-        return try { block() } finally { building.set(previous) }
+        return try {
+            block()
+        } finally {
+            building.set(previous)
+        }
     }
 
     val isBuildingUi: Boolean get() = building.get()
@@ -177,7 +205,13 @@ private class DerivedState<T>(private val calculation: () -> T) : State<T>, Auto
 }
 
 fun <T> mutableStateOf(initial: T): MutableState<T> = StateCell(initial)
+
 fun <T> derivedStateOf(calculation: () -> T): State<T> = DerivedState(calculation)
+
 fun <T> State<T>.readUntracked(): T = StateTracking.untracked { value }
+
 operator fun <T> State<T>.getValue(thisRef: Any?, property: KProperty<*>): T = value
-operator fun <T> MutableState<T>.setValue(thisRef: Any?, property: KProperty<*>, value: T) { this.value = value }
+
+operator fun <T> MutableState<T>.setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+    this.value = value
+}

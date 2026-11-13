@@ -4,18 +4,18 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import java.awt.Color
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
 
 object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
@@ -81,10 +82,10 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
                         rot,
                         rotationSpeed.toDouble(),
                         { candidate -> isBedHit(candidate, maxRange) },
-                        Priority.Low
+                        RotationPriority.Low
                     )
                 } else {
-                    RotationManager.setRotations(rot, rotationSpeed.toDouble(), Priority.Low)
+                    RotationManager.setRotations(rot, rotationSpeed.toDouble(), RotationPriority.Low)
                 }
             }
 
@@ -269,7 +270,12 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         return best
     }
 
-    private fun NonNullContext.getBedFaceTarget(bedPos: BlockPos, bedFace: Direction, maxRange: Double, eyes: Vec3): TargetData? {
+    private fun NonNullContext.getBedFaceTarget(
+        bedPos: BlockPos,
+        bedFace: Direction,
+        maxRange: Double,
+        eyes: Vec3
+    ): TargetData? {
         val adjacentPos = bedPos.relative(bedFace)
         val adjacentState: BlockState = level.getBlockState(adjacentPos)
         if (adjacentState.isAir) {
@@ -340,7 +346,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     }
 
     private fun NonNullContext.isBedHit(rotation: Rotation, rayRange: Double): Boolean {
-        val result = raytrace(rotation, rayRange)
+        val result = raycast(rotation, rayRange)
         return result is BlockHitResult && isBedBlock(result.blockPos)
     }
 

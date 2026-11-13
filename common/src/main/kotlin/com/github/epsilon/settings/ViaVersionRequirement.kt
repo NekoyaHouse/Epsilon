@@ -1,7 +1,7 @@
 package com.github.epsilon.settings
 
-import com.github.epsilon.hooks.ViaFabricPlusHooks
-import com.github.epsilon.hooks.ViaFabricPlusHooks.SupportVersion
+import com.github.epsilon.kernel.jvm.hooks.ViaFabricPlusHooks
+import com.github.epsilon.kernel.jvm.hooks.ViaFabricPlusHooks.SupportVersion
 
 enum class ViaVersionComparison(val symbol: String) {
     GREATER_THAN(">"), LESS_THAN("<"), EQUAL("="), GREATER_OR_EQUAL("≥"), LESS_OR_EQUAL("≤");

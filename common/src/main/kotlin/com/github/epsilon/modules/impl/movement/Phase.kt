@@ -5,22 +5,22 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.BlockCollisionEvent
 import com.github.epsilon.events.impl.DestroyedBlockEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwapBack
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack
+import com.github.epsilon.kernel.gameplay.movement.MovementUtils
+import com.github.epsilon.kernel.gameplay.movement.MovementUtils.forward
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.player.AutoTool.getBestTool
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.InvUtils.invSwap
-import com.github.epsilon.utils.player.InvUtils.invSwapBack
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.InvUtils.swapBack
-import com.github.epsilon.utils.player.MoveUtils
-import com.github.epsilon.utils.player.MoveUtils.forward
-import com.github.epsilon.utils.player.PlayerUtils.isEating
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -33,6 +33,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 
 object Phase : Module("Phase", Category.MOVEMENT) {
 
@@ -77,7 +78,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
 
             runSafe {
                 if (player.onGround() && mode == Mode.CCClip) {
-                    val diagonalOffset = MoveUtils.forwardWithoutStrafe(0.44)
+                    val diagonalOffset = MovementUtils.forwardWithoutStrafe(0.44)
                     val diagonal = player.yRot % 90 > 35 && player.yRot % 90 < 55
 
                     connection.send(
@@ -85,7 +86,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                     )
 
                     if (diagonal) {
-                        val directionVec = MoveUtils.forwardWithoutStrafe(0.51)
+                        val directionVec = MovementUtils.forwardWithoutStrafe(0.51)
 
                         var height = if (level.clip(
                                 ClipContext(
@@ -118,7 +119,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                         connection.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
                         toggle()
                     } else {
-                        val directionVec = MoveUtils.forwardWithoutStrafe(0.57)
+                        val directionVec = MovementUtils.forwardWithoutStrafe(0.57)
 
                         var height = if (level.clip(
                                 ClipContext(

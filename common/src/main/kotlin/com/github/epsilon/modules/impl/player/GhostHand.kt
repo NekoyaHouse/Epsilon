@@ -2,11 +2,10 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.StartUseItemEvent
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getDirection
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.RotationUtils.getDirection
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -29,8 +28,8 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
             }
 
             val direction = Vec3(0.0, 0.0, 0.1)
-                .xRot(-(player.xRot.toDouble()).toRadians().toFloat())
-                .yRot(-(player.yRot.toDouble()).toRadians().toFloat())
+                .xRot(-Math.toRadians(player.xRot.toDouble()).toFloat())
+                .yRot(-Math.toRadians(player.yRot.toDouble()).toFloat())
 
             posList.clear()
 

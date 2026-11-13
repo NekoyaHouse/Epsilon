@@ -12,6 +12,7 @@ import com.github.epsilon.gui.screen.ConfirmDialogScreen
 import com.github.epsilon.gui.screen.MainMenuScreen
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.gui.troll.TrollGuiScreen
+import com.github.epsilon.kernel.client.platform.PlatformRequirement
 import com.github.epsilon.managers.AssetManager
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.TranslationManager
@@ -20,7 +21,6 @@ import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.globalSetting
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.client.PlatformRequirement
 import com.mojang.blaze3d.Blaze3D
 import com.mojang.blaze3d.platform.IconSet
 import com.mojang.blaze3d.platform.InputConstants

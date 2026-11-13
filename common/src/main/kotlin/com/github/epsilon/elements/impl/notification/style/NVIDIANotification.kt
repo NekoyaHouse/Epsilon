@@ -8,8 +8,8 @@ import com.github.epsilon.gui.lib.ClipIf
 import com.github.epsilon.gui.lib.Rect
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.NotificationManager
-import com.github.epsilon.utils.render.animation.Easing
 import java.awt.Color
 import kotlin.math.roundToInt
 

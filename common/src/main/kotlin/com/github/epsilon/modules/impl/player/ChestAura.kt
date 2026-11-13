@@ -3,19 +3,18 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.player.PlayerUtils.isEating
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.ceil
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -28,6 +27,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.ceil
 
 object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
@@ -96,7 +96,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
                 targetRotation,
                 turnSpeed,
                 { rotation -> hitsTarget(rotation, target) },
-                Priority.Lowest,
+                RotationPriority.Lowest,
             )
 
             val hit = raycastTarget(RotationManager.getRotation(), target.pos, target.throughWalls)
@@ -217,7 +217,11 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         return hit != null && hit.blockPos == target.pos
     }
 
-    private fun NonNullContext.raycastTarget(rotation: Rotation, pos: BlockPos, throughWalls: Boolean): BlockHitResult? {
+    private fun NonNullContext.raycastTarget(
+        rotation: Rotation,
+        pos: BlockPos,
+        throughWalls: Boolean
+    ): BlockHitResult? {
         val start = player.getEyePosition(1.0F)
         val direction = Vec3.directionFromRotation(rotation.pitch, rotation.yaw)
         val end = start.add(direction.scale(range))

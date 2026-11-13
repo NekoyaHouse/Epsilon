@@ -6,10 +6,10 @@ import com.github.epsilon.graphics.shaders.MotionBlurShader
 import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.render.ScissorUtils
 import com.github.epsilon.managers.RenderTargetManager
 import com.github.epsilon.managers.RendererManager
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat

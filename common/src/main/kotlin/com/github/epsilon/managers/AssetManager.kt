@@ -5,10 +5,10 @@ import com.github.epsilon.assets.ffmpeg.FFmpegNativePlatform
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.screen.AssetDownloadScreen
 import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.client.platform.ClientPlatform
+import com.github.epsilon.kernel.network.Http
 import com.github.epsilon.managers.AssetManager.ffmpegUrl
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.utils.client.ClientPlatform
-import com.github.epsilon.utils.network.Http
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.renderer.texture.DynamicTexture

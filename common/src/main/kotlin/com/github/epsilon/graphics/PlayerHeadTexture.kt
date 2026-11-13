@@ -2,7 +2,7 @@ package com.github.epsilon.graphics
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.utils.network.Http
+import com.github.epsilon.kernel.network.Http
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
@@ -25,7 +25,6 @@ open class PlayerHeadTexture private constructor(uploaded: Uploaded) :
     private data class Uploaded(val texture: GpuTexture, val view: GpuTextureView, val sampler: GpuSampler)
 
     companion object {
-
         private fun toNativeImage(head: ByteArray): NativeImage {
             val image = NativeImage(8, 8, false)
             image.pixelBytes.put(head).rewind()

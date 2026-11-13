@@ -13,7 +13,7 @@ import com.github.epsilon.gui.panel.view.settings.ConfigClientSettingTab
 import com.github.epsilon.gui.panel.view.settings.FriendClientSettingTab
 import com.github.epsilon.gui.panel.view.settings.GeneralClientSettingTab
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.kernel.render.animation.Easing
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.util.*
 

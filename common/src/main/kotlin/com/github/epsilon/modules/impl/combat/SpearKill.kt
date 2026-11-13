@@ -2,19 +2,19 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getRotationsToEntity
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
-import com.github.epsilon.utils.rotation.RotationUtils.getRotationsToEntity
-import kotlin.math.roundToInt
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.roundToInt
 
 object SpearKill : Module("Spear Kill", Category.COMBAT) {
 

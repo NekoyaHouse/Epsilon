@@ -9,11 +9,11 @@ import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.panel.PanelState
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.Category
-import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 import kotlin.math.abs

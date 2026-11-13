@@ -12,13 +12,11 @@ canvas API 替代旧 layer handle API。
 ## 核心特性
 
 * **SDF 圆角矩形**：通过片段着色器（Fragment Shader）计算平滑且抗锯齿的圆角。支持动态半径，无需改变顶点数据。
-* **MSDF TTF 渲染**：继续使用 STB_truetype 获取字体度量、轮廓及特效覆盖率，由 msdfgen 核心为直线、二次和三次曲线
-  着色并生成 RGB 多通道距离场，以线性 RGBA8 图集存储。着色器取 RGB 中值，并按八个图集像素的距离范围恢复覆盖率；
-  模糊和 glitch 继续使用独立 R8 覆盖率图集。字形在 CPU 工作线程生成，图集在渲染线程上传，缺字占位框也使用 MSDF。
-  Fabric 与 NeoForge 均内嵌 LWJGL msdfgen 3.4.3 及 Windows/Linux/macOS 的 x64、ARM64 原生库；字体解析不调用
-  msdfgen 的 FreeType 扩展。
-  所有文本统一使用单点 `TTF_FONT` 管线（`ttf_font.fsh`），按屏幕空间距离重建像素覆盖率并保留一像素的边缘过渡。
-  字体抗锯齿开关与超采样分支已移除。
+* **MSDF TTF 渲染**：继续使用 STB_truetype 获取字体度量、轮廓及特效覆盖率，由 msdfgen 核心为直线、二次和三次曲线 着色并生成
+  RGB 多通道距离场，以线性 RGBA8 图集存储。着色器取 RGB 中值，并按八个图集像素的距离范围恢复覆盖率； 模糊和 glitch 继续使用独立
+  R8 覆盖率图集。字形在 CPU 工作线程生成，图集在渲染线程上传，缺字占位框也使用 MSDF。 Fabric 与 NeoForge 均内嵌 LWJGL
+  msdfgen 3.4.3 及 Windows/Linux/macOS 的 x64、ARM64 原生库；字体解析不调用 msdfgen 的 FreeType 扩展。 所有文本统一使用单点
+  `TTF_FONT` 管线（`ttf_font.fsh`），按屏幕空间距离重建像素覆盖率并保留一像素的边缘过渡。 字体抗锯齿开关与超采样分支已移除。
 
 ---
 
@@ -175,11 +173,7 @@ Java 调用方的等价写法：
 ```java
 private final Supplier<RectRenderer> rectRenderer = Suppliers.memoize(RectRenderer::create);
 
-rectRenderer.
-
-get().
-
-addRect(10f,10f,100f,100f,Color.WHITE);
+rectRenderer.get().addRect(10f,10f,100f,100f,Color.WHITE);
 ```
 
 ---

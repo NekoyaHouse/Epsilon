@@ -3,19 +3,21 @@ package com.github.epsilon.modules.impl.movement
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
 import com.google.gson.JsonObject
-import kotlin.math.*
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
+import kotlin.math.*
 
 object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
@@ -192,7 +194,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
             } else {
                 player.xRot
             }
-            RotationManager.setRotations(Rotation(yaw, pitch), rotationSpeed.toDouble(), Priority.Highest)
+            RotationManager.setRotations(Rotation(yaw, pitch), rotationSpeed.toDouble(), RotationPriority.Highest)
         }
     }
 
@@ -228,7 +230,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
         if (dx * dx + dz * dz < 1.0E-6) {
             return@runSafeOrElse player.yRot
         }
-        Mth.wrapDegrees((atan2(dz, dx)).toDegrees().toFloat() - 90.0f)
+        Mth.wrapDegrees(Math.toDegrees(atan2(dz, dx)).toFloat() - 90.0f)
     }
 
     private fun resetRecord(notify: Boolean) {

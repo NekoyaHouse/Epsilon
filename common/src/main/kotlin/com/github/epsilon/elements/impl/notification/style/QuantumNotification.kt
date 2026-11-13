@@ -8,14 +8,8 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.gui.lib.Arc
-import com.github.epsilon.gui.lib.Clip
-import com.github.epsilon.gui.lib.GradientArc
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Shadow
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.gui.lib.*
+import com.github.epsilon.kernel.render.animation.Easing
 import java.awt.Color
 import java.util.*
 import kotlin.math.*

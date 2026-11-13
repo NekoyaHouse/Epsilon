@@ -4,14 +4,13 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MousePressEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.SwingMode
 import com.mojang.blaze3d.platform.InputConstants
-import java.util.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.tags.ItemTags
@@ -22,6 +21,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
+import java.util.*
 
 object AutoDtap : Module("Auto Dtap", Category.COMBAT) {
 

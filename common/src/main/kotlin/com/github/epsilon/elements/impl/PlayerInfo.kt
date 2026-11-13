@@ -9,19 +9,11 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
-import com.github.epsilon.gui.lib.BlurredText
-import com.github.epsilon.gui.lib.Clip
-import com.github.epsilon.gui.lib.PlayerHead
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Shadow
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
-import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.multiplayer.ClientLevel
@@ -37,6 +29,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
 import kotlin.math.roundToInt
+import com.google.common.base.Supplier as GuavaSupplier
 
 object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
 

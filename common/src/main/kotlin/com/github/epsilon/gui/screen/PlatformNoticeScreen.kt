@@ -3,13 +3,13 @@ package com.github.epsilon.gui.screen
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.theme.MD3Theme
-import com.github.epsilon.hooks.ViaFabricPlusHooks
 import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.client.platform.ClientPlatform
+import com.github.epsilon.kernel.client.platform.PlatformRequirement
+import com.github.epsilon.kernel.jvm.hooks.ViaFabricPlusHooks
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.ViaVersionRequirement
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.client.ClientPlatform
-import com.github.epsilon.utils.client.PlatformRequirement
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import java.util.concurrent.ConcurrentHashMap

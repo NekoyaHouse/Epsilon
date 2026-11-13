@@ -81,7 +81,11 @@ class TtfFontLoader : IFontLoader {
             try {
                 pending.join()
             } catch (failure: CompletionException) {
-                Constants.LOGGER.error("Failed to generate MSDF glyph U+{} asynchronously; retrying", codepoint.toString(16), failure)
+                Constants.LOGGER.error(
+                    "Failed to generate MSDF glyph U+{} asynchronously; retrying",
+                    codepoint.toString(16),
+                    failure
+                )
                 fontFile.generateGlyph(codepoint)
             }
         } else fontFile.generateGlyph(codepoint)

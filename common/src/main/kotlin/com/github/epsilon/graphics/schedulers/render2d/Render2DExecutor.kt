@@ -9,8 +9,11 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DDrawPlan.Texture
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
-import com.mojang.renderpearl.api.commands.*
-import com.mojang.renderpearl.api.pipeline.*
+import com.mojang.renderpearl.api.commands.GpuQueryPool
+import com.mojang.renderpearl.api.commands.RenderPass
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline
+import com.mojang.renderpearl.api.pipeline.IndexType
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.GpuSampler
 import com.mojang.renderpearl.api.textures.GpuTextureView
 import org.lwjgl.PointerBuffer
@@ -20,6 +23,8 @@ import java.nio.IntBuffer
 import java.util.Optional
 import java.util.OptionalDouble
 import java.util.function.Supplier
+import kotlin.collections.ArrayDeque
+import kotlin.collections.first
 
 /** 先完成准备和上传，再打开真实 pass；录制 pass 不持有 GPU 命令编码器。 */
 internal class Render2DExecutor(private val arena: GeometryArena, private val stats: Render2DStats) : AutoCloseable {

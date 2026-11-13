@@ -10,19 +10,13 @@ import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
-import com.github.epsilon.gui.lib.Clip
-import com.github.epsilon.gui.lib.Outline
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.Texture
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.QQAvatarManager
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
-import com.github.epsilon.utils.render.animation.Easing
-import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.network.chat.Component
@@ -35,6 +29,7 @@ import java.util.*
 import java.util.function.Supplier
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
+import com.google.common.base.Supplier as GuavaSupplier
 
 private const val IDEAL_WIDTH = 500.0f
 private const val BASE_HEIGHT = 66.0f

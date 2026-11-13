@@ -13,7 +13,6 @@ import com.github.epsilon.managers.ModuleManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
-import net.minecraft.client.input.MouseButtonEvent
 import java.util.*
 
 class TrollCategoryWindow(private val category: Category?) : TrollWindow() {

@@ -5,15 +5,17 @@ import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.impl.FallFlyingEvent
 import com.github.epsilon.events.impl.FireworkRotationEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.random.Random
 import net.minecraft.world.item.Items
+import kotlin.random.Random
 
 class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
@@ -182,7 +184,7 @@ class Pitch40ElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly
             RotationManager.setRotations(
                 Rotation(elytraFly.getPitch40Yaw(player.yRot), pitch),
                 180.0,
-                Priority.Highest
+                RotationPriority.Highest
             )
         }
     }

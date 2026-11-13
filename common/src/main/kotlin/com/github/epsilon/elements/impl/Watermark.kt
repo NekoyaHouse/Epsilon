@@ -10,12 +10,12 @@ import com.github.epsilon.gui.lib.BlurredText
 import com.github.epsilon.gui.lib.GlitchText
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.utils.render.ColorUtils
-import com.google.common.base.Supplier as GuavaSupplier
+import com.github.epsilon.kernel.render.ColorUtils
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
 import java.util.function.Supplier
+import com.google.common.base.Supplier as GuavaSupplier
 
 object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
 

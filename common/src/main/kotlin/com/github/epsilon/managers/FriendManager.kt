@@ -1,6 +1,8 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.kernel.state.*
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import net.minecraft.world.entity.player.Player
 
 object FriendManager {

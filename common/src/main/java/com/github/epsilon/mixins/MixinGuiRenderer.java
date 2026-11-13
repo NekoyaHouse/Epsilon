@@ -3,7 +3,7 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.troll.TrollGuiScreen;
-import com.github.epsilon.utils.render.EpsilonGuiRenderer;
+import com.github.epsilon.kernel.render.EpsilonGuiRenderer;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

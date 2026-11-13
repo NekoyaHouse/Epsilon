@@ -1,19 +1,19 @@
 package com.github.epsilon.gui.lib
 
 import com.github.epsilon.graphics.LuminTexture
+import com.github.epsilon.graphics.schedulers.render2d.Render2DProperties
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.input.UiInputSubscription
-import com.github.epsilon.gui.lib.render.UiPhaseValue
-import com.github.epsilon.gui.lib.state.LuminComposition
-import com.github.epsilon.graphics.schedulers.render2d.Render2DProperties
 import com.github.epsilon.gui.lib.render.LuminUiRenderer
 import com.github.epsilon.gui.lib.render.UiContentBuffer
+import com.github.epsilon.gui.lib.render.UiPhaseValue
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.state.LuminAnimatable
+import com.github.epsilon.gui.lib.state.LuminComposition
 import com.github.epsilon.gui.lib.state.LuminRuntime
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.kernel.render.animation.Animation
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
 import java.awt.Color

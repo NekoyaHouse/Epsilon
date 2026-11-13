@@ -3,15 +3,15 @@ package com.github.epsilon.modules.impl.combat
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SwingHandEvent
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
@@ -44,7 +44,7 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
             }
 
             val rotations = calculate(currentTarget.eyePosition)
-            RotationManager.setRotations(rotations, 180.0, Priority.High)
+            RotationManager.setRotations(rotations, 180.0, RotationPriority.High)
 
             val hitResult = RotationManager.getHitResult()
             if (hitResult != null && hitResult.type == HitResult.Type.ENTITY) {

@@ -5,9 +5,9 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.network.NetworkUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.network.NetworkUtils
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.gui.screens.RecoverWorldDataScreen
 import net.minecraft.client.player.RemotePlayer

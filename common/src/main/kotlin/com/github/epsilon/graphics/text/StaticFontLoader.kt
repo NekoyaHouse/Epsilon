@@ -1,9 +1,9 @@
 package com.github.epsilon.graphics.text
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
+import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.modules.impl.ClientSetting
 import net.minecraft.resources.Identifier
 import java.awt.Font

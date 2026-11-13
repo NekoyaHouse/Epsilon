@@ -1,7 +1,7 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.TranslateComponent
+import com.github.epsilon.kernel.state.mutableStateOf
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicLong
 

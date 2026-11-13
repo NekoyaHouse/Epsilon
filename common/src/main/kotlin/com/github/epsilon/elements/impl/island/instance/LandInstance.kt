@@ -4,7 +4,7 @@ import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.elements.impl.island.pattern.impl.DelayPattern
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.utils.timer.TimerUtils
+import com.github.epsilon.kernel.time.TimerUtils
 import java.awt.Color
 
 /**

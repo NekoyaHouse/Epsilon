@@ -1,10 +1,10 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.impl.PacketEvent;
+import com.github.epsilon.kernel.network.ClientIdentityHider;
+import com.github.epsilon.kernel.network.NetworkUtils;
 import com.github.epsilon.managers.network.ClientboundPacketManager;
 import com.github.epsilon.managers.network.ServerboundPacketManager;
-import com.github.epsilon.utils.network.ClientIdentityHider;
-import com.github.epsilon.utils.network.NetworkUtils;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.netty.channel.ChannelFutureListener;

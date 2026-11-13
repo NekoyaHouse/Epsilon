@@ -6,13 +6,7 @@ import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.Clip
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Rect
-import com.github.epsilon.gui.lib.Outline
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.PlayerHead
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.impl.render.ACSpoof

@@ -6,6 +6,8 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.client.KeybindUtils
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
@@ -23,9 +25,6 @@ import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFlightModes
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.settings.SettingGroup
 import com.github.epsilon.settings.group
-import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.rotation.Rotation
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
@@ -500,16 +499,16 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
 
         val previousDirection = previous.normalize()
         val nextDirection = desired.normalize()
-        val previousYaw = (atan2(-previousDirection.x, previousDirection.z)).toDegrees().toFloat()
+        val previousYaw = Math.toDegrees(atan2(-previousDirection.x, previousDirection.z)).toFloat()
         val previousPitch =
-            -(atan2(previousDirection.y, maxOf(1.0E-4, previousDirection.horizontalDistance()))).toDegrees().toFloat()
+            -Math.toDegrees(atan2(previousDirection.y, maxOf(1.0E-4, previousDirection.horizontalDistance()))).toFloat()
 
         // 目标方向接近垂直时 yaw 没有意义，保持上一 tick 的 yaw，只允许俯仰变化。
         val yaw: Float
         if (nextDirection.horizontalDistance() < 1.0E-3) {
             yaw = previousYaw
         } else {
-            val nextYaw = (atan2(-nextDirection.x, nextDirection.z)).toDegrees().toFloat()
+            val nextYaw = Math.toDegrees(atan2(-nextDirection.x, nextDirection.z)).toFloat()
             yaw = if (unlimited) {
                 nextYaw
             } else {
@@ -518,7 +517,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         }
 
         val nextPitch =
-            -(atan2(nextDirection.y, maxOf(1.0E-4, nextDirection.horizontalDistance()))).toDegrees().toFloat()
+            -Math.toDegrees(atan2(nextDirection.y, maxOf(1.0E-4, nextDirection.horizontalDistance()))).toFloat()
         val pitchDelta = nextPitch - previousPitch
         if (abs(Mth.wrapDegrees(yaw - previousYaw).toDouble()) < TURN_DEAD_ZONE_DEGREES &&
             abs(pitchDelta.toDouble()) < TURN_DEAD_ZONE_DEGREES

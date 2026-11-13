@@ -3,11 +3,11 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.render.SkeletonRenderer
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.SkeletonRenderer
 import java.awt.Color
 
 object Skeleton : Module("Skeleton", Category.RENDER) {

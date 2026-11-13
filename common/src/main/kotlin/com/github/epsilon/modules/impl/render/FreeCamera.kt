@@ -4,17 +4,16 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.client.ChatMessages
+import com.github.epsilon.kernel.client.KeybindUtils
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.client.KeybindUtils
-import com.github.epsilon.utils.player.ChatUtils
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
 import com.mojang.blaze3d.platform.InputConstants
-import kotlin.math.sqrt
 import net.minecraft.client.CameraType
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket
@@ -25,6 +24,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
+import kotlin.math.sqrt
 
 object FreeCamera : Module("Free Camera", Category.RENDER) {
 
@@ -157,7 +157,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
                 val currentRotation = rotation
                 if (currentRotation != null) {
-                    RotationManager.setRotations(currentRotation, 180.0, Priority.Highest)
+                    RotationManager.setRotations(currentRotation, 180.0, RotationPriority.Highest)
                 }
             }
 
@@ -307,7 +307,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
     }
 
     fun sendChatInfo(text: String) {
-        ChatUtils.sendMessage("[Free Camera] $text")
+        ChatMessages.sendMessage("[Free Camera] $text")
     }
 
     fun renderHands(): Boolean = !isEnabled || renderHands

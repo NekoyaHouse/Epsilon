@@ -6,7 +6,7 @@ import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.lib.input.UiInputRouter
 import com.github.epsilon.kernel.state.StateObservation
 import com.github.epsilon.kernel.state.StateTracking
-import java.util.IdentityHashMap
+import java.util.*
 
 /** 观察宿主布局准备阶段，绘制块仍由各 composition 独立观察。 */
 class LuminView : AutoCloseable {

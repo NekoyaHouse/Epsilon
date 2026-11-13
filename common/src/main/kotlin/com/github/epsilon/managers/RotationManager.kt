@@ -5,14 +5,12 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.movement.MovementFix
 import com.github.epsilon.modules.impl.render.FreeCamera
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
@@ -224,22 +222,22 @@ object RotationManager : AlwaysListening {
     }
 
     fun setRotations(rotations: Rotation?, rotationSpeed: Double) {
-        setRotations(rotations, rotationSpeed, null, Priority.Medium)
+        setRotations(rotations, rotationSpeed, null, RotationPriority.Medium)
     }
 
-    fun setRotations(rotations: Rotation?, rotationSpeed: Double, priority: Priority) {
+    fun setRotations(rotations: Rotation?, rotationSpeed: Double, priority: RotationPriority) {
         setRotations(rotations, rotationSpeed, null, priority)
     }
 
     fun setRotations(rotations: Rotation?, rotationSpeed: Double, raytrace: Function<Rotation, Boolean>?) {
-        setRotations(rotations, rotationSpeed, raytrace, Priority.Medium)
+        setRotations(rotations, rotationSpeed, raytrace, RotationPriority.Medium)
     }
 
     fun setRotations(
         rotations: Rotation?,
         rotationSpeed: Double,
         raytrace: Function<Rotation, Boolean>?,
-        priority: Priority
+        priority: RotationPriority
     ) {
         if (rotations == null) return
 
@@ -258,7 +256,7 @@ object RotationManager : AlwaysListening {
     }
 
     /** 采用调用方已经完成步进的角度，不再叠加随机平滑；仍参与统一优先级和移动修正。 */
-    fun setRotationsExact(request: Rotation, priority: Priority): Boolean {
+    fun setRotationsExact(request: Rotation, priority: RotationPriority): Boolean {
         if (active && priority.priority < this.priority) return false
         rotationRequest = request
         targetRotations = request
@@ -306,25 +304,27 @@ object RotationManager : AlwaysListening {
                         ).toFloat()
 
                 offset.set(
-                    (offset.yaw + -Mth.sin((randomAngle.toDouble()).toRadians()) * speed).toFloat(),
-                    (offset.pitch + Mth.cos((randomAngle.toDouble()).toRadians()) * speed).toFloat()
+                    (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble())) * speed).toFloat(),
+                    (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble())) * speed).toFloat()
                 )
 
                 targetYaw += offset.yaw
                 targetPitch += offset.pitch
 
                 if (!raytrace.apply(Rotation(targetYaw, targetPitch))) {
-                    randomAngle = ((atan2(
-                        (trueTargetRotations.yaw - targetYaw).toDouble(),
-                        (targetPitch - trueTargetRotations.pitch).toDouble()
-                    )).toDegrees() - 180).toFloat()
+                    randomAngle = (Math.toDegrees(
+                        atan2(
+                            (trueTargetRotations.yaw - targetYaw).toDouble(),
+                            (targetPitch - trueTargetRotations.pitch).toDouble()
+                        )
+                    ) - 180).toFloat()
 
                     targetYaw -= offset.yaw
                     targetPitch -= offset.pitch
 
                     offset.set(
-                        (offset.yaw + -Mth.sin((randomAngle.toDouble()).toRadians()) * speed).toFloat(),
-                        (offset.pitch + Mth.cos((randomAngle.toDouble()).toRadians()) * speed).toFloat()
+                        (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble())) * speed).toFloat(),
+                        (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble())) * speed).toFloat()
                     )
 
                     targetYaw = targetYaw + offset.yaw

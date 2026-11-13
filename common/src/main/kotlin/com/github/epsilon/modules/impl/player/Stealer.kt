@@ -2,24 +2,24 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.shiftClick
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestArmorScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestAxeScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestCrossbowScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestPickaxeScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestPowerBowScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestPunchBowScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestShovelScore
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBestSwordDamage
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBlockCountInInventory
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getItemCount
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.hasItem
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.ClickSlotUtils.shiftClick
-import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.player.InvHelper.getBestArmorScore
-import com.github.epsilon.utils.player.InvHelper.getBestAxeScore
-import com.github.epsilon.utils.player.InvHelper.getBestCrossbowScore
-import com.github.epsilon.utils.player.InvHelper.getBestPickaxeScore
-import com.github.epsilon.utils.player.InvHelper.getBestPowerBowScore
-import com.github.epsilon.utils.player.InvHelper.getBestPunchBowScore
-import com.github.epsilon.utils.player.InvHelper.getBestShovelScore
-import com.github.epsilon.utils.player.InvHelper.getBestSwordDamage
-import com.github.epsilon.utils.player.InvHelper.getBlockCountInInventory
-import com.github.epsilon.utils.player.InvHelper.getItemCount
-import com.github.epsilon.utils.player.InvHelper.hasItem
-import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.network.chat.Component
@@ -52,7 +52,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
                         val largeChest = Component.translatable("container.chestDouble").string
                         val enderChest = Component.translatable("container.enderchest").string
                         if (chestTitle == chest || chestTitle == largeChest || chestTitle == "Chest" || pickEnderChest && chestTitle == enderChest) {
-                            val nextDelay = MathUtils.getRandom(minDelay, maxDelay)
+                            val nextDelay = RandomRanges.getRandom(minDelay, maxDelay)
                             if (isChestEmpty(menu) && timer.passedMillise(nextDelay.toLong())) {
                                 if (autoClose && timer.passedMillise(closeDelay.toLong())) {
                                     player.closeContainer()
@@ -92,38 +92,38 @@ object Stealer : Module("Stealer", Category.PLAYER) {
     fun NonNullContext.isItemUseful(stack: ItemStack): Boolean {
         if (stack.isEmpty) {
             return false
-        } else if (InvHelper.isGodItem(stack) || InvHelper.isSharpnessAxe(stack)) {
+        } else if (NavenInvUtils.isGodItem(stack) || NavenInvUtils.isSharpnessAxe(stack)) {
             return true
-        } else if (InvHelper.isArmor(stack)) {
-            val protection = InvHelper.getProtection(stack)
-            val bestArmor = getBestArmorScore(InvHelper.getArmorSlot(stack)!!)
+        } else if (NavenInvUtils.isArmor(stack)) {
+            val protection = NavenInvUtils.getProtection(stack)
+            val bestArmor = getBestArmorScore(NavenInvUtils.getArmorSlot(stack)!!)
             return !(protection <= bestArmor)
-        } else if (InvHelper.isSword(stack)) {
-            val damage = InvHelper.getSwordDamage(stack)
+        } else if (NavenInvUtils.isSword(stack)) {
+            val damage = NavenInvUtils.getSwordDamage(stack)
             val bestDamage = getBestSwordDamage()
             return !(damage <= bestDamage)
-        } else if (InvHelper.isPickaxe(stack)) {
-            val score = InvHelper.getToolScore(stack)
+        } else if (NavenInvUtils.isPickaxe(stack)) {
+            val score = NavenInvUtils.getToolScore(stack)
             val bestScore = getBestPickaxeScore()
             return !(score <= bestScore)
-        } else if (InvHelper.isAxe(stack)) {
-            val score = InvHelper.getToolScore(stack)
+        } else if (NavenInvUtils.isAxe(stack)) {
+            val score = NavenInvUtils.getToolScore(stack)
             val bestScore = getBestAxeScore()
             return !(score <= bestScore)
-        } else if (InvHelper.isShovel(stack)) {
-            val score = InvHelper.getToolScore(stack)
+        } else if (NavenInvUtils.isShovel(stack)) {
+            val score = NavenInvUtils.getToolScore(stack)
             val bestScore = getBestShovelScore()
             return !(score <= bestScore)
         } else if (stack.item is CrossbowItem) {
-            val score = InvHelper.getCrossbowScore(stack)
+            val score = NavenInvUtils.getCrossbowScore(stack)
             val bestScore = getBestCrossbowScore()
             return !(score <= bestScore)
-        } else if (stack.item is BowItem && InvHelper.isPunchBow(stack)) {
-            val score = InvHelper.getPunchBowScore(stack)
+        } else if (stack.item is BowItem && NavenInvUtils.isPunchBow(stack)) {
+            val score = NavenInvUtils.getPunchBowScore(stack)
             val bestScore = getBestPunchBowScore()
             return !(score <= bestScore)
-        } else if (stack.item is BowItem && InvHelper.isPowerBow(stack)) {
-            val score = InvHelper.getPowerBowScore(stack)
+        } else if (stack.item is BowItem && NavenInvUtils.isPowerBow(stack)) {
+            val score = NavenInvUtils.getPowerBowScore(stack)
             val bestScore = getBestPowerBowScore()
             return !(score <= bestScore)
         } else if (stack.item == Items.COMPASS) {
@@ -133,7 +133,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
         } else if (stack.item == Items.LAVA_BUCKET && getItemCount(Items.LAVA_BUCKET) >= InvManager.lavaBucketCount) {
             return false
         } else if (stack.item is BlockItem &&
-            InvHelper.isValidStack(stack) &&
+            NavenInvUtils.isValidStack(stack) &&
             getBlockCountInInventory() + stack.count >= InvManager.maxBlockSize
         ) {
             return false
@@ -145,37 +145,37 @@ object Stealer : Module("Stealer", Category.PLAYER) {
             || getItemCount(Items.SNOWBALL) + getItemCount(Items.EGG) + stack.count < InvManager.maxProjectileSize
             && InvManager.keepProjectile
         ) {
-            return stack.item !is StandingAndWallBlockItem && InvHelper.isCommonItemUseful(stack)
+            return stack.item !is StandingAndWallBlockItem && NavenInvUtils.isCommonItemUseful(stack)
         } else {
             return false
         }
     }
 
     private fun NonNullContext.isBestItemInChest(menu: ChestMenu, stack: ItemStack): Boolean {
-        if (!InvHelper.isGodItem(stack) && !InvHelper.isSharpnessAxe(stack)) {
+        if (!NavenInvUtils.isGodItem(stack) && !NavenInvUtils.isSharpnessAxe(stack)) {
             for (i in 0 until menu.rowCount * 9) {
                 val checkStack = menu.getSlot(i).item
-                if (InvHelper.isArmor(stack) && InvHelper.isArmor(checkStack)) {
-                    if (InvHelper.getArmorSlot(stack) == InvHelper.getArmorSlot(checkStack)
-                        && InvHelper.getProtection(checkStack) > InvHelper.getProtection(stack)
+                if (NavenInvUtils.isArmor(stack) && NavenInvUtils.isArmor(checkStack)) {
+                    if (NavenInvUtils.getArmorSlot(stack) == NavenInvUtils.getArmorSlot(checkStack)
+                        && NavenInvUtils.getProtection(checkStack) > NavenInvUtils.getProtection(stack)
                     ) {
                         return false
                     }
-                } else if (InvHelper.isSword(stack) && InvHelper.isSword(checkStack)) {
-                    if (InvHelper.getSwordDamage(checkStack) > InvHelper.getSwordDamage(stack)) {
+                } else if (NavenInvUtils.isSword(stack) && NavenInvUtils.isSword(checkStack)) {
+                    if (NavenInvUtils.getSwordDamage(checkStack) > NavenInvUtils.getSwordDamage(stack)) {
                         return false
                     }
-                } else if (InvHelper.isPickaxe(stack) && InvHelper.isPickaxe(checkStack)) {
-                    if (InvHelper.getToolScore(checkStack) > InvHelper.getToolScore(stack)) {
+                } else if (NavenInvUtils.isPickaxe(stack) && NavenInvUtils.isPickaxe(checkStack)) {
+                    if (NavenInvUtils.getToolScore(checkStack) > NavenInvUtils.getToolScore(stack)) {
                         return false
                     }
-                } else if (InvHelper.isAxe(stack) && InvHelper.isAxe(checkStack)) {
-                    if (InvHelper.getToolScore(checkStack) > InvHelper.getToolScore(stack)) {
+                } else if (NavenInvUtils.isAxe(stack) && NavenInvUtils.isAxe(checkStack)) {
+                    if (NavenInvUtils.getToolScore(checkStack) > NavenInvUtils.getToolScore(stack)) {
                         return false
                     }
-                } else if (InvHelper.isShovel(stack)
-                    && InvHelper.isShovel(checkStack)
-                    && InvHelper.getToolScore(checkStack) > InvHelper.getToolScore(stack)
+                } else if (NavenInvUtils.isShovel(stack)
+                    && NavenInvUtils.isShovel(checkStack)
+                    && NavenInvUtils.getToolScore(checkStack) > NavenInvUtils.getToolScore(stack)
                 ) {
                     return false
                 }

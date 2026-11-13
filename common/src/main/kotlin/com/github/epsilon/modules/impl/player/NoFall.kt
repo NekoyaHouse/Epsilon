@@ -5,11 +5,11 @@ import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.SendPositionEvent
+import com.github.epsilon.kernel.network.NetworkUtils
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
-import com.github.epsilon.utils.network.NetworkUtils
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 object NoFall : Module("No Fall", Category.PLAYER) {

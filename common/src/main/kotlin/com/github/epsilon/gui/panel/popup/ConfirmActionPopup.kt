@@ -5,10 +5,10 @@ import com.github.epsilon.gui.lib.render.UiRenderBatch
 import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.lib.state.LuminView
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
-import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 import java.util.function.Supplier

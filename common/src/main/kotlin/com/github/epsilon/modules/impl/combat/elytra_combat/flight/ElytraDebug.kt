@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
-import com.github.epsilon.utils.player.ChatUtils
+import com.github.epsilon.kernel.client.ChatMessages
 
 /**
  * ElytraCombat 决策调试输出，默认关闭，同一标签按时间节流。
@@ -36,7 +36,7 @@ object ElytraDebug {
         }
         LAST_LABELS[slot] = label
         LAST_TIMES[slot] = now
-        ChatUtils.sendMessage("[ElytraCombat] $label")
+        ChatMessages.sendMessage("[ElytraCombat] $label")
     }
 
     /** 清空标签与节流时间。 */

@@ -10,17 +10,6 @@ import net.minecraft.world.effect.MobEffects
 
 object Fullbright : Module("Fullbright", Category.RENDER) {
 
-    init {
-        onDisable {
-            if (mode == Mode.Gamma) return@onDisable
-            runSafe {
-                player.removeEffect(MobEffects.NIGHT_VISION)
-            }
-        }
-
-        safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
-    }
-
     private enum class Mode {
         Gamma,
         Potion
@@ -32,14 +21,23 @@ object Fullbright : Module("Fullbright", Category.RENDER) {
         }
     })
 
-    fun isGammaMode(): Boolean = isEnabled && mode == Mode.Gamma
-
-    private fun onPlayerTick(event: PlayerTickEvent.Pre) {
-        if (mode == Mode.Potion) {
+    init {
+        onDisable {
+            if (mode == Mode.Gamma) return@onDisable
             runSafe {
-                player.addEffect(MobEffectInstance(MobEffects.NIGHT_VISION, -1, 0))
+                player.removeEffect(MobEffects.NIGHT_VISION)
+            }
+        }
+
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (mode == Mode.Potion) {
+                runSafe {
+                    player.addEffect(MobEffectInstance(MobEffects.NIGHT_VISION, -1, 0))
+                }
             }
         }
     }
+
+    fun isGammaMode(): Boolean = isEnabled && mode == Mode.Gamma
 
 }

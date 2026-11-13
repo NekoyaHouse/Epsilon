@@ -5,17 +5,14 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.settings.impl.EnumSetting
-import java.awt.Color
-import java.util.*
-import java.util.concurrent.ThreadLocalRandom
-import kotlin.math.roundToInt
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.BundlePacket
 import net.minecraft.network.protocol.Packet
@@ -31,6 +28,10 @@ import net.minecraft.world.entity.npc.villager.Villager
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
+import java.util.*
+import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.roundToInt
 
 object Backtrack : Module("Backtrack", Category.COMBAT) {
 

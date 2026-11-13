@@ -6,25 +6,26 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.client.ChatMessages
+import com.github.epsilon.kernel.gameplay.grimac.C03Interact.placeBlock
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
+import com.github.epsilon.kernel.gameplay.inventory.FindItemResult
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.canSee
+import com.github.epsilon.kernel.gameplay.world.BlockInteraction.canPlaceAt
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.render.animation.Easing
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.*
-import com.github.epsilon.utils.player.ClickSlotUtils.swap
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.PlayerUtils.isEating
-import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.rotation.RotationUtils.canSee
-import com.github.epsilon.utils.timer.TimerUtils
-import com.github.epsilon.utils.world.BlockUtils.canPlaceAt
-import com.github.epsilon.utils.world.LegacyPlacement.placeBlock
-import java.awt.Color
-import java.util.concurrent.ConcurrentLinkedQueue
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -43,6 +44,8 @@ import net.minecraft.world.level.block.LeverBlock
 import net.minecraft.world.level.block.NoteBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.*
+import java.awt.Color
+import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class TrapBase(
     name: String,
@@ -186,7 +189,7 @@ abstract class TrapBase(
 
             val blocks = findBlocks()
             if (!blocks.found()) {
-                ChatUtils.sendMessage(noBlockFound.getTranslatedName())
+                ChatMessages.sendMessage(noBlockFound.getTranslatedName())
                 toggle()
                 return@safeEventHandler
             }
@@ -330,7 +333,11 @@ abstract class TrapBase(
         }
     }
 
-    private fun NonNullContext.findSupportPlacement(pos: BlockPos, rotation: Rotation, planned: Set<BlockPos>): PlaceInfo? {
+    private fun NonNullContext.findSupportPlacement(
+        pos: BlockPos,
+        rotation: Rotation,
+        planned: Set<BlockPos>
+    ): PlaceInfo? {
         val visited = mutableSetOf(pos)
         var frontier = listOf(pos)
         val priority = compareBy<PlaceInfo> { it.pos !in planned }
@@ -471,7 +478,7 @@ abstract class TrapBase(
                 ?: crystals.filter { canAttackCrystal(it) }.minByOrNull { player.distanceToSqr(it) }
             if (target != null) {
                 breakingCrystal = target
-                val hit = raytrace(RotationManager.getRotation(), getBreakRange())
+                val hit = raycast(RotationManager.getRotation(), getBreakRange())
                 if (hit !is EntityHitResult || hit.entity !== target) return true
                 gameMode.attack(player, target)
                 SwingMode.of(swingHand).attackSwing(InteractionHand.MAIN_HAND)

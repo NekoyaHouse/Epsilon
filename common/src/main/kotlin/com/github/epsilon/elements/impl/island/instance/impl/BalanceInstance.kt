@@ -4,13 +4,9 @@ import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.RoundRectHorizontalGradient
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.Circle
-import com.github.epsilon.utils.render.animation.Animation
-import com.github.epsilon.utils.render.animation.Easing
+import com.github.epsilon.gui.lib.*
+import com.github.epsilon.kernel.render.animation.Animation
+import com.github.epsilon.kernel.render.animation.Easing
 import java.util.function.Supplier
 import kotlin.math.roundToInt
 

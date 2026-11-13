@@ -8,7 +8,6 @@ import com.github.epsilon.settings.SettingLayoutPlanner
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
-import net.minecraft.client.input.MouseButtonEvent
 import java.awt.Color
 import java.util.*
 

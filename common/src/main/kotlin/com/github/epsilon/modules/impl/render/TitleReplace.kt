@@ -2,9 +2,9 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.kernel.render.ColorUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.ColorUtils
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket

@@ -5,8 +5,8 @@ import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.state.luminFrameTime
 import com.github.epsilon.gui.panel.adapter.ModuleViewModel
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.client.KeybindUtils
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.client.KeybindUtils
 
 /**
  * 模块列表中的单行展示组件。

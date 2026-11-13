@@ -3,8 +3,8 @@ package com.github.epsilon.graphics.renderers
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
+import com.github.epsilon.kernel.render.ScissorUtils
 import com.github.epsilon.managers.RendererManager
-import com.github.epsilon.utils.render.ScissorUtils
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice

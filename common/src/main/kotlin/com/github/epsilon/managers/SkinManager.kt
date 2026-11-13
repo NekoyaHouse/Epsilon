@@ -4,7 +4,7 @@ import com.github.epsilon.Constants
 import com.github.epsilon.accounts.TexturesJson
 import com.github.epsilon.accounts.UuidToProfileResponse
 import com.github.epsilon.graphics.PlayerHeadTexture
-import com.github.epsilon.utils.network.Http
+import com.github.epsilon.kernel.network.Http
 import com.google.gson.Gson
 import java.io.IOException
 import java.util.*

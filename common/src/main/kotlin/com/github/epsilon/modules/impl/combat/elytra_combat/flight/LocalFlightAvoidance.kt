@@ -1,7 +1,5 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.flight
 
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.math.toRadians
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -50,9 +48,9 @@ object LocalFlightAvoidance {
         targetDirection = targetDirection.normalize()
 
         val baseDirection = desiredVelocity.normalize()
-        val baseYaw = Mth.wrapDegrees((atan2(baseDirection.z, baseDirection.x)).toDegrees().toFloat() - 90.0f)
+        val baseYaw = Mth.wrapDegrees(Math.toDegrees(atan2(baseDirection.z, baseDirection.x)).toFloat() - 90.0f)
         val basePitch =
-            -(atan2(baseDirection.y, maxOf(0.001, baseDirection.horizontalDistance()))).toDegrees().toFloat()
+            -Math.toDegrees(atan2(baseDirection.y, maxOf(0.001, baseDirection.horizontalDistance()))).toFloat()
         val preferred = if (preferredDirection == null || preferredDirection.lengthSqr() < 1.0E-8) {
             null
         } else {
@@ -108,8 +106,8 @@ object LocalFlightAvoidance {
     }
 
     private fun direction(yaw: Float, pitch: Float): Vec3 {
-        val yawRad = (yaw.toDouble()).toRadians()
-        val pitchRad = (pitch.toDouble()).toRadians()
+        val yawRad = Math.toRadians(yaw.toDouble())
+        val pitchRad = Math.toRadians(pitch.toDouble())
         val horizontal = cos(pitchRad)
         return Vec3(
             -sin(yawRad) * horizontal,

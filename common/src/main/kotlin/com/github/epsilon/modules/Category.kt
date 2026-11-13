@@ -15,8 +15,11 @@ enum class Category(
 ) {
 
     COMBAT(IconChars.SWORDS, "combat"),
+
     PLAYER(IconChars.PERSON, "player"),
+
     MOVEMENT(IconChars.DIRECTIONS_RUN, "movement"),
+
     RENDER(IconChars.BRUSH, "render");
 
     private val translateComponent: TranslateComponent =

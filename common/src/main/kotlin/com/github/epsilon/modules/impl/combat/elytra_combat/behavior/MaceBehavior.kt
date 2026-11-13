@@ -5,7 +5,6 @@ import com.github.epsilon.modules.impl.combat.elytra_combat.behavior.MaceBehavio
 import com.github.epsilon.modules.impl.combat.elytra_combat.combat.CombatHitTracker
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.*
 import com.github.epsilon.modules.impl.combat.elytra_combat.target.TargetSnapshot
-import com.github.epsilon.utils.math.toRadians
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
@@ -226,7 +225,7 @@ class MaceBehavior : ElytraCombatBehavior {
             val downAngle = if (bot.maceAngleOptimize) bot.maceDownAngle else 30.5
             movement = Vec3(
                 movement.x,
-                -horizontal * tan((downAngle).toRadians()),
+                -horizontal * tan(Math.toRadians(downAngle)),
                 movement.z,
             )
         }

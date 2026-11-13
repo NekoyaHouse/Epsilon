@@ -4,14 +4,14 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isInBlock
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isInWeb
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.trap.FeetTrap
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.player.PlayerUtils.isInBlock
-import com.github.epsilon.utils.player.PlayerUtils.isInWeb
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.ai.attributes.Attributes

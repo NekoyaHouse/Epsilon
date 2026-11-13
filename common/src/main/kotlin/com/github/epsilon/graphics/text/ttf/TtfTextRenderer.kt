@@ -8,8 +8,7 @@ import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.github.epsilon.graphics.text.GlyphDescriptor
 import com.github.epsilon.graphics.text.ITextRenderer
 import com.github.epsilon.graphics.text.TextGlitchEffect
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.render.ScissorUtils
+import com.github.epsilon.kernel.render.ScissorUtils
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
@@ -277,7 +276,7 @@ class TtfTextRenderer : ITextRenderer {
     ) {
         if (layout.glyphCount == 0) return
 
-        val radians = (rotationDegrees.toDouble()).toRadians().toFloat()
+        val radians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
         val cos = cos(radians.toDouble()).toFloat()
         val sin = sin(radians.toDouble()).toFloat()
         for (run in layout.runs) {

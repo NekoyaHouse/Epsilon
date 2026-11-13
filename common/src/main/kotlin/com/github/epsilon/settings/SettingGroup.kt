@@ -1,7 +1,9 @@
 package com.github.epsilon.settings
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.TranslateComponent
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import java.util.*
 
 /**

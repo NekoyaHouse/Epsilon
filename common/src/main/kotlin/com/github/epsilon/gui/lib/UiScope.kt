@@ -5,7 +5,7 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.lib.state.LuminRuntime
-import com.github.epsilon.utils.render.animation.Animation
+import com.github.epsilon.kernel.render.animation.Animation
 import kotlin.math.max
 
 /**

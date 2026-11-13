@@ -1,10 +1,9 @@
 package com.github.epsilon.accounts
 
 import com.github.epsilon.Constants
-import com.github.epsilon.utils.network.Http
+import com.github.epsilon.kernel.network.Http
 import com.google.gson.annotations.SerializedName
 import com.mojang.blaze3d.Blaze3D
-import com.mojang.datafixers.util.Pair as DataFixerPair
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import java.io.IOException
@@ -15,6 +14,7 @@ import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 import java.util.function.Consumer
+import com.mojang.datafixers.util.Pair as DataFixerPair
 
 object MicrosoftLogin {
 

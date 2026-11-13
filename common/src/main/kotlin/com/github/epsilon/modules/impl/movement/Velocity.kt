@@ -6,20 +6,17 @@ import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isInBlock
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.AntiBot
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.player.PlayerUtils.isInBlock
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import java.util.*
-import kotlin.math.atan2
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
@@ -29,6 +26,8 @@ import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult
+import java.util.*
+import kotlin.math.atan2
 
 object Velocity : Module("Velocity", Category.MOVEMENT) {
 
@@ -123,7 +122,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                 RotationManager.setRotations(
                     Rotation(yaw, RotationManager.getRotation().pitch),
                     180.0,
-                    Priority.Highest
+                    RotationPriority.Highest
                 )
             }
         }
@@ -267,7 +266,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                     startDelay = System.currentTimeMillis()
                 }
             }
-            yaw = Mth.wrapDegrees((atan2(movement.z, movement.x)).toDegrees().toFloat() + 90.0f)
+            yaw = Mth.wrapDegrees(Math.toDegrees(atan2(movement.z, movement.x)).toFloat() + 90.0f)
         }
     }
 

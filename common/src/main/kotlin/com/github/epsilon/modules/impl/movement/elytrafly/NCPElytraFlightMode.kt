@@ -2,19 +2,19 @@ package com.github.epsilon.modules.impl.movement.elytrafly
 
 import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.TravelEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.FindItemResult
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.TimerManager
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
 
@@ -219,8 +219,8 @@ class NCPElytraFlightMode(elytraFly: ElytraFly) : ElytraFlightMode(elytraFly) {
             forward = if (forward > 0.0f) 1.0f else -1.0f
         }
 
-        val sin = sin(((yaw + 90.0f).toDouble()).toRadians())
-        val cos = cos(((yaw + 90.0f).toDouble()).toRadians())
+        val sin = sin(Math.toRadians((yaw + 90.0f).toDouble()))
+        val cos = cos(Math.toRadians((yaw + 90.0f).toDouble()))
         return doubleArrayOf(
             forward * speed * cos + side * speed * sin,
             forward * speed * sin - side * speed * cos

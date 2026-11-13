@@ -4,10 +4,10 @@ import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.UiTheme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
-import com.github.epsilon.utils.render.animation.Easing
 import java.util.*
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 

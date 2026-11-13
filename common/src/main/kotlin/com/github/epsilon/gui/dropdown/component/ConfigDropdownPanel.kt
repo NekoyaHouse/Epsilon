@@ -6,11 +6,11 @@ import com.github.epsilon.gui.dropdown.widget.DropdownTextField
 import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.state.afterLuminCommit
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.client.ConfigFolderOpener
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.ConfigManager
-import com.github.epsilon.utils.client.ConfigFolderOpener
 import com.mojang.blaze3d.platform.InputConstants
 
 class ConfigDropdownPanel(panelIndex: Int) :

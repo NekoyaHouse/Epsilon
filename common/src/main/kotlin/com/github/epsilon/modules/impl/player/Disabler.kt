@@ -1,11 +1,11 @@
 package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.network.NetworkUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.ViaVersionComparison
 import com.github.epsilon.settings.viaOnly
-import com.github.epsilon.utils.network.NetworkUtils
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.entity.player.Player
 

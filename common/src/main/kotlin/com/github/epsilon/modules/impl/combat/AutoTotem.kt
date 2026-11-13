@@ -2,13 +2,14 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.click
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getItemCount
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getItemSlot
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.ClickSlotUtils.click
-import com.github.epsilon.utils.player.ClickSlotUtils.swap
-import com.github.epsilon.utils.player.InvHelper.getItemCount
-import com.github.epsilon.utils.player.InvHelper.getItemSlot
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 

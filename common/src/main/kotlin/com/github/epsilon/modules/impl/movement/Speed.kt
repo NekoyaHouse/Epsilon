@@ -5,17 +5,13 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isInBlock
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.toRadians
-import com.github.epsilon.utils.player.PlayerUtils.isInBlock
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.cos
-import kotlin.math.hypot
-import kotlin.math.sin
-import kotlin.math.sqrt
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -29,6 +25,10 @@ import net.minecraft.world.entity.vehicle.boat.Boat
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 object Speed : Module("Speed", Category.MOVEMENT) {
 
@@ -150,7 +150,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                 for (entity in level.entitiesForRendering()) {
                     val entityBox = entity.boundingBox
                     if (boat && player.onGround() && entity is Boat && box.intersects(entityBox.inflate(boatExpand))) {
-                        val yaw = (getSprintYaw(player.yRot).toDouble()).toRadians()
+                        val yaw = Math.toRadians(getSprintYaw(player.yRot).toDouble())
                         val boatBoost = boatSpeed
                         player.deltaMovement = Vec3(-sin(yaw) * boatBoost, boatJump, cos(yaw) * boatBoost)
                         return@safeEventHandler
@@ -162,7 +162,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     }
                 }
 
-                val yaw = (getSprintYaw(player.yRot).toDouble()).toRadians()
+                val yaw = Math.toRadians(getSprintYaw(player.yRot).toDouble())
                 val collisionBoost = collideSpeed * collisions
                 player.push(-sin(yaw) * collisionBoost, 0.0, cos(yaw) * collisionBoost)
             }
@@ -232,8 +232,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     event.x = 0.0
                     event.z = 0.0
                 }
-                event.x = (n * speed * -sin((n3).toRadians()) + n2 * speed * cos((n3).toRadians())) * 0.99
-                event.z = (n * speed * cos((n3).toRadians()) - n2 * speed * -sin((n3).toRadians())) * 0.99
+                event.x = (n * speed * -sin(Math.toRadians(n3)) + n2 * speed * cos(Math.toRadians(n3))) * 0.99
+                event.z = (n * speed * cos(Math.toRadians(n3)) - n2 * speed * -sin(Math.toRadians(n3))) * 0.99
                 event.cancel()
 
                 stage++
@@ -309,8 +309,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         if (forward == 0.0f && strafe == 0.0f) {
             return Vec2.ZERO
         }
-        val rx = cos((yaw.toDouble()).toRadians()).toFloat()
-        val rz = (-sin((yaw.toDouble()).toRadians())).toFloat()
+        val rx = cos(Math.toRadians(yaw.toDouble())).toFloat()
+        val rz = (-sin(Math.toRadians(yaw.toDouble()))).toFloat()
         return Vec2((forward * speed * rz) + (strafe * speed * rx), (forward * speed * rx) - (strafe * speed * rz))
     }
 

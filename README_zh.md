@@ -23,8 +23,6 @@
 
 ## 🎨 渲染系统
 
-TTF 字体使用 MSDF 图集，继续由 STB_truetype 提供轮廓，并通过内嵌的 msdfgen 核心生成距离场。
-
 详见 [渲染系统文档](common/src/main/kotlin/com/github/epsilon/graphics/README_zh.md)
 
 ## ⚙️ 构建与运行
@@ -37,16 +35,11 @@ TTF 字体使用 MSDF 图集，继续由 STB_truetype 提供轮廓，并通过�
 ./gradlew runClient
 ```
 
-## 开发约定
-
-Module 与 utils 中仅需一个非空游戏上下文的函数使用 `fun NonNullContext.xxx(...)`，内部直接访问 `player`、`level`、`gameMode` 和 `connection`。对象成员扩展需导入后在 `safeEventHandler`、`runSafe` 或 `with(nn) { }` 中调用；只有多个上下文需求或已有其他扩展接收者时才使用 `context(...)` 参数。完整开发约束见 [AGENTS.md](AGENTS.md)。
-
 ## 🙏 鸣谢
 
 感谢以下项目。第三方代码归属信息详见 [NOTICE](NOTICE.md)。
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
 - [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
-- [TrollHack](https://github.com/Luna5ama/TrollHack)
 - [ThunderHack-Recode](https://github.com/Pan4ur/ThunderHack-Recode)
 
 ## 📝 许可证

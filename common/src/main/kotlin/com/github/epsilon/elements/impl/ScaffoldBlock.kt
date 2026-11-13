@@ -4,20 +4,16 @@ import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
-import com.github.epsilon.gui.lib.ClipIf
-import com.github.epsilon.gui.lib.RoundRect
-import com.github.epsilon.gui.lib.Shadow
-import com.github.epsilon.gui.lib.Text
-import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.gui.lib.*
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.render.animation.Easing
-import com.google.common.base.Supplier as GuavaSupplier
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Supplier
 import kotlin.math.pow
+import com.google.common.base.Supplier as GuavaSupplier
 
 object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
 

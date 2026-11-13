@@ -3,22 +3,21 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.InvUtils.swapBack
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.abs
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
@@ -33,6 +32,7 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 
 object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
@@ -83,7 +83,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                     quickCollectDelayTicks--
                 } else if (grimWaitingCollectRotation && grimCollectRotation != null) {
                     val rotation = grimCollectRotation!!
-                    RotationManager.setRotations(rotation, 180.0, Priority.High)
+                    RotationManager.setRotations(rotation, 180.0, RotationPriority.High)
 
                     if (isFacing(rotation, 2.0f, 2.5f)) {
                         swap(grimCollectSlot, true)
@@ -114,7 +114,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val hitZ = eyesPos.z.coerceIn(waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
                             val rotation = calculate(hitVec)
-                            RotationManager.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, RotationPriority.High)
                             grimCollectRotation = rotation
                             grimCollectSlot = bucket.slot
                             grimWaitingCollectRotation = true
@@ -126,7 +126,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
             if (waitingForRotation && lockedRotation != null) {
                 val locked = lockedRotation!!
-                RotationManager.setRotations(locked, 180.0, Priority.High)
+                RotationManager.setRotations(locked, 180.0, RotationPriority.High)
 
                 if (!isFacing(locked, 1.6f, 2.0f)) {
                     return@safeEventHandler
@@ -165,7 +165,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val targetVec = Vec3(bestPos.x + 0.5, bestPos.y + 1.0, bestPos.z + 0.5)
                             val rotation = calculate(targetVec)
 
-                            RotationManager.setRotations(rotation, 180.0, Priority.High)
+                            RotationManager.setRotations(rotation, 180.0, RotationPriority.High)
 
                             if (rotation.pitch > 45) {
                                 val eyesPos = player.eyePosition
@@ -180,7 +180,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                 }
 
                                 val preciseRotation = calculate(hitVec)
-                                RotationManager.setRotations(preciseRotation, 180.0, Priority.High)
+                                RotationManager.setRotations(preciseRotation, 180.0, RotationPriority.High)
 
                                 val noSlowdown = NoSlowdown
                                 if (NoSlowdown.isWorking()) {

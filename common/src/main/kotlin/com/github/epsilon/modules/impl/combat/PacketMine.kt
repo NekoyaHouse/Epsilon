@@ -5,19 +5,16 @@ import com.github.epsilon.events.impl.PacketMineEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.EnchantmentLookup
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getDirection
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.EnchantmentUtils
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.RotationUtils.getDirection
-import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.vertex.PoseStack
-import java.awt.Color
-import java.util.*
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -32,6 +29,10 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
+import java.awt.Color
+import java.util.*
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 object PacketMine : Module("Packet Mine", Category.COMBAT) {
 
@@ -484,7 +485,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val stack = if (slot == -1) ItemStack.EMPTY else player.inventory.getItem(slot)
         val canHarvest = stack.isCorrectToolForDrops(state)
         var speed = stack.getDestroySpeed(state)
-        val efficiency = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.EFFICIENCY)
+        val efficiency = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.EFFICIENCY)
         if (efficiency > 0 && speed > 1.0f) {
             speed += efficiency * efficiency + 1
         }
@@ -517,7 +518,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         val stack = if (slot == -1) ItemStack.EMPTY else player.inventory.getItem(slot)
         val canHarvest = stack.isCorrectToolForDrops(state)
         var speed = stack.getDestroySpeed(state)
-        val efficiency = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.EFFICIENCY)
+        val efficiency = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.EFFICIENCY)
         if (efficiency > 0 && speed > 1.0f) {
             speed += efficiency * efficiency + 1
         }
@@ -572,7 +573,7 @@ object PacketMine : Module("Packet Mine", Category.COMBAT) {
         for (i in 0 until 9) {
             val stack = player.inventory.getItem(i)
             if (stack !== ItemStack.EMPTY) {
-                val digSpeed = EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.EFFICIENCY).toFloat()
+                val digSpeed = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.EFFICIENCY).toFloat()
                 val destroySpeed = stack.getDestroySpeed(level.getBlockState(pos))
                 if (digSpeed + destroySpeed > currentFastest) {
                     currentFastest = digSpeed + destroySpeed

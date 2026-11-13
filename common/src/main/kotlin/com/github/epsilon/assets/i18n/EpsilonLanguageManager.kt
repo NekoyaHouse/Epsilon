@@ -15,9 +15,9 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.*
+import java.util.regex.Pattern
 import java.util.Map.copyOf as immutableMapCopyOf
 import java.util.Map.of as immutableMapOf
-import java.util.regex.Pattern
 
 object EpsilonLanguageManager {
 

@@ -9,10 +9,10 @@ import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
-import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
@@ -211,9 +211,9 @@ abstract class AbstractDropdownPanel protected constructor(
         scope.drawPanelContent(contentMouseX, contentMouseY, visibleHeight)
         scope.InputRegion(
             key = this to "scrollbar", bounds = UiRect(
-            scrollbarViewport.right() - UiScrollBar.HOVER_WIDTH - scope.origin.x,
-            scrollbarViewport.y - scope.origin.y, UiScrollBar.HOVER_WIDTH, scrollbarViewport.height
-        ),
+                scrollbarViewport.right() - UiScrollBar.HOVER_WIDTH - scope.origin.x,
+                scrollbarViewport.y - scope.origin.y, UiScrollBar.HOVER_WIDTH, scrollbarViewport.height
+            ),
             onPress = { event, _ ->
                 val handled =
                     scrollBar.mouseClicked(event.x(), event.y(), scrollbarViewport, scroll, maxScroll, contentHeight)

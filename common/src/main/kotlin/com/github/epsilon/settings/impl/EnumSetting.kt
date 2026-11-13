@@ -1,8 +1,8 @@
 package com.github.epsilon.settings.impl
 
 import com.github.epsilon.assets.i18n.TranslateComponent
+import com.github.epsilon.kernel.client.platform.PlatformRequirement
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.utils.client.PlatformRequirement
 
 class EnumSetting<E : Enum<E>>(
     name: String,

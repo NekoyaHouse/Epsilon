@@ -2,12 +2,12 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.math.RandomRanges
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.player.SwingMode
 import net.minecraft.world.InteractionHand
 
 object MultiAura : Module("Multi Aura", Category.COMBAT) {
@@ -39,7 +39,7 @@ object MultiAura : Module("Multi Aura", Category.COMBAT) {
             if (pauseOnContainers && mc.gui.screen() != null) return@safeEventHandler
             if (player.isUsingItem || player.isBlocking) return@safeEventHandler
 
-            attacks += MathUtils.getRandom(minCPS.toDouble(), maxCPS.toDouble()) / 20.0
+            attacks += RandomRanges.getRandom(minCPS.toDouble(), maxCPS.toDouble()) / 20.0
             if (attacks < 1.0) return@safeEventHandler
 
             val targets = TargetManager.acquireTargets(

@@ -3,11 +3,11 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.utils.timer.TimerUtils
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundPingPacket

@@ -5,8 +5,8 @@ import com.github.epsilon.gui.lib.Texture
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.state.LuminAnimatable
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.AssetManager
-import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.util.Util

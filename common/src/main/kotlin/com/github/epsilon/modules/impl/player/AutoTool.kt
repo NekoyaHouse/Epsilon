@@ -4,11 +4,12 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.StartDestroyBlockEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.EnchantmentLookup
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.EnchantmentUtils
-import com.github.epsilon.utils.player.InvHelper
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.enchantment.Enchantments
@@ -73,14 +74,14 @@ object AutoTool : Module("Auto Tool", Category.PLAYER) {
         for (index in 0 until 9) {
             val itemStack = player.inventory.getItem(index)
             if (
-                !InvHelper.isGodItem(itemStack) &&
+                !NavenInvUtils.isGodItem(itemStack) &&
                 !itemStack.isEmpty &&
                 !blockState.isAir &&
                 (!itemStack.`is`(ItemTags.SWORDS) || block is WebBlock)
             ) {
                 var strVsBlock = itemStack.item.getDestroySpeed(itemStack, blockState)
                 if (strVsBlock > 1.0F && block !is DropExperienceBlock && block !is RedStoneOreBlock) {
-                    val level = EnchantmentUtils.getEnchantmentLevel(itemStack, Enchantments.EFFICIENCY)
+                    val level = EnchantmentLookup.getEnchantmentLevel(itemStack, Enchantments.EFFICIENCY)
                     if (level > 0) {
                         strVsBlock += (level * level + 1).toFloat()
                     }

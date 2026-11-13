@@ -6,15 +6,14 @@ import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.hudeditor.HudEditorScreen
 import com.github.epsilon.gui.panel.PanelScreen
 import com.github.epsilon.gui.troll.TrollGuiScreen
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.click
+import com.github.epsilon.kernel.gameplay.inventory.EnchantmentLookup
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
-import com.github.epsilon.utils.player.ClickSlotUtils.click
-import com.github.epsilon.utils.player.EnchantmentUtils
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.InvUtils.swapBack
-import kotlin.math.ceil
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
@@ -27,6 +26,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.equipment.Equippable
+import kotlin.math.ceil
 
 object AutoArmor : Module("Auto Armor", Category.PLAYER) {
 
@@ -213,10 +213,13 @@ object AutoArmor : Module("Auto Armor", Category.PLAYER) {
             }
         }
 
-        enchantmentScore += EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.PROTECTION) * protectionMultiplier
-        enchantmentScore += EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.BLAST_PROTECTION) * blastMultiplier
+        enchantmentScore += EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.PROTECTION) * protectionMultiplier
+        enchantmentScore += EnchantmentLookup.getEnchantmentLevel(
+            stack,
+            Enchantments.BLAST_PROTECTION
+        ) * blastMultiplier
 
-        if (ignoreCurse && EnchantmentUtils.hasEnchantment(stack, Enchantments.BINDING_CURSE)) {
+        if (ignoreCurse && EnchantmentLookup.hasEnchantment(stack, Enchantments.BINDING_CURSE)) {
             return -999
         }
 

@@ -1,17 +1,19 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwapBack
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack
+import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.modules.impl.combat.elytra_combat.flight.ElytraDebug
-import com.github.epsilon.utils.player.InvHelper
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.InvUtils.invSwap
-import com.github.epsilon.utils.player.InvUtils.invSwapBack
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.InvUtils.swapBack
-import com.github.epsilon.utils.player.SwingMode
-import java.util.function.Predicate
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
@@ -20,6 +22,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import java.util.function.Predicate
 
 /**
  * ElytraCombat 独立武器控制器，不依赖 AutoWeapon、MaceAura 或 SpearKill。
@@ -93,7 +96,7 @@ object CombatWeaponController {
         // 对方举盾时优先切斧破盾，否则切重锤；Selection 负责 finally 中恢复原槽位。
         val selection = selectMainHand(
             if (shieldSwap) {
-                Predicate { stack -> InvHelper.isAxe(stack) }
+                Predicate { stack -> NavenInvUtils.isAxe(stack) }
             } else {
                 Predicate { stack -> stack == (Items.MACE) }
             }
@@ -263,7 +266,7 @@ object CombatWeaponController {
             return false
         }
         return runSafeOrFalse {
-            findInHotbar(Predicate { stack -> InvHelper.isAxe(stack) }).found()
+            findInHotbar(Predicate { stack -> NavenInvUtils.isAxe(stack) }).found()
         }
     }
 

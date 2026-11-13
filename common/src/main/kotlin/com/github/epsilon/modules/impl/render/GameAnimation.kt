@@ -1,10 +1,10 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.render.animation.Animation
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.animation.Animation
-import com.github.epsilon.utils.render.animation.Easing
 import kotlin.math.abs
 import kotlin.math.roundToInt
 

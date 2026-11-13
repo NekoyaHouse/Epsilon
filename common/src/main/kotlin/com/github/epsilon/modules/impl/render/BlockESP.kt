@@ -5,10 +5,10 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.kernel.client.ChatMessages
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.ChatUtils
-import com.github.epsilon.utils.timer.TimerUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.util.Util
@@ -75,7 +75,7 @@ object BlockESP : Module("Block ESP", Category.RENDER) {
 
         val player = mc.player
         if (mc.fps < 8 && player != null && player.tickCount > 150) {
-            ChatUtils.sendMessage("你的 FPS 太低了，我帮你给 BlockESP 关掉了。")
+            ChatMessages.sendMessage("你的 FPS 太低了，我帮你给 BlockESP 关掉了。")
             toggle()
             return
         }

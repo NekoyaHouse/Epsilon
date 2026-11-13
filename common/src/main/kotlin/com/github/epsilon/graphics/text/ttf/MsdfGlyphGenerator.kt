@@ -39,16 +39,19 @@ internal object MsdfGlyphGenerator {
                             startX = nextX
                             startY = nextY
                         }
+
                         STBTruetype.STBTT_vline -> builder.line(x, y, nextX, nextY)
                         STBTruetype.STBTT_vcurve -> builder.edge(
                             MSDF_SEGMENT_TYPE_QUADRATIC,
                             x, y, vertex.cx().toDouble(), vertex.cy().toDouble(), nextX, nextY
                         )
+
                         STBTruetype.STBTT_vcubic -> builder.edge(
                             MSDF_SEGMENT_TYPE_CUBIC,
                             x, y, vertex.cx().toDouble(), vertex.cy().toDouble(),
                             vertex.cx1().toDouble(), vertex.cy1().toDouble(), nextX, nextY
                         )
+
                         else -> error("Unsupported STB glyph vertex type: ${vertex.type()}")
                     }
                     x = nextX
@@ -64,7 +67,12 @@ internal object MsdfGlyphGenerator {
     fun generateFallback(boxWidth: Int, boxHeight: Int, stroke: Int, padding: Int): ByteBuffer {
         return render(boxWidth + padding * 2, boxHeight + padding * 2, 1.0, -padding, -boxHeight - padding) { builder ->
             builder.rectangle(0.0, 0.0, boxWidth.toDouble(), boxHeight.toDouble())
-            builder.rectangle(stroke.toDouble(), stroke.toDouble(), (boxWidth - stroke).toDouble(), (boxHeight - stroke).toDouble())
+            builder.rectangle(
+                stroke.toDouble(),
+                stroke.toDouble(),
+                (boxWidth - stroke).toDouble(),
+                (boxHeight - stroke).toDouble()
+            )
         }
     }
 
@@ -103,7 +111,10 @@ internal object MsdfGlyphGenerator {
                             val sourceIndex = ((height - row - 1) * width + column) * 3
                             val targetIndex = (row * width + column) * 4
                             for (channel in 0..2) {
-                                output.put(targetIndex + channel, (source[sourceIndex + channel].coerceIn(0f, 1f) * 255f).roundToInt().toByte())
+                                output.put(
+                                    targetIndex + channel,
+                                    (source[sourceIndex + channel].coerceIn(0f, 1f) * 255f).roundToInt().toByte()
+                                )
                             }
                             output.put(targetIndex + 3, 0xFF.toByte())
                         }

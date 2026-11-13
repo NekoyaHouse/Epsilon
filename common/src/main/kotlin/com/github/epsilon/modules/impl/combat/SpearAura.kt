@@ -5,29 +5,28 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.interfaces.ClientboundEntityEventPacketAccessor
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.FindItemResult
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwapBack
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getRotationsToEntity
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.render.effect.CaptureMarkESP
+import com.github.epsilon.kernel.render.effect.CircleESP
+import com.github.epsilon.kernel.render.effect.FireflyESP
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.render.AntiAlias
-import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.player.InvUtils.invSwap
-import com.github.epsilon.utils.player.InvUtils.invSwapBack
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.render.esp.CaptureMarkESP
-import com.github.epsilon.utils.render.esp.CircleESP
-import com.github.epsilon.utils.render.esp.FireflyESP
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
-import com.github.epsilon.utils.rotation.RotationUtils.getRotationsToEntity
 import com.mojang.blaze3d.vertex.PoseStack
-import java.awt.Color
 import net.minecraft.client.KeyMapping
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.tags.ItemTags
@@ -39,6 +38,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
 
 /**
  * 长矛自动蓄力与瞄准，kinetic 命中后延迟一 tick 尝试重锤补刀。
@@ -92,7 +92,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     private val autoCharge by boolSetting("Auto Charge", true)
     private val move by boolSetting("Move", true)
     private val rotationSpeed by intSetting("Rotation Speed", 180, 10..180, 10)
-    private val rotationPriority by enumSetting("Rotation Priority", Priority.High)
+    private val rotationPriority by enumSetting("Rotation RotationPriority", RotationPriority.High)
 
     private val players by boolSetting("Players", true)
     private val mobs by boolSetting("Mobs", true)
@@ -282,7 +282,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             forceForward = move
 
             val rotations = calculate(currentTarget, true, range)
-            if (raytrace(rotations, range)?.type == HitResult.Type.BLOCK) {
+            if (raycast(rotations, range)?.type == HitResult.Type.BLOCK) {
                 aimRotations = null
                 return@safeEventHandler
             }
@@ -291,7 +291,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 rotations,
                 rotationSpeed.toDouble(),
                 { rotation ->
-                    val hit = raytrace(rotation, range)
+                    val hit = raycast(rotation, range)
                     hit is EntityHitResult && hit.entity === target
                 },
                 rotationPriority

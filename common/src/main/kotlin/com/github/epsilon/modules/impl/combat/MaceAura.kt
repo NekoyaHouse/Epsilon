@@ -2,32 +2,32 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.inventory.FindItemResult
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwapBack
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getRotationsToEntity
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
-import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.InvUtils.invSwap
-import com.github.epsilon.utils.player.InvUtils.invSwapBack
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.InvUtils.swapBack
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
-import com.github.epsilon.utils.rotation.RotationUtils.getRotationsToEntity
-import com.github.epsilon.utils.timer.TimerUtils
-import kotlin.math.ceil
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import kotlin.math.ceil
 
 /**
  * @author Moli
@@ -98,7 +98,7 @@ object MaceAura : Module("Mace Aura", Category.COMBAT) {
             }
 
             RotationManager.setRotations(
-                getRotationsToEntity(currentTarget), 180.0, Priority.Medium
+                getRotationsToEntity(currentTarget), 180.0, RotationPriority.Medium
             )
 
             if (!isReadyToAttack()) return@safeEventHandler

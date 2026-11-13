@@ -2,13 +2,13 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.player.ClickSlotUtils.swap
-import java.util.*
-import kotlin.math.ceil
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.world.item.Items
+import java.util.*
+import kotlin.math.ceil
 
 object HoverTotem : Module("Hover Totem", Category.COMBAT) {
 

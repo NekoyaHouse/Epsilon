@@ -4,7 +4,21 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.render.effect.CaptureMarkESP
+import com.github.epsilon.kernel.render.effect.CircleESP
+import com.github.epsilon.kernel.render.effect.DeobfESP
+import com.github.epsilon.kernel.render.effect.DeobfESP.render
+import com.github.epsilon.kernel.render.effect.DeobfESP.retainRisingEffects
+import com.github.epsilon.kernel.render.effect.FireflyESP
+import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.managers.target.TargetRequest
@@ -14,21 +28,6 @@ import com.github.epsilon.modules.impl.movement.NoSlowdown
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.movement.Velocity
 import com.github.epsilon.modules.impl.render.AntiAlias
-import com.github.epsilon.utils.player.PlayerUtils.isEating
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.render.esp.CaptureMarkESP
-import com.github.epsilon.utils.render.esp.CircleESP
-import com.github.epsilon.utils.render.esp.DeobfESP
-import com.github.epsilon.utils.render.esp.DeobfESP.render
-import com.github.epsilon.utils.render.esp.DeobfESP.retainRisingEffects
-import com.github.epsilon.utils.render.esp.FireflyESP
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.RaytraceUtils.raytrace
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.rotation.RotationUtils.getEyeDistanceToEntity
-import com.github.epsilon.utils.timer.TimerUtils
-import java.awt.Color
-import kotlin.math.abs
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
@@ -36,6 +35,8 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
+import java.awt.Color
+import kotlin.math.abs
 
 object KillAura : Module("Kill Aura", Category.COMBAT) {
 
@@ -74,13 +75,13 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         100,
         0..500,
         1, { targetMode == TargetMode.Switch })
-    private val priorityMode by enumSetting("Priority Mode", PriorityMode.None)
+    private val priorityMode by enumSetting("RotationPriority Mode", PriorityMode.None)
     val searchRange by doubleSetting("Search Range", 4.0, 1.0..6.0, 0.1)
     val aimRange by doubleSetting("Aim Range", 3.0, 1.0..6.0, 0.1)
     private val fov by intSetting("FOV", 360, 10..360, 1)
     private val rotate by boolSetting("Rotate", true)
     private val rotationSpeed by intSetting("Rotation Speed", 180, 10..180, 10, { rotate })
-    private val rotationPriority by enumSetting("Rotation Priority", Priority.High, { rotate })
+    private val rotationPriority by enumSetting("Rotation RotationPriority", RotationPriority.High, { rotate })
     private val cps by intSetting("CPS", 12, 1..20, 1, { mode == Mode.OnePointEight })
 
     private val players by boolSetting("Players", true)
@@ -311,7 +312,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             if (rotate) {
                 val calculate = calculate(currentTarget, true, aimRange)
 
-                if (!ignoreWalls && raytrace(calculate, aimRange)?.type == HitResult.Type.BLOCK) {
+                if (!ignoreWalls && raycast(calculate, aimRange)?.type == HitResult.Type.BLOCK) {
                     return@safeEventHandler
                 }
 
@@ -322,7 +323,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                         calculate,
                         rotationSpeed.toDouble(),
                         { rotation ->
-                            val hit = raytrace(rotation, 3.0)
+                            val hit = raycast(rotation, 3.0)
                             hit is EntityHitResult && hit.entity === currentTarget
                         },
                         rotationPriority,

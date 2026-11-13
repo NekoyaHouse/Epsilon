@@ -31,7 +31,7 @@ class LegacyConfigMigrator(
         if (modules == null) return
 
         // Only migrate when no per-module files have been created yet
-        val anyExists = modules.any { m -> m != null && Files.exists(getModuleFile(m)) }
+        val anyExists = modules.any { m -> Files.exists(getModuleFile(m)) }
         if (anyExists) return
 
         Constants.LOGGER.info("检测到旧版 config.json，正在迁移到按模块分离的配置文件...")

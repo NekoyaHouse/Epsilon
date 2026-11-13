@@ -1,7 +1,7 @@
 package com.github.epsilon.settings.impl
 
+import com.github.epsilon.kernel.gameplay.world.BlockRegistryUtils
 import com.github.epsilon.settings.Setting
-import com.github.epsilon.utils.world.BlockRegistryUtils
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
@@ -10,8 +10,8 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
-import java.util.List.copyOf as immutableListCopyOf
 import java.util.function.Predicate
+import java.util.List.copyOf as immutableListCopyOf
 
 class RegistryListSetting<T : Any>(
     name: String,

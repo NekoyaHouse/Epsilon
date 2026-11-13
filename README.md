@@ -23,8 +23,6 @@ A modern multi loader Minecraft utility client built on NeoForge & Fabric with a
 
 ## 🎨 Graphics System
 
-TTF text uses MSDF atlases generated from STB_truetype outlines through the bundled msdfgen core.
-
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
 ## ⚙️ Build & Run
@@ -37,16 +35,11 @@ See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/R
 ./gradlew runClient
 ```
 
-## Development
-
-Module and utility functions that need a single non-null game context use `fun NonNullContext.xxx(...)` and access `player`, `level`, `gameMode`, and `connection` directly. Import object member extensions and call them inside `safeEventHandler`, `runSafe`, or `with(nn) { }`. Reserve `context(...)` parameters for multiple contexts or functions that already need another extension receiver. See [AGENTS.md](AGENTS.md) for development constraints.
-
 ## 🙏 Credits
 
 Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-party code attributions.
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
 - [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
-- [TrollHack](https://github.com/Luna5ama/TrollHack)
 - [ThunderHack-Recode](https://github.com/Pan4ur/ThunderHack-Recode)
 
 ## 📝 License

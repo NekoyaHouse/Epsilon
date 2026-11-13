@@ -8,9 +8,9 @@ import com.github.epsilon.gui.dropdown.DropdownTheme
 import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.utils.render.animation.Easing
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import kotlin.math.ceil

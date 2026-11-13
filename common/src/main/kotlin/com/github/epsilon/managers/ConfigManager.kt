@@ -1,10 +1,13 @@
 package com.github.epsilon.managers
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.Constants
 import com.github.epsilon.accounts.Account
 import com.github.epsilon.assets.config.LegacyConfigMigrator
 import com.github.epsilon.elements.HudModule
+import com.github.epsilon.kernel.state.StateTracking
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.settings.Setting
@@ -16,15 +19,14 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
-import java.util.List.copyOf as immutableListCopyOf
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import java.util.List.copyOf as immutableListCopyOf
 
 object ConfigManager {
 
-    private const val CONFIG_VERSION = 5
     private const val DEFAULT_CONFIG_NAME = "default"
     private const val CONFIGS_FOLDER = "configs"
     private const val IMPORTS_FOLDER = "imports"
@@ -36,11 +38,6 @@ object ConfigManager {
     private const val EXPORT_METADATA_FILE_NAME = "config-info.json"
     private const val SHOW_WELCOME_SCREEN_SETTING = "Show Welcome Screen"
     private val INVALID_CONFIG_NAME_PATTERN = Pattern.compile("[\\\\/:*?\"<>|\\p{Cntrl}]")
-
-    /** 已重命名模块的旧显示名到新显示名的映射，用于迁移按模块拆分的旧配置文件。 */
-    private val RENAMED_MODULE_CONFIG_FILES: Map<String, String> = mapOf(
-        "Zealot Crystal+" to "Crystal Aura",
-    )
 
     val configDir: Path = Paths.get(System.getProperty("user.home"), ".epsilon")
     val configsDir: Path = configDir.resolve(CONFIGS_FOLDER)
@@ -66,7 +63,6 @@ object ConfigManager {
         try {
             ensureRootDirectories()
             migrateLegacyLayoutsIfNeeded(getConfigurableModules())
-            migrateRenamedModuleConfigs()
             activeConfigName = resolveStoredActiveConfigName()
             ensureConfigExists(activeConfigName)
             loadActiveConfigSnapshot()
@@ -279,22 +275,9 @@ object ConfigManager {
         return configStorageDir.resolve("epsilon").resolve(module.name + ".json")
     }
 
-    /**
-     * 查找模块配置文件；重命名过的模块回退到旧文件名，兼容未迁移及导入的旧配置。
-     */
-    private fun findModuleConfigFile(configStorageDir: Path, module: Module): Path? {
-        val current = getModuleFile(configStorageDir, module)
-        if (Files.exists(current)) return current
-        val legacyName = RENAMED_MODULE_CONFIG_FILES.entries
-            .firstOrNull { (_, newName) -> newName == module.name }
-            ?.key
-            ?: return null
-        val legacy = configStorageDir.resolve("epsilon").resolve("$legacyName.json")
-        return if (Files.exists(legacy)) legacy else null
-    }
-
     private fun applyModuleFromDisk(module: Module, configStorageDir: Path) {
-        val file = findModuleConfigFile(configStorageDir, module) ?: return
+        val file = getModuleFile(configStorageDir, module)
+        if (!Files.exists(file)) return
         try {
             val json = Files.readString(file, StandardCharsets.UTF_8)
             val parsed = JsonParser.parseString(json)
@@ -383,7 +366,6 @@ object ConfigManager {
 
     private fun buildModuleObject(module: Module): JsonObject {
         val obj = JsonObject()
-        obj.addProperty("version", CONFIG_VERSION)
         obj.addProperty("enabled", module.isEnabled)
         obj.addProperty("keyBind", module.keyBind)
         obj.addProperty("bindMode", module.bindMode.name)
@@ -752,35 +734,6 @@ object ConfigManager {
         Files.move(legacyFriendFile, backupFile, StandardCopyOption.REPLACE_EXISTING)
     }
 
-    /**
-     * 把重命名模块的旧配置文件改为新文件名，避免升级后丢失模块设置；
-     * 目标文件已存在时保留目标文件，不覆盖用户数据。
-     */
-    private fun migrateRenamedModuleConfigs() {
-        try {
-            Files.createDirectories(configsDir)
-            Files.list(configsDir).use { stream ->
-                for (configPath in stream.filter { Files.isDirectory(it) }.toList()) {
-                    migrateRenamedModuleConfigsIn(configPath.resolve("epsilon"))
-                }
-            }
-        } catch (e: Exception) {
-            Constants.LOGGER.error("迁移重命名模块配置失败", e)
-        }
-    }
-
-    private fun migrateRenamedModuleConfigsIn(moduleDir: Path) {
-        if (!Files.isDirectory(moduleDir)) return
-        for ((oldName, newName) in RENAMED_MODULE_CONFIG_FILES) {
-            val source = moduleDir.resolve("$oldName.json")
-            if (!Files.exists(source)) continue
-            val target = moduleDir.resolve("$newName.json")
-            if (Files.exists(target)) continue
-            Files.move(source, target)
-            Constants.LOGGER.info("已迁移模块配置 {} -> {}", source.fileName, target.fileName)
-        }
-    }
-
     private fun resolveStoredActiveConfigName(): String {
         if (Files.exists(activeConfigFile)) {
             val stored = Files.readString(activeConfigFile, StandardCharsets.UTF_8).trim()
@@ -883,7 +836,6 @@ object ConfigManager {
 
     private fun buildExportMetadata(configName: String): JsonObject {
         val obj = JsonObject()
-        obj.addProperty("version", CONFIG_VERSION)
         obj.addProperty("configName", configName)
         obj.addProperty("exportedAt", Instant.now().toString())
         return obj

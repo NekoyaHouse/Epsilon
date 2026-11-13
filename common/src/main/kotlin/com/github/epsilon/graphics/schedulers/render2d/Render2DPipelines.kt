@@ -9,7 +9,7 @@ import com.mojang.renderpearl.api.pipeline.ShaderType
 import com.mojang.renderpearl.api.pipeline.UniformType
 import com.mojang.renderpearl.api.vertex.VertexFormat
 import net.minecraft.client.renderer.BindGroupLayouts
-import java.util.Optional
+import java.util.*
 
 /** 每实例属性让不同组件的变换与 tint 共享一次绑定。 */
 internal object Render2DPipelines {

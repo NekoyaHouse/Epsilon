@@ -9,13 +9,12 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.managers.RendererManager
-import com.github.epsilon.utils.math.toRadians
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import java.awt.Color
-import java.lang.Float as JavaFloat
 import kotlin.math.cos
 import kotlin.math.sin
+import java.lang.Float as JavaFloat
 
 /** 持久 display list 与当帧 canvas 共用执行后端；flush 消费尚未提交的记录。 */
 class Render2DScheduler : IRenderer {
@@ -1089,7 +1088,7 @@ class Render2DScheduler : IRenderer {
                 x: Float, y: Float, width: Float, height: Float,
                 originX: Float, originY: Float, rotationDegrees: Float,
             ): Render2DBounds {
-                val radians = (rotationDegrees.toDouble()).toRadians().toFloat()
+                val radians = Math.toRadians(rotationDegrees.toDouble()).toFloat()
                 val cos = cos(radians.toDouble()).toFloat()
                 val sin = sin(radians.toDouble()).toFloat()
                 val x1 = rotateX(x, y, originX, originY, cos, sin)

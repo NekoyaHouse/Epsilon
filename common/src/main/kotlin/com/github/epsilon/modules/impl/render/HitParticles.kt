@@ -6,10 +6,10 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
+import com.github.epsilon.kernel.math.RandomRanges
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
-import com.github.epsilon.utils.math.MathUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
@@ -82,16 +82,16 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
                 if (onlySelf && entity !== player) continue
                 if (entity.hurtTime <= 0) continue
 
-                val particleColor = resolveColor(MathUtils.getRandom(1.0f, 228.0f).toInt())
+                val particleColor = resolveColor(RandomRanges.getRandom(1.0f, 228.0f).toInt())
                 for (i in 0 until amount) {
                     particles.add(
                         Particle(
                             entity.x.toFloat(),
-                            MathUtils.getRandom(entity.y.toFloat(), (entity.y + entity.bbHeight).toFloat()),
+                            RandomRanges.getRandom(entity.y.toFloat(), (entity.y + entity.bbHeight).toFloat()),
                             entity.z.toFloat(),
                             particleColor,
-                            MathUtils.getRandom(0.0f, 180.0f),
-                            MathUtils.getRandom(10.0f, 60.0f)
+                            RandomRanges.getRandom(0.0f, 180.0f),
+                            RandomRanges.getRandom(10.0f, 60.0f)
                         )
                     )
                 }
@@ -136,13 +136,13 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         private var prevY: Float = y
         private var prevZ: Float = z
         private var motionX: Float =
-            MathUtils.getRandom(-speed / 50.0f, speed / 50.0f)
+            RandomRanges.getRandom(-speed / 50.0f, speed / 50.0f)
 
         private var motionY: Float =
-            MathUtils.getRandom(-speed / 50.0f, speed / 50.0f)
+            RandomRanges.getRandom(-speed / 50.0f, speed / 50.0f)
 
         private var motionZ: Float =
-            MathUtils.getRandom(-speed / 50.0f, speed / 50.0f)
+            RandomRanges.getRandom(-speed / 50.0f, speed / 50.0f)
 
         private val spawnTime: Long = System.currentTimeMillis()
         private var lastRenderTime: Long = spawnTime

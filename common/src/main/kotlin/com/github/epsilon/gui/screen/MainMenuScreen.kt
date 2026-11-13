@@ -13,12 +13,12 @@ import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.screen.accounts.AccountsScreen
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.AssetManager
 import com.github.epsilon.managers.VideoManager
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.utils.render.animation.Easing
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen

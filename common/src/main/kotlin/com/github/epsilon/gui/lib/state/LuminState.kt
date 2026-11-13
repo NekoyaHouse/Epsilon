@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.lib.state
 
-import com.github.epsilon.kernel.state.MutableState as KernelMutableState
 import com.github.epsilon.kernel.state.State
-import com.github.epsilon.kernel.state.mutableStateOf as kernelMutableStateOf
 import kotlin.reflect.KProperty
+import com.github.epsilon.kernel.state.MutableState as KernelMutableState
+import com.github.epsilon.kernel.state.mutableStateOf as kernelMutableStateOf
 
 /** 兼容旧导入；通用状态实现位于不依赖 GUI 的 kernel.state。 */
 typealias LuminState<T> = State<T>

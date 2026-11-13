@@ -6,8 +6,8 @@ import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Text
 import com.github.epsilon.gui.lib.UiScope
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.settings.impl.ButtonSetting
-import com.github.epsilon.utils.render.animation.Easing
 import com.mojang.blaze3d.platform.InputConstants
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 

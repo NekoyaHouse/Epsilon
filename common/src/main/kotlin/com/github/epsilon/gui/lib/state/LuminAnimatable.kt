@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.lib.state
 
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.kernel.state.State
 import com.github.epsilon.kernel.state.readUntracked
-import com.github.epsilon.utils.render.animation.Easing
 
 /** 帧时钟推进数值；构建中仅声明目标，成功提交后才启动。 */
 class LuminAnimatable(

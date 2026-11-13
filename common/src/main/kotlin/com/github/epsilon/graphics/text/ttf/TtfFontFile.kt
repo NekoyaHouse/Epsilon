@@ -111,7 +111,8 @@ class TtfFontFile private constructor(
             val glyphHeight = y1[0] - y0[0] + padding * 2
             val xOffset = x0[0] - padding
             val yOffset = y0[0] - padding
-            val msdfPixels = MsdfGlyphGenerator.generate(fontInfo, glyphIndex, scale, glyphWidth, glyphHeight, xOffset, yOffset)
+            val msdfPixels =
+                MsdfGlyphGenerator.generate(fontInfo, glyphIndex, scale, glyphWidth, glyphHeight, xOffset, yOffset)
             var alphaPixels: ByteBuffer? = null
             try {
                 alphaPixels = MemoryUtil.memCalloc(glyphWidth * glyphHeight)
@@ -131,7 +132,10 @@ class TtfFontFile private constructor(
                                 val targetX = column + dstX
                                 val targetY = row + dstY
                                 if (targetX in 0 until glyphWidth && targetY in 0 until glyphHeight) {
-                                    alphaPixels.put(targetY * glyphWidth + targetX, bitmap.get(row * bitmapWidth[0] + column))
+                                    alphaPixels.put(
+                                        targetY * glyphWidth + targetX,
+                                        bitmap.get(row * bitmapWidth[0] + column)
+                                    )
                                 }
                             }
                         }

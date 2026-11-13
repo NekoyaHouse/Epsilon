@@ -6,6 +6,7 @@ import com.github.epsilon.elements.impl.notification.NotificationMode
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.client.ChatMessages
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
@@ -13,7 +14,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.group
 import com.github.epsilon.settings.impl.EnumSetting
 import com.github.epsilon.settings.impl.RegistryListSetting
-import com.github.epsilon.utils.player.ChatUtils
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
@@ -24,7 +24,6 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.GameType
 import java.util.*
-import java.util.Objects
 
 object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
 
@@ -250,7 +249,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
                                         .replace("{new_gamemode}", translateGamemode(newMode))
                                     val mode = alertMode.value
                                     if (mode == AlertMode.Chat || mode == AlertMode.Both) {
-                                        ChatUtils.sendMessage(
+                                        ChatMessages.sendMessage(
                                             Component.literal(msg).withStyle(ChatFormatting.YELLOW)
                                         )
                                     }
@@ -347,7 +346,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
         msg = msg.replace("{old_gamemode}", "").replace("{new_gamemode}", "").trim()
         // Chat
         if (mode == AlertMode.Chat || mode == AlertMode.Both) {
-            ChatUtils.sendMessage(Component.literal(msg).withStyle(color))
+            ChatMessages.sendMessage(Component.literal(msg).withStyle(color))
         }
         // HUD Notification (no chat side-effect)
         if ((mode == AlertMode.Notification || mode == AlertMode.Both) && playerId != null) {

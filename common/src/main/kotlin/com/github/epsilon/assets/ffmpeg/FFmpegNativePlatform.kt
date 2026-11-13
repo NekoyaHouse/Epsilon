@@ -1,6 +1,6 @@
 package com.github.epsilon.assets.ffmpeg
 
-import com.github.epsilon.utils.client.ClientPlatform
+import com.github.epsilon.kernel.client.platform.ClientPlatform
 
 /**
  * JavaCPP FFmpeg 原生库在受支持平台上的产物描述。

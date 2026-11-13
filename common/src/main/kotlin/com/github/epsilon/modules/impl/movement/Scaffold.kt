@@ -9,32 +9,28 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.grimac.C03Interact.placeBlock
+import com.github.epsilon.kernel.gameplay.inventory.FindItemResult
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwap
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwapBack
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swap
+import com.github.epsilon.kernel.gameplay.movement.FallingPlayer
+import com.github.epsilon.kernel.gameplay.player.SwingMode
+import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.overBlock
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.jvm.runSafeOrElse
+import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.MathUtils
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.player.FallingPlayer
-import com.github.epsilon.utils.player.FindItemResult
-import com.github.epsilon.utils.player.InvUtils.find
-import com.github.epsilon.utils.player.InvUtils.findInHotbar
-import com.github.epsilon.utils.player.InvUtils.invSwap
-import com.github.epsilon.utils.player.InvUtils.invSwapBack
-import com.github.epsilon.utils.player.InvUtils.swap
-import com.github.epsilon.utils.player.InvUtils.swapBack as restoreHotbarSlot
-import com.github.epsilon.utils.player.SwingMode
-import com.github.epsilon.utils.render.animation.Easing
-import com.github.epsilon.utils.rotation.RaytraceUtils.overBlock
-import com.github.epsilon.utils.rotation.Rotation
-import com.github.epsilon.utils.rotation.RotationUtils.calculate
-import com.github.epsilon.utils.world.LegacyPlacement
-import com.github.epsilon.utils.world.LegacyPlacement.placeBlock
-import java.awt.Color
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.roundToInt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -50,6 +46,11 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.roundToInt
+import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack as restoreHotbarSlot
 
 object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
@@ -296,7 +297,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                         RotationManager.rotations = rotation
                         RotationManager.updateActive(true)
 
-                        // 代替 sendPosition()；Packet 模式由 LegacyPlacement 发送位置和旋转。
+                        // 代替 sendPosition()；Packet 模式由 C03Interact 发送位置和旋转。
                         connection.send(
                             ServerboundMovePlayerPacket.Rot(
                                 rotation.yaw,
@@ -323,11 +324,11 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             forwardInput = event.forward
             strafeInput = event.strafe
             inputYaw = Mth.wrapDegrees(
-                ((player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees()
+                ((player.yRot + Math.toDegrees(atan2(-strafeInput.toDouble(), forwardInput.toDouble()))
                     .toFloat()) / 45.0f).roundToInt() * 45.0f
             )
             rawInputYaw = Mth.wrapDegrees(
-                (player.yRot + (atan2(-strafeInput.toDouble(), forwardInput.toDouble())).toDegrees()
+                (player.yRot + Math.toDegrees(atan2(-strafeInput.toDouble(), forwardInput.toDouble()))
                     .toFloat()).roundToInt().toFloat()
             )
 
@@ -627,8 +628,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
             for (pitch in pitchArray) {
                 val candidate = Rotation(
-                    yaw + MathUtils.getRandom(-0.3f, 0.3f),
-                    pitch + MathUtils.getRandom(-0.3f, 0.3f)
+                    yaw + RandomRanges.getRandom(-0.3f, 0.3f),
+                    pitch + RandomRanges.getRandom(-0.3f, 0.3f)
                 )
                 val matches = if (raytrace == RaytraceMode.Normal) {
                     overBlock(candidate, pos)
@@ -670,16 +671,16 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         if (face != Direction.UP && face != Direction.DOWN) {
             y += 0.08
         } else {
-            x += MathUtils.getRandom(-0.3, 0.3)
-            z += MathUtils.getRandom(-0.3, 0.3)
+            x += RandomRanges.getRandom(-0.3, 0.3)
+            z += RandomRanges.getRandom(-0.3, 0.3)
         }
 
         if (face == Direction.WEST || face == Direction.EAST) {
-            z += MathUtils.getRandom(-0.3, 0.3)
+            z += RandomRanges.getRandom(-0.3, 0.3)
         }
 
         if (face == Direction.SOUTH || face == Direction.NORTH) {
-            x += MathUtils.getRandom(-0.3, 0.3)
+            x += RandomRanges.getRandom(-0.3, 0.3)
         }
 
         return Vec3(x, y, z)

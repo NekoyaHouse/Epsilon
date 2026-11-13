@@ -38,15 +38,6 @@ GNU GPLv3 and GNU AGPLv3 include compatibility terms for combining GPLv3 and
 AGPLv3 works; the AGPLv3 network-interaction source requirements apply where
 required by that license.
 
-## TrollHack
-
-- Repository: [Luna5ama/TrollHack](https://github.com/Luna5ama/TrollHack)
-- License: GNU General Public License v3.0
-- Used in Epsilon: CrystalAura module.
-
-The original code has been modified and adapted for Epsilon's module,
-setting, rotation, and event systems.
-
 ## ThunderHack-Recode
 
 - Repository: [Pan4ur/ThunderHack-Recode](https://github.com/Pan4ur/ThunderHack-Recode)

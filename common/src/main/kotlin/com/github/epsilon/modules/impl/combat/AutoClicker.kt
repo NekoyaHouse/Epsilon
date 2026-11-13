@@ -2,12 +2,12 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.math.RandomRanges
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.math.MathUtils
-import kotlin.math.pow
 import net.minecraft.client.KeyMapping
+import kotlin.math.pow
 
 /**
  * @author Moli
@@ -113,7 +113,7 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
         val minCPS = if (clickButton == ClickButton.LEFT) leftMinCPS else rightMinCPS
         val maxCPS = if (clickButton == ClickButton.LEFT) leftMaxCPS else rightMaxCPS
 
-        val baseCPS = MathUtils.getRandom(minCPS, maxCPS).toDouble()
+        val baseCPS = RandomRanges.getRandom(minCPS, maxCPS).toDouble()
         val adjustedCPS = applyBurstAndDecay(state, baseCPS, currentTime)
 
         state.nextDelay = (1000.0 / adjustedCPS).toLong()
@@ -125,8 +125,8 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
 
         val yaw = player.yRot
         val pitch = player.xRot
-        val yawRandom = MathUtils.getRandom(-0.5f, 0.5f) * 0.5f
-        val pitchRandom = MathUtils.getRandom(-0.5f, 0.5f) * 0.5f
+        val yawRandom = RandomRanges.getRandom(-0.5f, 0.5f) * 0.5f
+        val pitchRandom = RandomRanges.getRandom(-0.5f, 0.5f) * 0.5f
         player.yRot = yaw + yawRandom
         player.xRot = pitch + pitchRandom
     }
@@ -141,14 +141,14 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
     }
 
     private fun shouldMiss(): Boolean {
-        return enableMiss && MathUtils.getRandom(1, 100) <= missChance
+        return enableMiss && RandomRanges.getRandom(1, 100) <= missChance
     }
 
     private fun scheduleDoubleClick(state: ButtonState, currentTime: Long) {
         if (!enableDoubleClick) return
         if (state.pendingDoubleClick) return
 
-        if (MathUtils.getRandom(1, 100) <= doubleClickChance) {
+        if (RandomRanges.getRandom(1, 100) <= doubleClickChance) {
             state.pendingDoubleClick = true
             state.doubleClickTime = currentTime + doubleClickDelay
         }
@@ -220,7 +220,7 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
                     isInDecay = false
                 }
             } else {
-                if (MathUtils.getRandom(1, 100) <= burstChance) {
+                if (RandomRanges.getRandom(1, 100) <= burstChance) {
                     isInBurst = true
                     burstStartTime = currentTime
                     burstEndTime = currentTime + burstDuration

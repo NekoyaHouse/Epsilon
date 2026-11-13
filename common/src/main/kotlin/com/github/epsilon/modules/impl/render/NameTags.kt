@@ -9,12 +9,12 @@ import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.utils.render.WorldToScreen
 import com.google.common.base.Suppliers
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player

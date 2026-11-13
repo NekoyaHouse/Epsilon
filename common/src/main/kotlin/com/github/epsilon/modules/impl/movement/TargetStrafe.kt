@@ -7,17 +7,14 @@ import com.github.epsilon.events.impl.KeyboardInputEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.gameplay.rotation.Rotation
+import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
-import com.github.epsilon.utils.math.toDegrees
-import com.github.epsilon.utils.rotation.Priority
-import com.github.epsilon.utils.rotation.Rotation
-import java.awt.Color
-import kotlin.math.*
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -25,6 +22,8 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import java.awt.Color
+import kotlin.math.*
 
 object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
@@ -93,12 +92,12 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
             val deltaX = nextPosition.x - player.x
             val deltaZ = nextPosition.z - player.z
 
-            targetYaw = Mth.wrapDegrees((atan2(deltaZ, deltaX)).toDegrees().toFloat() - 90.0f)
+            targetYaw = Mth.wrapDegrees(Math.toDegrees(atan2(deltaZ, deltaX)).toFloat() - 90.0f)
 
             RotationManager.setRotations(
                 Rotation(targetYaw, RotationManager.getPitch()),
                 180.0,
-                Priority.Low
+                RotationPriority.Low
             )
         }
 

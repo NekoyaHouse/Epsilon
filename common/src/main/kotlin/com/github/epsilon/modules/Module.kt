@@ -1,10 +1,12 @@
 package com.github.epsilon.modules
 
-import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.api.ListenerOwner
 import com.github.epsilon.kernel.MinecraftWrapper
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.state.getValue
+import com.github.epsilon.kernel.state.mutableStateOf
+import com.github.epsilon.kernel.state.setValue
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
