@@ -28,14 +28,14 @@ object FireflyESP {
     private val FIREFLY_TEX: Identifier = ResourceLocationUtils.getIdentifier("textures/particles/firefly.png")
 
     private val TARGET_ICON_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        .withLocation("pipeline/epsilon_target_icon")
+        .withLocation("pipeline/epsilon_firefly_no_depth")
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
 
     private val TARGET_ICON_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        .withLocation("pipeline/epsilon_target_icon")
+        .withLocation("pipeline/epsilon_firefly")
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
         .withCull(false)
