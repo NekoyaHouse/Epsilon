@@ -16,7 +16,8 @@ public class MixinItem {
 
     @ModifyExpressionValue(method = "getPlayerPOVHitResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;calculateViewVector(FF)Lnet/minecraft/world/phys/Vec3;"))
     private static Vec3 hookUseItemRayTrace(Vec3 original, Level level, Player player, ClipContext.Fluid fluid) {
-        UseItemRaytraceEvent event = new UseItemRaytraceEvent(player.getYRot(), player.getXRot()).post();
+        UseItemRaytraceEvent event = new UseItemRaytraceEvent(player.getYRot(), player.getXRot());
+        event.post();
         return Entity.calculateViewVector(event.getPitch(), event.getYaw());
     }
 

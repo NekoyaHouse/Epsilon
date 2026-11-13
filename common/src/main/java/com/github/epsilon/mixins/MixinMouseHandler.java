@@ -24,7 +24,8 @@ public class MixinMouseHandler {
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onButton(long handle, MouseButtonInfo rawButtonInfo, int action, CallbackInfo ci) {
-        MousePressEvent event = new MousePressEvent(rawButtonInfo.button(), action, rawButtonInfo.modifiers()).post();
+        MousePressEvent event = new MousePressEvent(rawButtonInfo.button(), action, rawButtonInfo.modifiers());
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -32,7 +33,8 @@ public class MixinMouseHandler {
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void onMouseScroll(long handle, double xoffset, double yoffset, CallbackInfo ci) {
-        MouseScrollEvent event = new MouseScrollEvent(yoffset).post();
+        MouseScrollEvent event = new MouseScrollEvent(yoffset);
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }

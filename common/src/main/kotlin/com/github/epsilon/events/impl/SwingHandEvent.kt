@@ -5,6 +5,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class SwingHandEvent : Cancellable(), IEvent<SwingHandEvent>, IPosting by Companion {
+class SwingHandEvent : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

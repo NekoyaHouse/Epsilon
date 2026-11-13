@@ -13,7 +13,8 @@ public class MixinVisGraph {
 
     @Inject(method = "setOpaque", at = @At("HEAD"), cancellable = true)
     private void onMarkClosed(BlockPos pos, CallbackInfo ci) {
-        ChunkOcclusionEvent event = new ChunkOcclusionEvent().post();
+        ChunkOcclusionEvent event = new ChunkOcclusionEvent();
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }

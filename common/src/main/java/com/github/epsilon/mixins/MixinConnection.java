@@ -31,7 +31,8 @@ public class MixinConnection {
                 if (ClientboundPacketManager.INSTANCE.onPacketReceive(subPacket)) {
                     continue;
                 }
-                PacketEvent.Receive event = new PacketEvent.Receive(subPacket).post();
+                PacketEvent.Receive event = new PacketEvent.Receive(subPacket);
+                event.post();
                 if (!event.isCancelled()) {
                     packets.add((Packet<? super ClientGamePacketListener>) event.getPacket());
                 }
@@ -42,7 +43,8 @@ public class MixinConnection {
         if (ClientboundPacketManager.INSTANCE.onPacketReceive(packet)) {
             return;
         }
-        PacketEvent.Receive event = new PacketEvent.Receive(packet).post();
+        PacketEvent.Receive event = new PacketEvent.Receive(packet);
+        event.post();
         if (!event.isCancelled()) {
             original.call(event.getPacket(), listener);
         }
@@ -60,7 +62,8 @@ public class MixinConnection {
                 original.call(instance, filteredPacket, listener, flush);
             }
         } else {
-            PacketEvent.Send event = new PacketEvent.Send(packet).post();
+            PacketEvent.Send event = new PacketEvent.Send(packet);
+            event.post();
             if (!event.isCancelled()) {
                 Packet<?> filteredPacket = ClientIdentityHider.INSTANCE.filterServerboundPacket(event.getPacket());
                 if (filteredPacket != null) {

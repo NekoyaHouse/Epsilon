@@ -7,11 +7,11 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 
 open class Render2DEvent protected constructor(val guiGraphics: GuiGraphicsExtractor) {
 
-    class Level(guiGraphics: GuiGraphicsExtractor) : Render2DEvent(guiGraphics), IEvent<Level>, IPosting by Companion {
+    class Level(guiGraphics: GuiGraphicsExtractor) : Render2DEvent(guiGraphics), IEvent, IPosting by Companion {
         companion object : EventBus()
     }
 
-    class HUD(guiGraphics: GuiGraphicsExtractor) : Render2DEvent(guiGraphics), IEvent<HUD>, IPosting by Companion {
+    class HUD(guiGraphics: GuiGraphicsExtractor) : Render2DEvent(guiGraphics), IEvent, IPosting by Companion {
         companion object : EventBus()
     }
 

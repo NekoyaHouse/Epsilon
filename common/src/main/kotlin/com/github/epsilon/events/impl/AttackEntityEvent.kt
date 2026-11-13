@@ -7,7 +7,7 @@ import com.github.epsilon.events.api.IPosting
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 
-class AttackEntityEvent(val player: Player, val entity: Entity) : Cancellable(), IEvent<AttackEntityEvent>,
+class AttackEntityEvent(val player: Player, val entity: Entity) : Cancellable(), IEvent,
     IPosting by Companion {
     companion object : EventBus()
 }

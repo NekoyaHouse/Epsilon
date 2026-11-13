@@ -5,6 +5,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class MouseScrollEvent(val value: Double) : Cancellable(), IEvent<MouseScrollEvent>, IPosting by Companion {
+class MouseScrollEvent(val value: Double) : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

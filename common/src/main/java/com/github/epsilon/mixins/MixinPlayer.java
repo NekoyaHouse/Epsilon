@@ -22,7 +22,8 @@ public class MixinPlayer {
     @Inject(method = "travel", at = @At("HEAD"), cancellable = true)
     private void onTravelPre(Vec3 input, CallbackInfo ci) {
         if ((Object) this == mc.player) {
-            TravelEvent event = new TravelEvent().post();
+            TravelEvent event = new TravelEvent();
+            event.post();
             if (event.isCancelled()) {
                 ci.cancel();
             }
@@ -31,13 +32,15 @@ public class MixinPlayer {
 
     @ModifyExpressionValue(method = {"causeExtraKnockback", "doSweepAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
     private float modifyAttackYaw(float original) {
-        AttackYawEvent event = new AttackYawEvent(original).post();
+        AttackYawEvent event = new AttackYawEvent(original);
+        event.post();
         return event.getYaw();
     }
 
     @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
     private boolean onAttackSlowdown(Player instance, Vec3 movement, @Share("cancelAttackSlowdown") LocalBooleanRef cancelled) {
-        AttackSlowdownEvent event = new AttackSlowdownEvent().post();
+        AttackSlowdownEvent event = new AttackSlowdownEvent();
+        event.post();
         cancelled.set(event.isCancelled());
         return !cancelled.get();
     }

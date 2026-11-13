@@ -15,7 +15,8 @@ public class MixinBlockCollisions {
 
     @WrapOperation(method = "computeNext", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/BlockGetter;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
     private BlockState hookComputeNext(BlockGetter instance, BlockPos blockPos, Operation<BlockState> original) {
-        BlockCollisionEvent event = new BlockCollisionEvent(original.call(instance, blockPos), blockPos).post();
+        BlockCollisionEvent event = new BlockCollisionEvent(original.call(instance, blockPos), blockPos);
+        event.post();
         return event.getState();
     }
 

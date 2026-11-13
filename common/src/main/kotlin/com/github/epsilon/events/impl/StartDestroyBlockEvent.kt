@@ -8,6 +8,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 
 class StartDestroyBlockEvent(var blockPos: BlockPos, var direction: Direction) : Cancellable(),
-    IEvent<StartDestroyBlockEvent>, IPosting by Companion {
+    IEvent, IPosting by Companion {
     companion object : EventBus()
 }

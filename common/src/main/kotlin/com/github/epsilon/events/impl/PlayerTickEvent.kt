@@ -7,11 +7,11 @@ import com.github.epsilon.events.api.IPosting
 
 open class PlayerTickEvent {
 
-    class Pre : Cancellable(), IEvent<Pre>, IPosting by Companion {
+    class Pre : Cancellable(), IEvent, IPosting by Companion {
         companion object : EventBus()
     }
 
-    class Post : IEvent<Post>, IPosting by Companion {
+    class Post : IEvent, IPosting by Companion {
         companion object : EventBus()
     }
 

@@ -41,7 +41,8 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "useItem", at = @At("HEAD"))
     private void preUseItem(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        UseItemEvent event = new UseItemEvent(player.getYRot(), player.getXRot()).post();
+        UseItemEvent event = new UseItemEvent(player.getYRot(), player.getXRot());
+        event.post();
         if (event.isModified()) {
             epsilon$oldYaw = player.getYRot();
             epsilon$oldPitch = player.getXRot();
@@ -62,7 +63,8 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void onAttackEntity(Player player, Entity entity, CallbackInfo ci) {
-        AttackEntityEvent event = new AttackEntityEvent(player, entity).post();
+        AttackEntityEvent event = new AttackEntityEvent(player, entity);
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -70,7 +72,8 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void onStartDestroyBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
-        StartDestroyBlockEvent event = new StartDestroyBlockEvent(pos, direction).post();
+        StartDestroyBlockEvent event = new StartDestroyBlockEvent(pos, direction);
+        event.post();
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }
@@ -78,7 +81,8 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "destroyBlock", at = @At("HEAD"), cancellable = true)
     private void onDestroyBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        DestroyBlockEvent event = new DestroyBlockEvent(pos).post();
+        DestroyBlockEvent event = new DestroyBlockEvent(pos);
+        event.post();
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }

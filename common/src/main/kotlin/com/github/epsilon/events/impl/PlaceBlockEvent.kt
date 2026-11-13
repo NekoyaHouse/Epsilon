@@ -7,7 +7,7 @@ import com.github.epsilon.events.api.IPosting
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Block
 
-class PlaceBlockEvent(val blockPos: BlockPos, val block: Block) : Cancellable(), IEvent<PlaceBlockEvent>,
+class PlaceBlockEvent(val blockPos: BlockPos, val block: Block) : Cancellable(), IEvent,
     IPosting by Companion {
     companion object : EventBus()
 }

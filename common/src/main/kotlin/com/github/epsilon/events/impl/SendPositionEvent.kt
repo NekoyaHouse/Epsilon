@@ -17,7 +17,7 @@ class SendPositionEvent(
     val lastSentYaw: Float,
     val lastSentPitch: Float,
     val positionReminder: Int,
-) : Cancellable(), IEvent<SendPositionEvent>, IPosting by Companion {
+) : Cancellable(), IEvent, IPosting by Companion {
     var forcePosition = false
     var forceRotation = false
 

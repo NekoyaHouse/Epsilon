@@ -6,6 +6,6 @@ import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 import net.minecraft.client.gui.screens.Screen
 
-class OpenScreenEvent(val screen: Screen?) : Cancellable(), IEvent<OpenScreenEvent>, IPosting by Companion {
+class OpenScreenEvent(val screen: Screen?) : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

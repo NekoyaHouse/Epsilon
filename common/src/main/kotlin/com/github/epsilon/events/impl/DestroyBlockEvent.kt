@@ -6,6 +6,6 @@ import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 import net.minecraft.core.BlockPos
 
-class DestroyBlockEvent(val blockPos: BlockPos) : Cancellable(), IEvent<DestroyBlockEvent>, IPosting by Companion {
+class DestroyBlockEvent(val blockPos: BlockPos) : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

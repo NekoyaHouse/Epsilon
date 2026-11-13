@@ -17,6 +17,7 @@ import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.HandView;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.client.FramerateLimiter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -77,6 +78,19 @@ public abstract class MixinMinecraft {
         new ClientLoopEvent().post();
     }
 
+    /**
+     * 扎啤方块人
+     * RenderPearl 在 Windows 最小化场景下的渲染会有问题，导致 crash
+     */
+    @Inject(method = "renderFrame", at = @At("HEAD"), cancellable = true)
+    private void skipMinimizedFrame(boolean advanceGameTime, CallbackInfo ci) {
+        Minecraft minecraft = (Minecraft) (Object) this;
+        if (minecraft.getWindow().isIconified()) {
+            FramerateLimiter.limitDisplayFPS(minecraft.getFramerateLimitTracker().getFramerateLimit());
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "tick", at = @At("TAIL"))
     private void onPostTick(CallbackInfo info) {
         new ClientTickEvent.Post().post();
@@ -113,7 +127,8 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
     private void onHandleKeybinds(CallbackInfo ci) {
-        RightClickEvent event = new RightClickEvent().post();
+        RightClickEvent event = new RightClickEvent();
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -121,7 +136,8 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/InteractionHand;values()[Lnet/minecraft/world/InteractionHand;"), cancellable = true)
     private void onStartUseItemBeforeHands(CallbackInfo ci) {
-        StartUseItemEvent event = new StartUseItemEvent().post();
+        StartUseItemEvent event = new StartUseItemEvent();
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }

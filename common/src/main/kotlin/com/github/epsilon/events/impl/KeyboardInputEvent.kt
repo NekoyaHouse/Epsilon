@@ -11,7 +11,7 @@ class KeyboardInputEvent(
     var jump: Boolean,
     var sneak: Boolean,
     var sprint: Boolean,
-) : IEvent<KeyboardInputEvent>, IPosting by Companion {
+) : IEvent, IPosting by Companion {
     companion object : EventBus()
 
     fun toNewInput(): Input {

@@ -9,6 +9,6 @@ class RotationAnimationEvent(
     var lastYaw: Float,
     var pitch: Float,
     var lastPitch: Float,
-) : IEvent<RotationAnimationEvent>, IPosting by Companion {
+) : IEvent, IPosting by Companion {
     companion object : EventBus()
 }

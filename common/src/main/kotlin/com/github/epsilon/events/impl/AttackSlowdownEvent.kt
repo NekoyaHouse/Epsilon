@@ -5,6 +5,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class AttackSlowdownEvent : Cancellable(), IEvent<AttackSlowdownEvent>, IPosting by Companion {
+class AttackSlowdownEvent : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

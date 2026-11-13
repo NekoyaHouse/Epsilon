@@ -4,6 +4,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class SlowdownEvent(var isSlowdown: Boolean) : IEvent<SlowdownEvent>, IPosting by Companion {
+class SlowdownEvent(var isSlowdown: Boolean) : IEvent, IPosting by Companion {
     companion object : EventBus()
 }

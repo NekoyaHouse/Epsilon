@@ -18,7 +18,8 @@ public class MixinFireworkRocketEntity {
     @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 redirectMovement(LivingEntity instance, Operation<Vec3> original) {
         if (instance == mc.player) {
-            FireworkRotationEvent event = new FireworkRotationEvent(instance.getYRot(), instance.getXRot()).post();
+            FireworkRotationEvent event = new FireworkRotationEvent(instance.getYRot(), instance.getXRot());
+            event.post();
             return Entity.calculateViewVector(event.getPitch(), event.getYaw());
         }
         return original.call(instance);

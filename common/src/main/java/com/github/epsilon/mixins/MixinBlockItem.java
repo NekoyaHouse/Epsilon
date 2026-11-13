@@ -15,7 +15,8 @@ public abstract class MixinBlockItem {
     @Inject(method = "placeBlock(Lnet/minecraft/world/item/context/BlockPlaceContext;Lnet/minecraft/world/level/block/state/BlockState;)Z", at = @At("HEAD"), cancellable = true)
     private void onPlace(BlockPlaceContext context, BlockState placementState, CallbackInfoReturnable<Boolean> cir) {
         if (!context.getLevel().isClientSide()) return;
-        PlaceBlockEvent event = new PlaceBlockEvent(context.getClickedPos(), placementState.getBlock()).post();
+        PlaceBlockEvent event = new PlaceBlockEvent(context.getClickedPos(), placementState.getBlock());
+        event.post();
         if (event.isCancelled()) {
             cir.setReturnValue(true);
         }

@@ -38,7 +38,8 @@ public class MixinLivingEntity {
     @WrapOperation(method = "tickHeadTurn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
     private float modifyHeadYaw(LivingEntity entity, Operation<Float> original) {
         if (entity == mc.player) {
-            RotationAnimationEvent event = new RotationAnimationEvent(entity.getYRot(), 0.0f, 0.0f, 0.0f).post();
+            RotationAnimationEvent event = new RotationAnimationEvent(entity.getYRot(), 0.0f, 0.0f, 0.0f);
+            event.post();
             return event.getYaw();
         }
         return original.call(entity);
@@ -47,7 +48,8 @@ public class MixinLivingEntity {
     @ModifyExpressionValue(method = "jumpFromGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
     private float modifyJumpYaw(float original) {
         if ((Object) this == mc.player) {
-            JumpEvent event = new JumpEvent(original).post();
+            JumpEvent event = new JumpEvent(original);
+            event.post();
             return event.getYaw();
         }
         return original;
@@ -56,7 +58,8 @@ public class MixinLivingEntity {
     @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 modifyFallFlyingLookAngle(Vec3 original) {
         if ((Object) this == mc.player) {
-            FallFlyingEvent event = new FallFlyingEvent(mc.player.getYRot(), mc.player.getXRot()).post();
+            FallFlyingEvent event = new FallFlyingEvent(mc.player.getYRot(), mc.player.getXRot());
+            event.post();
             return Entity.calculateViewVector(event.getPitch(), event.getYaw());
         }
         return original;
@@ -65,7 +68,8 @@ public class MixinLivingEntity {
     @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float modifyFallFlyingPitch(float original) {
         if ((Object) this == mc.player) {
-            FallFlyingEvent event = new FallFlyingEvent(mc.player.getYRot(), original).post();
+            FallFlyingEvent event = new FallFlyingEvent(mc.player.getYRot(), original);
+            event.post();
             return event.getPitch();
         }
         return original;
@@ -77,7 +81,8 @@ public class MixinLivingEntity {
             return original;
         }
 
-        FallFlyingMovementEvent event = new FallFlyingMovementEvent(original).post();
+        FallFlyingMovementEvent event = new FallFlyingMovementEvent(original);
+        event.post();
         return event.getMovement();
     }
 
@@ -102,7 +107,8 @@ public class MixinLivingEntity {
     @Inject(method = "swing(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/component/SwingAnimation;Z)Z", at = @At("HEAD"), cancellable = true)
     private void onSwing(InteractionHand hand, SwingAnimation animation, boolean sendToSwingingEntity, CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this == mc.player) {
-            SwingHandEvent event = new SwingHandEvent().post();
+            SwingHandEvent event = new SwingHandEvent();
+            event.post();
             if (event.isCancelled()) {
                 cir.setReturnValue(false);
             }

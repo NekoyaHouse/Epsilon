@@ -6,7 +6,7 @@ import com.github.epsilon.events.api.IPosting
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.state.BlockState
 
-class BlockCollisionEvent(var state: BlockState, val pos: BlockPos) : IEvent<BlockCollisionEvent>,
+class BlockCollisionEvent(var state: BlockState, val pos: BlockPos) : IEvent,
     IPosting by Companion {
     companion object : EventBus()
 }

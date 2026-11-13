@@ -4,6 +4,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class AfterSendPositionEvent : IEvent<AfterSendPositionEvent>, IPosting by Companion {
+class AfterSendPositionEvent : IEvent, IPosting by Companion {
     companion object : EventBus()
 }

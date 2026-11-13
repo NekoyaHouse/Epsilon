@@ -5,6 +5,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class RightClickEvent : Cancellable(), IEvent<RightClickEvent>, IPosting by Companion {
+class RightClickEvent : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

@@ -24,7 +24,8 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;solveBodyRot(Lnet/minecraft/world/entity/LivingEntity;FF)F"))
     private float modifyBodyYaw(float original, LivingEntity entity, S state, float partialTicks) {
         if (entity == mc.player) {
-            RotationAnimationEvent event = new RotationAnimationEvent(entity.yBodyRot, entity.yBodyRotO, 0.0f, 0.0f).post();
+            RotationAnimationEvent event = new RotationAnimationEvent(entity.yBodyRot, entity.yBodyRotO, 0.0f, 0.0f);
+            event.post();
             return Mth.rotLerp(partialTicks, event.getLastYaw(), event.getYaw());
         }
         return original;
@@ -33,7 +34,8 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;rotLerp(FFF)F"))
     private float modifyHeadYaw(float original, LivingEntity entity, S state, float partialTicks) {
         if (entity == mc.player) {
-            RotationAnimationEvent event = new RotationAnimationEvent(entity.yHeadRot, entity.yHeadRotO, 0.0f, 0.0f).post();
+            RotationAnimationEvent event = new RotationAnimationEvent(entity.yHeadRot, entity.yHeadRotO, 0.0f, 0.0f);
+            event.post();
             return Mth.rotLerp(partialTicks, event.getLastYaw(), event.getYaw());
         }
         return original;
@@ -42,7 +44,8 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot(F)F"))
     private float modifyPitch(float original, LivingEntity entity, S state, float partialTicks) {
         if (entity == mc.player) {
-            RotationAnimationEvent event = new RotationAnimationEvent(0.0f, 0.0f, entity.getXRot(), entity.getXRot(0.0f)).post();
+            RotationAnimationEvent event = new RotationAnimationEvent(0.0f, 0.0f, entity.getXRot(), entity.getXRot(0.0f));
+            event.post();
             return Mth.rotLerp(partialTicks, event.getLastPitch(), event.getPitch());
         }
         return original;

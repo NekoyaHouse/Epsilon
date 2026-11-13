@@ -5,6 +5,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class TravelEvent : Cancellable(), IEvent<TravelEvent>, IPosting by Companion {
+class TravelEvent : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

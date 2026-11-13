@@ -13,7 +13,8 @@ public class MixinKeyboardHandler {
 
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
     private void keyPress(long handle, int action, KeyEvent keyEvent, CallbackInfo ci) {
-        KeyPressEvent event = new KeyPressEvent(keyEvent, action).post();
+        KeyPressEvent event = new KeyPressEvent(keyEvent, action);
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }

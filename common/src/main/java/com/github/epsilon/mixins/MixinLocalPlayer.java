@@ -65,7 +65,8 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
     private void onPreTick(CallbackInfo ci) {
-        PlayerTickEvent.Pre event = new PlayerTickEvent.Pre().post();
+        PlayerTickEvent.Pre event = new PlayerTickEvent.Pre();
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -79,7 +80,8 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
     private void onPreSendPosition(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
-        epsilon$sendPositionEvent = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround(), new Vec3(xLast, yLast, zLast), yRotLast, xRotLast, positionReminder).post();
+        epsilon$sendPositionEvent = new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround(), new Vec3(xLast, yLast, zLast), yRotLast, xRotLast, positionReminder);
+        epsilon$sendPositionEvent.post();
         if (epsilon$sendPositionEvent.isCancelled()) {
             ci.cancel();
             new AfterSendPositionEvent().post();
@@ -153,13 +155,15 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @WrapOperation(method = "modifyInput", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
     private boolean onSlowdown(LocalPlayer localPlayer, Operation<Boolean> original) {
-        SlowdownEvent event = new SlowdownEvent(original.call(localPlayer)).post();
+        SlowdownEvent event = new SlowdownEvent(original.call(localPlayer));
+        event.post();
         return event.isSlowdown();
     }
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V"), cancellable = true)
     private void onMove(MoverType moverType, Vec3 delta, CallbackInfo ci) {
-        MoveEvent event = new MoveEvent(delta.x, delta.y, delta.z).post();
+        MoveEvent event = new MoveEvent(delta.x, delta.y, delta.z);
+        event.post();
         if (event.isCancelled()) {
             super.move(moverType, new Vec3(event.getX(), event.getY(), event.getZ()));
             ci.cancel();

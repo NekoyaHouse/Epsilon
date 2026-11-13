@@ -4,6 +4,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class FireworkRotationEvent(var yaw: Float, var pitch: Float) : IEvent<FireworkRotationEvent>, IPosting by Companion {
+class FireworkRotationEvent(var yaw: Float, var pitch: Float) : IEvent, IPosting by Companion {
     companion object : EventBus()
 }

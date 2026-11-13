@@ -20,7 +20,8 @@ public class MixinKeyboardInput {
     private Input redirectKeyPresses(Input original) {
         float forwardImpulse = calculateImpulse(original.forward(), original.backward());
         float leftImpulse = calculateImpulse(original.left(), original.right());
-        KeyboardInputEvent event = new KeyboardInputEvent(forwardImpulse, leftImpulse, original.jump(), original.shift(), original.sprint()).post();
+        KeyboardInputEvent event = new KeyboardInputEvent(forwardImpulse, leftImpulse, original.jump(), original.shift(), original.sprint());
+        event.post();
         return event.toNewInput();
     }
 

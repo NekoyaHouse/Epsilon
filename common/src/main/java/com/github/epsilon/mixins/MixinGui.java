@@ -14,7 +14,8 @@ public class MixinGui {
 
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void onSetScreen(Screen screen, CallbackInfo ci) {
-        OpenScreenEvent event = new OpenScreenEvent(screen).post();
+        OpenScreenEvent event = new OpenScreenEvent(screen);
+        event.post();
         if (event.isCancelled()) {
             ci.cancel();
         } else {

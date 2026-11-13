@@ -1,11 +1,7 @@
 package com.github.epsilon.events.api
 
-interface IEvent<out E : IEvent<E>> : IPosting {
+interface IEvent : IPosting {
 
-    @Suppress("UNCHECKED_CAST")
-    fun post(): E {
-        post(this)
-        return this as E
-    }
+    fun post() = post(this)
 
 }

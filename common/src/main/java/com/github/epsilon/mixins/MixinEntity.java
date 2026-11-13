@@ -34,7 +34,8 @@ public class MixinEntity {
     @WrapOperation(method = "getViewVector", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;calculateViewVector(FF)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 redirectGetViewYRot(float xRot, float yRot, Operation<Vec3> original) {
         if ((Object) this == mc.player) {
-            RaytraceEvent event = new RaytraceEvent(yRot, xRot).post();
+            RaytraceEvent event = new RaytraceEvent(yRot, xRot);
+            event.post();
             return original.call(event.getPitch(), event.getYaw());
         }
         return original.call(xRot, yRot);
@@ -43,7 +44,8 @@ public class MixinEntity {
     @WrapOperation(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getYRot()F"))
     private float redirectGetYRotInMoveRelative(Entity instance, Operation<Float> original) {
         if (instance == mc.player) {
-            StrafeEvent event = new StrafeEvent(instance.getYRot()).post();
+            StrafeEvent event = new StrafeEvent(instance.getYRot());
+            event.post();
             return event.getYaw();
         }
         return original.call(instance);

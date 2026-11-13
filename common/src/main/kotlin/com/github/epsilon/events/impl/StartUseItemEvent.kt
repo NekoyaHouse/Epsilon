@@ -5,6 +5,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class StartUseItemEvent : Cancellable(), IEvent<StartUseItemEvent>, IPosting by Companion {
+class StartUseItemEvent : Cancellable(), IEvent, IPosting by Companion {
     companion object : EventBus()
 }

@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos
 
 object PacketMineEvent {
 
-    class BreakAttempt(val pos: BlockPos) : IEvent<BreakAttempt>, IPosting by Companion {
+    class BreakAttempt(val pos: BlockPos) : IEvent, IPosting by Companion {
         companion object : EventBus()
     }
 

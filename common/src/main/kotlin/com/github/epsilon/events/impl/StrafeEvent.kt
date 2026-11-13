@@ -4,6 +4,6 @@ import com.github.epsilon.events.api.EventBus
 import com.github.epsilon.events.api.IEvent
 import com.github.epsilon.events.api.IPosting
 
-class StrafeEvent(var yaw: Float) : IEvent<StrafeEvent>, IPosting by Companion {
+class StrafeEvent(var yaw: Float) : IEvent, IPosting by Companion {
     companion object : EventBus()
 }
