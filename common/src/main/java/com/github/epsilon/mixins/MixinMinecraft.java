@@ -6,7 +6,6 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.video.VideoPlayer;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.kernel.ffi.smtc.SmtcService;
-import com.github.epsilon.kernel.gameplay.player.SwingMode;
 import com.github.epsilon.kernel.jvm.NonNullContext;
 import com.github.epsilon.managers.sound.SoundKey;
 import com.github.epsilon.managers.sound.SoundManager;
@@ -25,6 +24,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.HitResult;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -170,7 +170,7 @@ public abstract class MixinMinecraft {
                 && mc.options.keyAttack.consumeClick()
                 && (!handView.getOnlyOnBlock() || mc.hitResult.getType() == HitResult.Type.BLOCK)
         ) {
-            SwingMode.Client.attackSwing(InteractionHand.MAIN_HAND);
+            mc.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
         }
     }
 

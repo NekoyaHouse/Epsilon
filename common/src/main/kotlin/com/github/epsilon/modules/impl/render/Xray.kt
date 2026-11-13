@@ -13,7 +13,6 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
-import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.tags.ItemTags
@@ -119,82 +118,77 @@ object Xray : Module("Xray", Category.RENDER) {
             }
         }
 
-        handler<Render3DEvent> { onRender3D(it.poseStack) }
-    }
+        safeEventHandler<Render3DEvent> {
+            for (pos in ores) {
+                val block = level.getBlockState(pos).block
+                if ((block === Blocks.DIAMOND_ORE || block === Blocks.DEEPSLATE_DIAMOND_ORE) && diamond) {
+                    draw(pos, 0, 255, 255)
+                }
+                if ((block === Blocks.GOLD_ORE || block === Blocks.DEEPSLATE_GOLD_ORE) && gold) {
+                    draw(pos, 255, 215, 0)
+                }
+                if (block === Blocks.NETHER_GOLD_ORE && gold) {
+                    draw(pos, 255, 215, 0)
+                }
+                if ((block === Blocks.IRON_ORE || block === Blocks.DEEPSLATE_IRON_ORE) && iron) {
+                    draw(pos, 213, 213, 213)
+                }
+                if ((block === Blocks.EMERALD_ORE || block === Blocks.DEEPSLATE_EMERALD_ORE) && emerald) {
+                    draw(pos, 0, 255, 77)
+                }
+                if ((block === Blocks.REDSTONE_ORE || block === Blocks.DEEPSLATE_REDSTONE_ORE) && redstone) {
+                    draw(pos, 255, 0, 0)
+                }
+                if (block === Blocks.COAL_ORE && coal) {
+                    draw(pos, 0, 0, 0)
+                }
+                if ((block === Blocks.LAPIS_ORE || block === Blocks.DEEPSLATE_LAPIS_ORE) && lapis) {
+                    draw(pos, 38, 97, 156)
+                }
+                if (block === Blocks.ANCIENT_DEBRIS && netherite) {
+                    draw(pos, 255, 255, 255)
+                }
+                if (block === Blocks.NETHER_QUARTZ_ORE && quartz) {
+                    draw(pos, 170, 170, 170)
+                }
+            }
 
-    private fun onRender3D(stack: PoseStack) {
-        val level = mc.level ?: return
-        val player = mc.player ?: return
+            val currentDisplay = displayBlock
+            if (currentDisplay != null && done != all) {
+                draw(currentDisplay, 255, 0, 60)
+            }
 
-        for (pos in ores) {
-            val block = level.getBlockState(pos).block
-            if ((block === Blocks.DIAMOND_ORE || block === Blocks.DEEPSLATE_DIAMOND_ORE) && diamond) {
-                draw(pos, 0, 255, 255)
+            if (brutForce) {
+                Render3DScheduler.addOutlineBox(area, Color(149, 149, 149, 100))
             }
-            if ((block === Blocks.GOLD_ORE || block === Blocks.DEEPSLATE_GOLD_ORE) && gold) {
-                draw(pos, 255, 215, 0)
-            }
-            if (block === Blocks.NETHER_GOLD_ORE && gold) {
-                draw(pos, 255, 215, 0)
-            }
-            if ((block === Blocks.IRON_ORE || block === Blocks.DEEPSLATE_IRON_ORE) && iron) {
-                draw(pos, 213, 213, 213)
-            }
-            if ((block === Blocks.EMERALD_ORE || block === Blocks.DEEPSLATE_EMERALD_ORE) && emerald) {
-                draw(pos, 0, 255, 77)
-            }
-            if ((block === Blocks.REDSTONE_ORE || block === Blocks.DEEPSLATE_REDSTONE_ORE) && redstone) {
-                draw(pos, 255, 0, 0)
-            }
-            if (block === Blocks.COAL_ORE && coal) {
-                draw(pos, 0, 0, 0)
-            }
-            if ((block === Blocks.LAPIS_ORE || block === Blocks.DEEPSLATE_LAPIS_ORE) && lapis) {
-                draw(pos, 38, 97, 156)
-            }
-            if (block === Blocks.ANCIENT_DEBRIS && netherite) {
-                draw(pos, 255, 255, 255)
-            }
-            if (block === Blocks.NETHER_QUARTZ_ORE && quartz) {
-                draw(pos, 170, 170, 170)
-            }
-        }
 
-        val currentDisplay = displayBlock
-        if (currentDisplay != null && done != all) {
-            draw(currentDisplay, 255, 0, 60)
-        }
+            if (toCheck.isEmpty() || !brutForce) return@safeEventHandler
 
-        if (brutForce) {
-            Render3DScheduler.addOutlineBox(area, Color(149, 149, 149, 100))
-        }
-
-        if (toCheck.isEmpty() || !brutForce) return
-
-        if (mc.isLocalServer) {
-            log("单人游戏你反你老冯呢")
-            toggle()
-            return
-        }
-
-        if (player.mainHandItem.`is`(ItemTags.PICKAXES)) {
-            if (player.tickCount % 8 == 0) {
-                log("别在主手放镐子")
+            if (mc.isLocalServer) {
+                log("单人游戏你反你老冯呢")
                 toggle()
+                return@safeEventHandler
             }
-            return
-        }
 
-        if (delayTimer.every(delay.toLong())) {
-            val pos = toCheck.removeAt(
-                if (toCheck.size - 1 <= 1) 0 else ThreadLocalRandom.current().nextInt(0, toCheck.size - 1)
-            )
-            displayBlock = pos
-            mc.gameMode!!.startDestroyBlock(pos, player.direction)
-            mc.gameMode!!.stopDestroyBlock()
-            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
-            checked.add(BlockMemory(pos))
-            done++
+            if (player.mainHandItem.`is`(ItemTags.PICKAXES)) {
+                if (player.tickCount % 8 == 0) {
+                    log("请不要在主手放镐子")
+                    toggle()
+                }
+                return@safeEventHandler
+            }
+
+            if (delayTimer.every(delay.toLong())) {
+                val pos = toCheck.removeAt(
+                    if (toCheck.size - 1 <= 1) 0 else ThreadLocalRandom.current().nextInt(0, toCheck.size - 1)
+                )
+                displayBlock = pos
+                gameMode.startDestroyBlock(pos, player.direction)
+                gameMode.stopDestroyBlock()
+                SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
+                checked.add(BlockMemory(pos))
+                done++
+            }
         }
     }
 
