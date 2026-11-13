@@ -75,13 +75,13 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         100,
         0..500,
         1, { targetMode == TargetMode.Switch })
-    private val priorityMode by enumSetting("RotationPriority Mode", PriorityMode.None)
+    private val priorityMode by enumSetting("Priority Mode", PriorityMode.None)
     val searchRange by doubleSetting("Search Range", 4.0, 1.0..6.0, 0.1)
     val aimRange by doubleSetting("Aim Range", 3.0, 1.0..6.0, 0.1)
     private val fov by intSetting("FOV", 360, 10..360, 1)
     private val rotate by boolSetting("Rotate", true)
     private val rotationSpeed by intSetting("Rotation Speed", 180, 10..180, 10, { rotate })
-    private val rotationPriority by enumSetting("Rotation RotationPriority", RotationPriority.High, { rotate })
+    private val rotationPriority by enumSetting("Rotation Priority", RotationPriority.High, { rotate })
     private val cps by intSetting("CPS", 12, 1..20, 1, { mode == Mode.OnePointEight })
 
     private val players by boolSetting("Players", true)

@@ -115,3 +115,5 @@ accessible field net/minecraft/client/gui/screens/social/SocialInteractionsScree
 accessible field net/minecraft/client/gui/components/ImageButton sprites Lnet/minecraft/client/gui/components/WidgetSprites;
 accessible class net/minecraft/client/gui/screens/debug/GameModeSwitcherScreen$GameModeIcon
 accessible class net/minecraft/client/gui/Font$PreparedTextBuilder
+accessible field net/minecraft/world/entity/LivingEntity swingState Lnet/minecraft/world/entity/LivingEntity$SwingState;
+accessible method net/minecraft/world/entity/LivingEntity getModifiedSwingDuration (Lnet/minecraft/world/item/component/SwingAnimation;)I

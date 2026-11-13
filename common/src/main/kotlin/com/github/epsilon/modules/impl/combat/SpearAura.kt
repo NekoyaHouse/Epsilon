@@ -92,7 +92,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
     private val autoCharge by boolSetting("Auto Charge", true)
     private val move by boolSetting("Move", true)
     private val rotationSpeed by intSetting("Rotation Speed", 180, 10..180, 10)
-    private val rotationPriority by enumSetting("Rotation RotationPriority", RotationPriority.High)
+    private val rotationPriority by enumSetting("Rotation Priority", RotationPriority.High)
 
     private val players by boolSetting("Players", true)
     private val mobs by boolSetting("Mobs", true)

@@ -33,7 +33,7 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
     private val fov by intSetting("Fov", 90, 1..360, 1)
     private val delay by intSetting("Delay", 500, 0..2000, 10)
     private val rotationSpeed by intSetting("Rotation Speed", 180, 1..180, 10)
-    private val rotationPriority by enumSetting("Rotation RotationPriority", RotationPriority.Lowest)
+    private val rotationPriority by enumSetting("Rotation Priority", RotationPriority.Lowest)
 
     private val timer = TimerUtils()
     private var shouldThrow = false

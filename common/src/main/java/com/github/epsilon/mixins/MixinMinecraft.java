@@ -170,7 +170,8 @@ public abstract class MixinMinecraft {
                 && mc.options.keyAttack.consumeClick()
                 && (!handView.getOnlyOnBlock() || mc.hitResult.getType() == HitResult.Type.BLOCK)
         ) {
-            mc.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
+            SwingAnimation anim = SwingAnimation.DEFAULT;
+            mc.player.swingState.startIfAble(InteractionHand.MAIN_HAND, anim, mc.player.getModifiedSwingDuration(anim));
         }
     }
 

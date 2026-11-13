@@ -37,10 +37,6 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     private val timerBalance by boolSetting("Timer Balance", true)
     private val tabList by boolSetting("Tab List", true)
     private val music by boolSetting("Music", true).platformOnly(PlatformRequirement.WINDOWS_X64)
-    private val traces by boolSetting("Traces", true)
-    private val traceRange by doubleSetting("Trace Range", 128.0, 8.0..256.0, 1.0, { traces })
-    private val traceWidth by doubleSetting("Trace Width", 1.5, 0.5..5.0, 0.25, { traces })
-    private val traceColor by colorSetting("Trace Color", Color(111, 224, 211, 180), true, { traces })
     val backgroundColor by colorSetting("Background Color", Color(15, 15, 15, 50))
     val drawShadow by boolSetting("Drop Shadow", true)
     val backgroundBlur by boolSetting("Background Blur", true)
@@ -64,7 +60,6 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
     private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize { TextRenderer.create() }
     private val landRenderer = LandRenderer(LandController, 48.0f, 48.0f)
-    private var rectRenderer: RectRenderer? = null
 
     private var target: LivingEntity? = null
 
@@ -83,56 +78,26 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             LandController.removeInstances(TabListInstance::class.java)
             LandController.removeInstances(MusicInstance::class.java)
             SmtcService.stop()
-            rectRenderer?.clear()
             target = null
-        }
-
-        handler<Render2DEvent.Level> {
-            if (!traces || mc.gameRenderer.gameRenderState().guiRenderState.isHudHidden) {
-                rectRenderer?.clear()
-                return@handler
-            }
-
-            runSafe {
-                var renderer = rectRenderer
-                if (renderer == null) {
-                    renderer = RectRenderer.create()
-                    rectRenderer = renderer
-                }
-                renderer.clear()
-                val activeRenderer = renderer
-                val traceCount = TracesRenderer.render(
-                    activeRenderer,
-                    landRenderer.x, landRenderer.y, landRenderer.width, landRenderer.height,
-                    traceRange, traceWidth.toFloat(), traceColor
-                )
-                if (traceCount > 0) {
-                    OverlayAntiAlias.render(4, Runnable { activeRenderer.drawAndClear() })
-                }
-            } ?: rectRenderer?.clear()
         }
     }
 
     override fun measure(deltaTracker: DeltaTracker) {
         frameVisible = false
-        runSafe { measureIsland() }
-    }
+        runSafe {
+            landRenderer.setTextRenderer(textRendererSupplier.get())
+            landRenderer.update()
 
-    context(nn: NonNullContext)
-    private fun measureIsland() {
-        landRenderer.setTextRenderer(textRendererSupplier.get())
-        landRenderer.update()
+            updateTargetInstance()
+            updateBlockInstance()
+            updateBalanceInstance()
+            updateTabListInstance()
+            updateMusicInstance()
 
-        updateTargetInstance()
-        updateBlockInstance()
-        updateBalanceInstance()
-        updateTabListInstance()
-        updateMusicInstance()
-
-        setBounds(landRenderer.width, landRenderer.height)
-        // 世界空间 traces 需要岛屿的绝对位置，因此在布局阶段同步
-        landRenderer.syncPosition(x, y)
-        frameVisible = true
+            setBounds(landRenderer.width, landRenderer.height)
+            landRenderer.syncPosition(x, y)
+            frameVisible = true
+        }
     }
 
     override fun UiScope.drawUi(deltaTracker: DeltaTracker) {
