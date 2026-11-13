@@ -132,7 +132,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         )
     )
     private val toggleOnTeleport by boolSetting("Toggle On Teleport", false)
-    private val selfRescue by boolSetting("Self Rescue", true)
+    private val selfRescue by boolSetting("Self Rescue", true, { rotationMode != RotationMode.Packet })
     private val mode by enumSetting("Mode", Mode.TellyBridge)
     private val swapMode by enumSetting("Swap Mode", SwapMode.Normal)
     private val swapBack by boolSetting("Swap Back", true, { swapMode == SwapMode.Normal })
@@ -269,7 +269,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
 
             getBlockInfo()
 
-            if (selfRescue) {
+            if (selfRescue && rotationMode != RotationMode.Packet) {
                 var reachable = true
                 if (player.deltaMovement.y < -0.1 && blockPos != null) {
                     val fallingPlayer = with(FallingPlayer(player)) { calculate(2) }
@@ -292,22 +292,22 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     rotateCount++
                     val pos = blockPos ?: return@safeEventHandler
                     val face = direction ?: return@safeEventHandler
-                    if (rotationMode != RotationMode.Packet) {
-                        val rotation = getRotation(pos, face)
-                        RotationManager.rotations = rotation
-                        RotationManager.updateActive(true)
 
-                        // 代替 sendPosition()；Packet 模式由 C03Interact 发送位置和旋转。
-                        connection.send(
-                            ServerboundMovePlayerPacket.Rot(
-                                rotation.yaw,
-                                rotation.pitch,
-                                player.onGround(),
-                                player.horizontalCollision
-                            )
+                    val rotation = getRotation(pos, face)
+                    RotationManager.rotations = rotation
+                    RotationManager.updateActive(true)
+
+                    connection.send(
+                        ServerboundMovePlayerPacket.Rot(
+                            rotation.yaw,
+                            rotation.pitch,
+                            player.onGround(),
+                            player.horizontalCollision
                         )
-                    }
+                    )
+
                     placeBlock(pos, face)
+
                     return@safeEventHandler
                 } else {
                     rotateCount = 0
@@ -461,11 +461,9 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         swap()
 
         val hand = blockResult.getHand()
-        val packetRotation = rotationMode == RotationMode.Packet
-        val hitVec = if (packetRotation) Vec3.atCenterOf(pos).relative(face, 0.5) else getVec3(pos, face)
-        val hit = BlockHitResult(hitVec, face, pos, false)
+        val hit = BlockHitResult(getVec3(pos, face), face, pos, false)
 
-        val result = if (packetRotation) {
+        val result = if (rotationMode == RotationMode.Packet) {
             placeBlock(hand, hit)
         } else {
             gameMode.useItemOn(player, hand, hit)
@@ -584,10 +582,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     }
 
     private fun getRotation(pos: BlockPos?, direction: Direction?): Rotation = runSafeOrElse(Rotation(0.0f, 0.0f)) {
-        val current = rotation
-        if (current == null) {
-            return@runSafeOrElse Rotation(Mth.wrapDegrees(player.yRot - 135.0f), 82.0f)
-        }
+        val current = rotation ?: return@runSafeOrElse Rotation(Mth.wrapDegrees(player.yRot - 135.0f), 82.0f)
 
         if (!onAir() || pos == null || direction == null) {
             return@runSafeOrElse current
