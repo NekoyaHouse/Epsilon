@@ -49,7 +49,7 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
         }
 
         safeEventHandler<AttackEntityEvent> { onAttackEntity(it) }
-        onUpdate { onPlayerTick(it) }
+        safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
     }
 
     private fun onAttackEntity(event: AttackEntityEvent) {

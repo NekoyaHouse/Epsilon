@@ -2,7 +2,9 @@ package com.github.epsilon.modules.impl.movement
 
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyboardInputEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.jvm.*
@@ -41,7 +43,7 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
             resetTarget()
         }
 
-        onUpdate(EventPriority.HIGHEST) {
+        safeEventHandler<PlayerTickEvent.Pre>(EventPriority.HIGHEST) {
             val left = mc.options.keyLeft.isDown
             val right = mc.options.keyRight.isDown
             if (left != right) {
@@ -50,12 +52,12 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (speedOnly && !Speed.isEnabled && !Flight.isEnabled) {
                 resetTarget()
-                return@onUpdate
+                return@safeEventHandler
             }
 
             if (requireJump && (mc.gui.screen() != null || !mc.options.keyJump.isDown)) {
                 resetTarget()
-                return@onUpdate
+                return@safeEventHandler
             }
 
             if (KillAura.isEnabled && !Scaffold.isEnabled && !player.isUsingItem && !player.isBlocking) {
@@ -66,14 +68,14 @@ object TargetStrafe : Module("Target Strafe", Category.MOVEMENT) {
 
             if (target == null) {
                 targetYaw = Float.NaN
-                return@onUpdate
+                return@safeEventHandler
             }
 
             val offsets = createOrbitOffsets()
             var closestIndex = findClosestIndex(offsets)
             if (closestIndex < 0) {
                 resetTarget()
-                return@onUpdate
+                return@safeEventHandler
             }
 
             if (player.horizontalCollision) {

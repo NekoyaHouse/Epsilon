@@ -4,6 +4,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.MoveEvent
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.managers.NotificationManager
@@ -77,7 +78,7 @@ object Xray : Module("Xray", Category.RENDER) {
             mc.smartCull = true
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (plugin.`is`(Plugin.New)) {
                 checked.forEach { blockMemory ->
                     if (blockMemory.isDelayed() && !ores.contains(blockMemory.blockPos))

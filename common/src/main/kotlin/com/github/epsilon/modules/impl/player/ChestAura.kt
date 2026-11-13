@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -67,28 +68,28 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             openingStartedAt = 0L
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             updateTrackedLevel()
 
             if (opening) {
-                if (mc.gui.screen() is AbstractContainerScreen<*>) return@onUpdate
-                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@onUpdate
+                if (mc.gui.screen() is AbstractContainerScreen<*>) return@safeEventHandler
+                if (System.currentTimeMillis() - openingStartedAt < 1000L) return@safeEventHandler
                 opening = false
                 timer.reset()
             }
 
-            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@onUpdate
+            if (shouldPause() || !timer.passedMillise(delay.toLong())) return@safeEventHandler
 
             if (hasNearbyPlayer()) {
                 if (mc.gui.screen() is AbstractContainerScreen<*>) {
                     player.closeContainer()
                 }
-                return@onUpdate
+                return@safeEventHandler
             }
 
-            if (mc.gui.screen() is AbstractContainerScreen<*>) return@onUpdate
+            if (mc.gui.screen() is AbstractContainerScreen<*>) return@safeEventHandler
 
-            val target = findTarget() ?: return@onUpdate
+            val target = findTarget() ?: return@safeEventHandler
 
             val targetRotation = calculate(player.eyePosition, target.hit.location)
             RotationManager.setRotations(
@@ -99,10 +100,10 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             )
 
             val hit = raycastTarget(RotationManager.getRotation(), target.pos, target.throughWalls)
-            if (hit == null || hit.blockPos != target.pos) return@onUpdate
+            if (hit == null || hit.blockPos != target.pos) return@safeEventHandler
 
             val result = gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit)
-            if (!result.consumesAction()) return@onUpdate
+            if (!result.consumesAction()) return@safeEventHandler
 
             playerClickedContainers.add(target.pos)
             clickedContainers.add(target.pos)

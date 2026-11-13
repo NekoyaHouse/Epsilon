@@ -376,7 +376,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             }
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (spearHitPending) {
                 spearHitPending = false
                 if (isUsingSpear()) {
@@ -386,7 +386,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
                 forceForward = false
                 // 命中包可能在 ClientTickEvent.Pre 之后才到达，这里再松一次按键，防止下一 tick 原版重新起手。
                 stopAutoCharge()
-                return@onUpdate
+                return@safeEventHandler
             }
 
             if (spearMaceDelay > 0) {

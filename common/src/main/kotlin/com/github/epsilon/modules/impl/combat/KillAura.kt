@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.RotationManager
@@ -357,12 +358,12 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             }
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             while (attacks > 0) {
                 attacks--
-                if (pauseOnEat && isEating() || NoSlowdown.isWorking()) return@onUpdate
+                if (pauseOnEat && isEating() || NoSlowdown.isWorking()) return@safeEventHandler
 
-                val entity = getAttackEntity() ?: return@onUpdate
+                val entity = getAttackEntity() ?: return@safeEventHandler
 
                 gameMode.attack(player, entity)
 

@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SwingHandEvent
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.managers.target.TargetManager
@@ -31,15 +32,15 @@ object SilentAim : Module("Silent Aim", Category.COMBAT) {
     private var target: LivingEntity? = null
 
     init {
-        onUpdate {
-            if (!redirecting) return@onUpdate
+        safeEventHandler<PlayerTickEvent.Pre> {
+            if (!redirecting) return@safeEventHandler
 
             val currentTarget = target
             if (currentTarget == null || !currentTarget.isAlive || currentTarget.isDeadOrDying ||
                 getEyeDistanceToEntity(currentTarget) > range
             ) {
                 redirecting = false
-                return@onUpdate
+                return@safeEventHandler
             }
 
             val rotations = calculate(currentTarget.eyePosition)

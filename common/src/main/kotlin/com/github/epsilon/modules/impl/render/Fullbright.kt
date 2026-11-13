@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
@@ -17,7 +18,7 @@ object Fullbright : Module("Fullbright", Category.RENDER) {
             }
         }
 
-        onUpdate { onPlayerTick(it) }
+        safeEventHandler<PlayerTickEvent.Pre> { onPlayerTick(it) }
     }
 
     private enum class Mode {

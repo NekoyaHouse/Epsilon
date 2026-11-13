@@ -5,6 +5,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AfterSendPositionEvent
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.modules.Category
@@ -119,7 +120,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
             currentTryWorking = false
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             tickStartX = player.x
             tickStartY = player.y
             tickStartZ = player.z

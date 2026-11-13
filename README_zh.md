@@ -37,6 +37,10 @@ TTF 字体使用 MSDF 图集，继续由 STB_truetype 提供轮廓，并通过�
 ./gradlew runClient
 ```
 
+## 开发约定
+
+Module 与 utils 中仅需一个非空游戏上下文的函数使用 `fun NonNullContext.xxx(...)`，内部直接访问 `player`、`level`、`gameMode` 和 `connection`。对象成员扩展需导入后在 `safeEventHandler`、`runSafe` 或 `with(nn) { }` 中调用；只有多个上下文需求或已有其他扩展接收者时才使用 `context(...)` 参数。完整开发约束见 [AGENTS.md](AGENTS.md)。
+
 ## 🙏 鸣谢
 
 感谢以下项目。第三方代码归属信息详见 [NOTICE](NOTICE.md)。

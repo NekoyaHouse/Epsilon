@@ -59,7 +59,7 @@ object Step : Module("Step", Category.MOVEMENT) {
             player.setStepHeight(height.toFloat())
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (timer && packets <= 0) {
                 TimerManager.reset()
                 timer = false
@@ -68,7 +68,7 @@ object Step : Module("Step", Category.MOVEMENT) {
             if (mode == Mode.OldNCP || strict) {
                 val stepHeight = player.y - player.yo
                 if (stepHeight <= 0.75 || stepHeight > height) {
-                    return@onUpdate
+                    return@safeEventHandler
                 }
 
                 val offsets = getOffset(stepHeight)

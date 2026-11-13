@@ -138,7 +138,7 @@ abstract class TrapBase(
             }
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             val target = breakingCrystal
             val pos = placing?.pos
             if (breakCrystal && target != null && pos != null && canAttackCrystal(target) &&

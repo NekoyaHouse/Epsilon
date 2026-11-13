@@ -2,8 +2,10 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.KeyPressEvent
 import com.github.epsilon.events.impl.MousePressEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.jvm.*
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
@@ -68,10 +70,10 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
             }
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             if (mc.gui.screen() != null) {
                 pressed = false
-                return@onUpdate
+                return@safeEventHandler
             }
 
             if (hasActivated) {
@@ -86,15 +88,15 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
                 val pearl = findInHotbar(Items.ENDER_PEARL)
                 if (!pearl.found()) {
                     resetState()
-                    return@onUpdate
+                    return@safeEventHandler
                 }
 
                 if (player.cooldowns.isOnCooldown(Items.ENDER_PEARL.defaultInstance)) {
-                    return@onUpdate
+                    return@safeEventHandler
                 }
 
                 if (pauseOnEat && (isEating() || NoSlowdown.isWorking())) {
-                    return@onUpdate
+                    return@safeEventHandler
                 } else {
                     if (NoSlowdown.isWorking()) {
                         NotificationManager.warning(
@@ -114,7 +116,7 @@ object KeyPearl : Module("Key Pearl", Category.COMBAT) {
 
                 if (clock < delay) {
                     clock++
-                    return@onUpdate
+                    return@safeEventHandler
                 }
 
                 if (!hasActivated) {

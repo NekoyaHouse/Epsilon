@@ -3,11 +3,8 @@ package com.github.epsilon.modules
 import com.github.epsilon.kernel.state.*
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.events.api.ListenerOwner
-import com.github.epsilon.events.api.DEFAULT_LISTENER_PRIORITY
-import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.MinecraftWrapper
-import com.github.epsilon.kernel.jvm.*
+import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.settings.Setting
 import com.github.epsilon.settings.SettingGroup
@@ -77,15 +74,6 @@ open class Module(
 
     protected fun onDisable(block: () -> Unit) {
         disableCallbacks.add(block)
-    }
-
-    /** 注册玩家 tick 前的非空上下文监听器，订阅生命周期与模块一致。 */
-    protected fun onUpdate(
-        priority: Int = DEFAULT_LISTENER_PRIORITY,
-        alwaysListening: Boolean = false,
-        block: NonNullContext.(PlayerTickEvent.Pre) -> Unit
-    ) {
-        safeEventHandler(priority, alwaysListening, block)
     }
 
     fun toggle() {

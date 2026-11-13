@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.render
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -97,7 +98,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
             }
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             for (target in level.players()) {
                 if (target === player) continue
                 playerCache[target.gameProfile.id()] = target

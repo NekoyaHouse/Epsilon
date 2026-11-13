@@ -114,7 +114,7 @@ object MasEffects : Module("Mas Effects", Category.RENDER) {
             particleRenderer.clear()
         }
 
-        onUpdate {
+        safeEventHandler<PlayerTickEvent.Pre> {
             particleRenderer.tick()
 
             if (playerDeathEffect) {
