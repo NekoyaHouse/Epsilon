@@ -2587,6 +2587,38 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
+      },
+      "particles": {
+        "_value": "Particles",
+        "mode": {
+          "_value": "Mode",
+          "star": "Star",
+          "firefly": "Firefly",
+          "dollar": "Dollar",
+          "heart": "Heart",
+          "snowflake": "Snowflake",
+          "drop": "Drop",
+          "cloud": "Cloud"
+        },
+        "color mode": {
+          "_value": "Color Mode",
+          "custom": "Custom",
+          "sync": "Theme Sync",
+          "rgb": "RGB",
+          "sky": "Sky",
+          "lightrgb": "Light RGB"
+        },
+        "physics": {
+          "_value": "Physics",
+          "drop": "Drop",
+          "fly": "Fly",
+          "fallingstars": "Falling Stars",
+          "rain": "Rain"
+        },
+        "color": "Color",
+        "amount": "Amount",
+        "time": "Life Time (ticks)",
+        "size": "Size"
       }
     },
     "elements": {

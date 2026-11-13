@@ -1,6 +1,6 @@
 package com.github.epsilon.kernel.render.effect
 
-import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.assets.resources.ParticleAtlas
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.ColorUtils
@@ -9,7 +9,6 @@ import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import org.joml.Matrix4f
@@ -25,18 +24,18 @@ object FireflyESP {
         Rainbow
     }
 
-    private val FIREFLY_TEX: Identifier = ResourceLocationUtils.getIdentifier("textures/particles/firefly.png")
+    private val FIREFLY_SPRITE = ParticleAtlas.Sprite.FIREFLY
 
     private val TARGET_ICON_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_firefly_no_depth")
-        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
 
     private val TARGET_ICON_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_firefly")
-        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
         .withCull(false)
         .build()
@@ -87,7 +86,7 @@ object FireflyESP {
             val iAge = (target.tickCount - 1).toFloat() + tickDelta
 
             val pipeline = if (canSee) TARGET_ICON_PIPELINE else TARGET_ICON_NO_DEPTH_PIPELINE
-            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, FIREFLY_TEX)
+            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, ParticleAtlas.texture)
 
             for (j in 0 until 3) {
                 for (i in 0..espLength) {
@@ -125,10 +124,10 @@ object FireflyESP {
                         rainbowBrightness.toFloat()
                     ).rgb
 
-                    renderer.vertex(matrix, -scale, scale, 0f, 0f, 1f, renderColor)
-                    renderer.vertex(matrix, scale, scale, 0f, 1f, 1f, renderColor)
-                    renderer.vertex(matrix, scale, -scale, 0f, 1f, 0f, renderColor)
-                    renderer.vertex(matrix, -scale, -scale, 0f, 0f, 0f, renderColor)
+                    renderer.vertex(matrix, -scale, scale, 0f, FIREFLY_SPRITE.u0, FIREFLY_SPRITE.v1, renderColor)
+                    renderer.vertex(matrix, scale, scale, 0f, FIREFLY_SPRITE.u1, FIREFLY_SPRITE.v1, renderColor)
+                    renderer.vertex(matrix, scale, -scale, 0f, FIREFLY_SPRITE.u1, FIREFLY_SPRITE.v0, renderColor)
+                    renderer.vertex(matrix, -scale, -scale, 0f, FIREFLY_SPRITE.u0, FIREFLY_SPRITE.v0, renderColor)
 
                     stack.popPose()
                 }

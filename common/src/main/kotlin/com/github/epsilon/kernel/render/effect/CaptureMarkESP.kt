@@ -1,6 +1,6 @@
 package com.github.epsilon.kernel.render.effect
 
-import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.assets.resources.ParticleAtlas
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.render.ColorUtils
@@ -9,7 +9,6 @@ import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import org.joml.Matrix4f
@@ -19,7 +18,7 @@ import kotlin.math.sin
 
 object CaptureMarkESP {
 
-    private val CAPTUREMARK_TEX: Identifier = ResourceLocationUtils.getIdentifier("textures/particles/target.png")
+    private val CAPTUREMARK_SPRITE = ParticleAtlas.Sprite.TARGET
 
     private val TARGET_ICON_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_target_icon")
@@ -67,7 +66,7 @@ object CaptureMarkESP {
         poseStack.rotateDegrees(Axis.XP, camera.xRot())
         poseStack.rotateDegrees(Axis.ZP, rotation)
 
-        val renderer = LuminImmediateRenderer.beginPosTexColorQuads(TARGET_ICON_PIPELINE, CAPTUREMARK_TEX)
+        val renderer = LuminImmediateRenderer.beginPosTexColorQuads(TARGET_ICON_PIPELINE, ParticleAtlas.texture)
 
         val matrix: Matrix4f = poseStack.last().pose()
 
@@ -76,10 +75,10 @@ object CaptureMarkESP {
         val c3 = getColorForProgress(0.5f, waveSpeed, color1, color2, timeSeconds)
         val c4 = getColorForProgress(0.75f, waveSpeed, color1, color2, timeSeconds)
 
-        renderer.vertex(matrix, -size, -size, 0f, 0f, 0f, c1.rgb)
-        renderer.vertex(matrix, -size, size, 0f, 0f, 1f, c2.rgb)
-        renderer.vertex(matrix, size, size, 0f, 1f, 1f, c3.rgb)
-        renderer.vertex(matrix, size, -size, 0f, 1f, 0f, c4.rgb)
+        renderer.vertex(matrix, -size, -size, 0f, CAPTUREMARK_SPRITE.u0, CAPTUREMARK_SPRITE.v0, c1.rgb)
+        renderer.vertex(matrix, -size, size, 0f, CAPTUREMARK_SPRITE.u0, CAPTUREMARK_SPRITE.v1, c2.rgb)
+        renderer.vertex(matrix, size, size, 0f, CAPTUREMARK_SPRITE.u1, CAPTUREMARK_SPRITE.v1, c3.rgb)
+        renderer.vertex(matrix, size, -size, 0f, CAPTUREMARK_SPRITE.u1, CAPTUREMARK_SPRITE.v0, c4.rgb)
         renderer.end()
 
         poseStack.popPose()

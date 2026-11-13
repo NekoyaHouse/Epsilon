@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.assets.resources.ParticleAtlas
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -15,7 +15,6 @@ import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.BlockPos
-import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.Blocks
@@ -57,10 +56,6 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
 
     private val particles: MutableList<Particle> = ArrayList()
 
-    private val STAR_TEXTURE: Identifier = ResourceLocationUtils.getIdentifier("textures/particles/star.png")
-    private val HEART_TEXTURE: Identifier = ResourceLocationUtils.getIdentifier("textures/particles/heart.png")
-    private val BLOOM_TEXTURE: Identifier = ResourceLocationUtils.getIdentifier("textures/particles/firefly.png")
-
     private val HIT_PARTICLE_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_hit_particles")
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
@@ -100,14 +95,14 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         handler<Render3DEvent> { event ->
             if (particles.isEmpty()) return@handler
 
-            val texture = when (mode) {
-                Mode.Stars -> STAR_TEXTURE
-                Mode.Hearts -> HEART_TEXTURE
-                Mode.Bloom -> BLOOM_TEXTURE
+            val sprite = when (mode) {
+                Mode.Stars -> ParticleAtlas.Sprite.STAR
+                Mode.Hearts -> ParticleAtlas.Sprite.HEART
+                Mode.Bloom -> ParticleAtlas.Sprite.FIREFLY
             }
-            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(HIT_PARTICLE_PIPELINE, texture)
+            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(HIT_PARTICLE_PIPELINE, ParticleAtlas.texture)
             for (particle in particles) {
-                particle.renderTexture(event.poseStack, renderer)
+                particle.renderTexture(event.poseStack, renderer, sprite)
             }
             renderer.end()
         }
@@ -185,7 +180,11 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
             return System.currentTimeMillis() - spawnTime > lifeTime * 1000L
         }
 
-        fun renderTexture(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
+        fun renderTexture(
+            poseStack: PoseStack,
+            renderer: LuminImmediateRenderer.PosTexColorQuads,
+            sprite: ParticleAtlas.Sprite
+        ) {
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val particleScale = 0.07f
             val size = scale.toFloat()
@@ -202,10 +201,10 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
             val matrix: Matrix4f = poseStack.last().pose()
             val argb = particleColor.rgb
 
-            renderer.vertex(matrix, 0.0f, size, 0.0f, 0.0f, 1.0f, argb)
-            renderer.vertex(matrix, size, size, 0.0f, 1.0f, 1.0f, argb)
-            renderer.vertex(matrix, size, 0.0f, 0.0f, 1.0f, 0.0f, argb)
-            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, argb)
+            renderer.vertex(matrix, 0.0f, size, 0.0f, sprite.u0, sprite.v1, argb)
+            renderer.vertex(matrix, size, size, 0.0f, sprite.u1, sprite.v1, argb)
+            renderer.vertex(matrix, size, 0.0f, 0.0f, sprite.u1, sprite.v0, argb)
+            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, sprite.u0, sprite.v0, argb)
 
             poseStack.popPose()
         }

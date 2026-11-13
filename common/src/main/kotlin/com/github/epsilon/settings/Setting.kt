@@ -9,34 +9,18 @@ import com.github.epsilon.kernel.state.setValue
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-/**
- * 设置基类。
- *
- * 值本身以 `var value` 暴露（Java 侧即 `getValue()/setValue(...)`），写入会触发 [onChanged]。
- * 统一实现 [ReadWriteProperty]，所有设置（包括枚举）都可以直接委托：
- *
- * ```kotlin
- * private var mode by enumSetting("Mode", Mode.Default)
- * private val aimStrength by intSetting("Aim Strength", 10, 1..20, 1)
- * if (aimStrength > 10) { ... }
- * ```
- *
- * 属性类型就是值类型，不需要 import 任何委托扩展。
- */
 abstract class Setting<V>(
     val name: String,
     defaultValue: V,
-    /** 可见性条件；为 null 时始终可见。 */
     val visible: Visibility?,
     var onChanged: ((V) -> Unit)?,
 ) : ReadWriteProperty<Any?, V> {
 
-    /** 设置当前值；默认写入后回调 [onChanged]（子类可覆盖 setter 做钳制/归一化）。 */
     open var value: V
         get() = valueStore
         set(newValue) = writeValue(newValue)
 
-    /** 默认值，仅供子类在构造期归一化与 [reset] 使用。 */
+    // 默认值，仅供子类在构造期归一化与 [reset] 使用。
     protected var defaultValue: V = defaultValue
 
     var isGlobalSetting: Boolean = false
@@ -60,7 +44,6 @@ abstract class Setting<V>(
     val noticeKey: String
         get() = translateComponent?.getFullKey() ?: name
 
-    /** 当前是否满足可见性条件。 */
     val isVisible: Boolean get() = visible?.check() ?: true
 
     open fun initTranslateComponent(component: TranslateComponent) {
@@ -89,11 +72,10 @@ abstract class Setting<V>(
         valueStore = defaultValue
     }
 
-    /** 直接写入当前值并触发回调，绕过子类对 [value] 的重写（对应原 Java 的 `super.setValue`）。 */
+    /** 直接写入当前值并触发回调，绕过子类对 [value] 的重写。 */
     protected fun writeValue(newValue: V) {
         valueStore = newValue
         onChanged?.invoke(newValue)
-        notifyChangeListeners(newValue)
     }
 
     /** 直接写入当前值且不触发回调。 */
@@ -106,30 +88,6 @@ abstract class Setting<V>(
         defaultValue = initial
         valueStore = initial
     }
-
-    /** recompose 用的变更监听；与 [onChanged] 独立，不改变既有的单回调语义。 */
-    private var changeListeners: MutableList<(V) -> Unit>? = null
-
-    fun addChangeListener(listener: (V) -> Unit) {
-        val list = changeListeners ?: ArrayList<(V) -> Unit>(1).also { changeListeners = it }
-        if (!list.contains(listener)) {
-            list.add(listener)
-        }
-    }
-
-    fun removeChangeListener(listener: (V) -> Unit) {
-        changeListeners?.remove(listener)
-    }
-
-    private fun notifyChangeListeners(newValue: V) {
-        val list = changeListeners ?: return
-        for (index in list.indices.reversed()) {
-            list[index].invoke(newValue)
-        }
-    }
-
-    /** 供状态适配器读取当前值而不触发任何副作用。 */
-    fun readCurrentValue(): V = valueStore
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): V = value
 

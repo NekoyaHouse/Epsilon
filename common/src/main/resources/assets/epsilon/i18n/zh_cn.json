@@ -2587,6 +2587,38 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
+      },
+      "particles": {
+        "_value": "环境粒子",
+        "mode": {
+          "_value": "贴图",
+          "star": "星星",
+          "firefly": "萤火",
+          "dollar": "美元",
+          "heart": "爱心",
+          "snowflake": "雪花",
+          "drop": "水滴",
+          "cloud": "云朵"
+        },
+        "color mode": {
+          "_value": "颜色模式",
+          "custom": "自定义",
+          "sync": "主题同步",
+          "rgb": "RGB",
+          "sky": "天空色",
+          "lightrgb": "浅色 RGB"
+        },
+        "physics": {
+          "_value": "运动模式",
+          "drop": "下落",
+          "fly": "飘浮",
+          "fallingstars": "流星",
+          "rain": "雨滴"
+        },
+        "color": "颜色",
+        "amount": "数量",
+        "time": "寿命（tick）",
+        "size": "尺寸"
       }
     },
     "elements": {
