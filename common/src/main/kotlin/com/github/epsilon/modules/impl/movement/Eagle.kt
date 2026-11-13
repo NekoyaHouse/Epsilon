@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.client.KeybindUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafeOrFalse
-import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import net.minecraft.core.BlockPos
@@ -42,7 +42,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
             }
 
             if (sneakDelay == 0 && isOverEdge()) {
-                sneakDelay = RandomRanges.getRandom(minDelay, maxDelay)
+                sneakDelay = MathUtils.getRandom(minDelay, maxDelay)
             }
         }
 

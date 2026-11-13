@@ -6,7 +6,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
-import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.impl.EnumSetting
@@ -103,12 +103,12 @@ object Particles : Module("Particles", Category.RENDER) {
                 if (fireFliesEnabled) {
                     fireFlies.add(
                         FireFly(
-                            (player.x + RandomRanges.getRandom(-25.0f, 25.0f)).toFloat(),
-                            (player.y + RandomRanges.getRandom(2.0f, 15.0f)).toFloat(),
-                            (player.z + RandomRanges.getRandom(-25.0f, 25.0f)).toFloat(),
-                            RandomRanges.getRandom(-0.2f, 0.2f),
-                            RandomRanges.getRandom(-0.1f, 0.1f),
-                            RandomRanges.getRandom(-0.2f, 0.2f)
+                            (player.x + MathUtils.getRandom(-25.0f, 25.0f)).toFloat(),
+                            (player.y + MathUtils.getRandom(2.0f, 15.0f)).toFloat(),
+                            (player.z + MathUtils.getRandom(-25.0f, 25.0f)).toFloat(),
+                            MathUtils.getRandom(-0.2f, 0.2f),
+                            MathUtils.getRandom(-0.1f, 0.1f),
+                            MathUtils.getRandom(-0.2f, 0.2f)
                         )
                     )
                 }
@@ -121,12 +121,12 @@ object Particles : Module("Particles", Category.RENDER) {
                 if (!mode.`is`(Mode.Off)) {
                     particles.add(
                         ParticleBase(
-                            (player.x + RandomRanges.getRandom(-48.0f, 48.0f)).toFloat(),
-                            (player.y + RandomRanges.getRandom(2.0f, 48.0f)).toFloat(),
-                            (player.z + RandomRanges.getRandom(-48.0f, 48.0f)).toFloat(),
-                            if (drop) 0.0f else RandomRanges.getRandom(-0.4f, 0.4f),
-                            if (drop) RandomRanges.getRandom(-0.2f, -0.05f) else RandomRanges.getRandom(-0.1f, 0.1f),
-                            if (drop) 0.0f else RandomRanges.getRandom(-0.4f, 0.4f)
+                            (player.x + MathUtils.getRandom(-48.0f, 48.0f)).toFloat(),
+                            (player.y + MathUtils.getRandom(2.0f, 48.0f)).toFloat(),
+                            (player.z + MathUtils.getRandom(-48.0f, 48.0f)).toFloat(),
+                            if (drop) 0.0f else MathUtils.getRandom(-0.4f, 0.4f),
+                            if (drop) MathUtils.getRandom(-0.2f, -0.05f) else MathUtils.getRandom(-0.1f, 0.1f),
+                            if (drop) 0.0f else MathUtils.getRandom(-0.4f, 0.4f)
                         )
                     )
                 }
@@ -250,7 +250,7 @@ object Particles : Module("Particles", Category.RENDER) {
         protected var prevPosX: Float = posX
         protected var prevPosY: Float = posY
         protected var prevPosZ: Float = posZ
-        protected var age: Int = RandomRanges.getRandom(100.0f, 300.0f).toInt()
+        protected var age: Int = MathUtils.getRandom(100.0f, 300.0f).toInt()
         protected var maxAge: Int = age
 
         open fun tick(): Boolean {

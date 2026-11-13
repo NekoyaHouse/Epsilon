@@ -4,7 +4,7 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import net.minecraft.core.BlockPos
@@ -59,7 +59,7 @@ object TriggerBot : Module("Trigger Bot", Category.COMBAT) {
             gameMode.attack(player, target)
             SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
 
-            delay = RandomRanges.getRandom(minDelay, maxDelay)
+            delay = MathUtils.getRandom(minDelay, maxDelay)
         }
     }
 

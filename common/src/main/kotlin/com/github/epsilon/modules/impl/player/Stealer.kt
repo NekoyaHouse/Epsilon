@@ -16,7 +16,7 @@ import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBlockCountI
 import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getItemCount
 import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.hasItem
 import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -52,7 +52,7 @@ object Stealer : Module("Stealer", Category.PLAYER) {
                         val largeChest = Component.translatable("container.chestDouble").string
                         val enderChest = Component.translatable("container.enderchest").string
                         if (chestTitle == chest || chestTitle == largeChest || chestTitle == "Chest" || pickEnderChest && chestTitle == enderChest) {
-                            val nextDelay = RandomRanges.getRandom(minDelay, maxDelay)
+                            val nextDelay = MathUtils.getRandom(minDelay, maxDelay)
                             if (isChestEmpty(menu) && timer.passedMillise(nextDelay.toLong())) {
                                 if (autoClose && timer.passedMillise(closeDelay.toLong())) {
                                     player.closeContainer()

@@ -3,7 +3,7 @@ package com.github.epsilon.kernel.math
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.nextUp
 
-object RandomRanges {
+object MathUtils {
 
     /**
      * 生成给定闭区间内的随机值。

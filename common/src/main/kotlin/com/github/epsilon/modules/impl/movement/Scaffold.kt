@@ -25,7 +25,7 @@ import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.kernel.jvm.runSafeOrFalse
-import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
@@ -628,8 +628,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
             for (pitch in pitchArray) {
                 val candidate = Rotation(
-                    yaw + RandomRanges.getRandom(-0.3f, 0.3f),
-                    pitch + RandomRanges.getRandom(-0.3f, 0.3f)
+                    yaw + MathUtils.getRandom(-0.3f, 0.3f),
+                    pitch + MathUtils.getRandom(-0.3f, 0.3f)
                 )
                 val matches = if (raytrace == RaytraceMode.Normal) {
                     overBlock(candidate, pos)
@@ -671,16 +671,16 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         if (face != Direction.UP && face != Direction.DOWN) {
             y += 0.08
         } else {
-            x += RandomRanges.getRandom(-0.3, 0.3)
-            z += RandomRanges.getRandom(-0.3, 0.3)
+            x += MathUtils.getRandom(-0.3, 0.3)
+            z += MathUtils.getRandom(-0.3, 0.3)
         }
 
         if (face == Direction.WEST || face == Direction.EAST) {
-            z += RandomRanges.getRandom(-0.3, 0.3)
+            z += MathUtils.getRandom(-0.3, 0.3)
         }
 
         if (face == Direction.SOUTH || face == Direction.NORTH) {
-            x += RandomRanges.getRandom(-0.3, 0.3)
+            x += MathUtils.getRandom(-0.3, 0.3)
         }
 
         return Vec3(x, y, z)

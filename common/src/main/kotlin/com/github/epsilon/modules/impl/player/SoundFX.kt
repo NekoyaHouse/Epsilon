@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.player
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.AttackEntityEvent
-import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.sound.SoundKey
 import com.github.epsilon.managers.sound.SoundManager
@@ -40,7 +40,7 @@ object SoundFX : Module("Sound FX", Category.PLAYER) {
             HitSound.Nya -> playSound(SoundKey.NYA)
 
             HitSound.Moan -> {
-                val sound = when (RandomRanges.getRandom(0, 3)) {
+                val sound = when (MathUtils.getRandom(0, 3)) {
                     0 -> SoundKey.MOAN1
                     1 -> SoundKey.MOAN2
                     2 -> SoundKey.MOAN3

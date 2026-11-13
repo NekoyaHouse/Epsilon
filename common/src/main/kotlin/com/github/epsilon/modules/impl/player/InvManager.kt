@@ -32,7 +32,7 @@ import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.shouldDisableF
 import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
-import com.github.epsilon.kernel.math.RandomRanges
+import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -155,7 +155,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
             inventoryOpen = false
             actionState = ActionState.IDLE
             actionConsumed = false
-            delayMs = RandomRanges.getRandom(minDelay, maxDelay)
+            delayMs = MathUtils.getRandom(minDelay, maxDelay)
             timer.reset()
         }
 
@@ -660,7 +660,7 @@ object InvManager : Module("Inv Manager", Category.PLAYER) {
 
     private fun completeInventoryAction() {
         timer.reset()
-        delayMs = RandomRanges.getRandom(minDelay, maxDelay)
+        delayMs = MathUtils.getRandom(minDelay, maxDelay)
         this.inventoryOpen = true
         actionConsumed = true
         actionState = if (mode == Mode.Silent) ActionState.WAITING_FOR_INVENTORY_CLOSE else ActionState.IDLE
