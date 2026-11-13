@@ -32,7 +32,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     private val expandAnimations: MutableMap<String, Animation> = HashMap()
 
     fun isEmpty(): Boolean {
-        return nodes.isEmpty()
+        return nodes.none { it.hasVisibleSetting() }
     }
 
     /**
@@ -56,8 +56,12 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         with(scope) {
             val labels = ArrayList<HeaderLabels>()
             for (node in nodes) {
+                val height = nodeHeight(node)
+                if (height == 0.0f) {
+                    continue
+                }
                 drawNode(mouseX, mouseY, node, 0, sectionX, cursor, sectionWidth, labels)
-                cursor += nodeHeight(node)
+                cursor += height
             }
             flushLabels(labels)
         }
@@ -67,12 +71,15 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     // --- 高度 ---
 
     private fun nodeHeight(node: Node): Float {
+        if (!node.hasVisibleSetting()) {
+            return 0.0f
+        }
         if (!node.hasHeader()) {
             return elementsHeight(node)
         }
         val progress = expandProgress(node)
         if (progress == 0.0f) return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
-        val contentHeight = DropdownTheme.GROUP_INSET + elementsHeight(node)
+        val contentHeight = DropdownTheme.GROUP_INSET * 2.0f + elementsHeight(node)
         return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + contentHeight * progress
     }
 
@@ -110,7 +117,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
         val progress = expandProgress(node)
         // 只跨越互不重叠的折叠组头合批；展开卡片与内容保留独立的绘制边界。
         if (progress > 0.0f) flushLabels(labels)
-        val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET + elementsHeight(node)
+        val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET * 2.0f + elementsHeight(node)
         Interaction(key = node, bounds = UiRect(cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT)) {
             onClick { toggleCollapsed(node); true }
         }
@@ -232,8 +239,12 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
                 is ChildElement -> {
                     val child = element.node
+                    val childHeight = nodeHeight(child)
+                    if (childHeight == 0.0f) {
+                        continue
+                    }
                     drawNode(mouseX, mouseY, child, depth, x, cursor, width, labels)
-                    cursor += nodeHeight(child)
+                    cursor += childHeight
                 }
             }
         }
@@ -346,6 +357,15 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         fun totalSettingCount(): Int {
             return model.totalSettingCount()
+        }
+
+        fun hasVisibleSetting(): Boolean {
+            return elements.any { element ->
+                when (element) {
+                    is WidgetElement -> element.widget.isVisible()
+                    is ChildElement -> element.node.hasVisibleSetting()
+                }
+            }
         }
     }
 

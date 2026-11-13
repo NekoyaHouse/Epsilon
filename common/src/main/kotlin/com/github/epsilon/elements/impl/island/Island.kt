@@ -4,11 +4,7 @@ import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.island.instance.LandController
 import com.github.epsilon.elements.impl.island.instance.impl.*
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
-import com.github.epsilon.events.api.handler
-import com.github.epsilon.events.impl.Render2DEvent
-import com.github.epsilon.graphics.renderers.RectRenderer
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.graphics.shaders.OverlayAntiAlias
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.client.platform.ClientPlatform
 import com.github.epsilon.kernel.client.platform.PlatformRequirement

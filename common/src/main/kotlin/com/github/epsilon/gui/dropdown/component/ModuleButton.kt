@@ -73,6 +73,9 @@ class ModuleButton(val module: Module) : Component() {
     }
 
     private fun computeSettingsHeight(): Float {
+        if (sectionRenderer.isEmpty()) {
+            return 0.0f
+        }
         return DropdownTheme.SETTING_GAP + sectionRenderer.height()
     }
 
