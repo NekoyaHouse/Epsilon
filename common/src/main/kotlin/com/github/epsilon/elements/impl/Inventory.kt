@@ -2,10 +2,10 @@ package com.github.epsilon.elements.impl
 
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.shaders.BlurShader
+import com.github.epsilon.gui.lib.Item
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Shadow
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.Item
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
 

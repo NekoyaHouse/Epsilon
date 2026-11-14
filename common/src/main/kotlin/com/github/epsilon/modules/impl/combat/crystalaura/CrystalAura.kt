@@ -393,7 +393,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 if (shape != BoxMode.Fill) Render3DScheduler.addOutlineBox(frame.box, faded(lineColor, frame.scale))
             }
         }
-        
+
         safeEventHandler<Render2DEvent.Level>(alwaysListening = true) { event ->
             val candidate = rendered ?: return@safeEventHandler
             val frame = renderFrame() ?: return@safeEventHandler

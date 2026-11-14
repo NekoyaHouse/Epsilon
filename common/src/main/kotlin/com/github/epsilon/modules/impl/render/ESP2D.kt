@@ -199,14 +199,27 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
         }
     }
 
-    private fun drawSolidBox(rectRenderer: Render2DScheduler.Canvas, x: Float, y: Float, endX: Float, endY: Float, color: Color) {
+    private fun drawSolidBox(
+        rectRenderer: Render2DScheduler.Canvas,
+        x: Float,
+        y: Float,
+        endX: Float,
+        endY: Float,
+        color: Color
+    ) {
         rectRenderer.addRect(x - 0.5f, y, 0.5f, endY - y, color)
         rectRenderer.addRect(x, endY - 0.5f, endX - x, 0.5f, color)
         rectRenderer.addRect(x - 0.5f, y, endX - x + 0.5f, 0.5f, color)
         rectRenderer.addRect(endX - 0.5f, y, 0.5f, endY - y, color)
     }
 
-    private fun drawHealthBar(rectRenderer: Render2DScheduler.Canvas, entity: LivingEntity, x: Float, y: Float, endY: Float) {
+    private fun drawHealthBar(
+        rectRenderer: Render2DScheduler.Canvas,
+        entity: LivingEntity,
+        x: Float,
+        y: Float,
+        endY: Float
+    ) {
         val height = endY - y
         if (height <= 0.0f) return
 

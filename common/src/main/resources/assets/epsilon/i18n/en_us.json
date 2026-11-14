@@ -1427,13 +1427,7 @@
         "move to slot": "Move To Slot",
         "elytra slot": "Elytra Slot"
       },
-      "fake player": {
-        "_value": "Fake Player",
-        "name": "Name",
-        "copy inventory": "Copy Inventory",
-        "record": "Record",
-        "playback": "Playback"
-      },
+      "fake player": "Fake Player",
       "ghost hand": "Ghost Hand",
       "inv manager": {
         "_value": "Inv Manager",

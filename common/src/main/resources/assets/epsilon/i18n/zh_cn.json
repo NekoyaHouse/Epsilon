@@ -1427,13 +1427,7 @@
         "move to slot": "移动到槽位",
         "elytra slot": "鞘翅槽位"
       },
-      "fake player": {
-        "_value": "假人",
-        "name": "名称",
-        "copy inventory": "复制背包",
-        "record": "录制",
-        "playback": "回放"
-      },
+      "fake player": "假人",
       "ghost hand": "幽灵手",
       "inv manager": {
         "_value": "背包管理",

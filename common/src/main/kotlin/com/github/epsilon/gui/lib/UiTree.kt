@@ -589,7 +589,19 @@ class UiTree private constructor(
             owner: LivingEntity? = null, seed: Int = 0, decorations: Boolean = false, countText: String? = null,
         ) {
             if (stack.isEmpty || !size.isFinite() || size <= 0f || color.alpha == 0) return
-            nodes.add(ItemNode(stack.copy(), resolveX(x), resolveY(y), size, color, owner, seed, decorations, countText))
+            nodes.add(
+                ItemNode(
+                    stack.copy(),
+                    resolveX(x),
+                    resolveY(y),
+                    size,
+                    color,
+                    owner,
+                    seed,
+                    decorations,
+                    countText
+                )
+            )
         }
 
         fun block(block: Block, x: Float, y: Float, size: Float = 16f, color: Color = Color.WHITE) {

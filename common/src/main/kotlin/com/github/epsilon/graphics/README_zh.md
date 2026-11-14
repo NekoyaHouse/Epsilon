@@ -33,15 +33,14 @@ canvas API 替代旧 layer handle API。
 
 ## 世界标签共享渲染
 
-`Render2DEvent.Level` 内部延迟创建一个共享 `Render2DScheduler`。Crystal Aura、TNT Timer、Logout Spots、
-Name Tags 和 ESP 2D 共用字体度量、几何与绘制后端。事件总线管理渲染作用域，在返回 `MixinGuiRenderer` 进行原版世界 GUI
-绘制前统一提交；提交异常时也执行当帧清理。调度器的 GPU 资源由 `RendererManager` 在退出时销毁。
+`Render2DEvent.Level` 内部延迟创建一个共享 `Render2DScheduler`。Crystal Aura、TNT Timer、Logout Spots、 Name Tags 和 ESP 2D
+共用字体度量、几何与绘制后端。事件总线管理渲染作用域，在返回 `MixinGuiRenderer` 进行原版世界 GUI 绘制前统一提交；提交异常时也执行当帧清理。调度器的
+GPU 资源由 `RendererManager` 在退出时销毁。
 
 在 `safeEventHandler<Render2DEvent.Level> { event -> ... }` 中使用 `event.textMetrics` 测量，使用 `event.canvas` 提交。
-每次读取 `event.canvas` 都分配后续图层，保持模块和标签的提交顺序；相关图元复用同一个 canvas，需要更晚图层时再读取。
-这些 API 仅在对应事件派发期间有效。模块不得清空或关闭共享后端。
-模糊、目标切换、原版或独立 renderer 绘制前调用 `event.flush()`；Name Tags 的背景模糊保留了这一顺序屏障。
-HUD 与界面 UI 继续使用各自的渲染作用域。
+每次读取 `event.canvas` 都分配后续图层，保持模块和标签的提交顺序；相关图元复用同一个 canvas，需要更晚图层时再读取。 这些 API
+仅在对应事件派发期间有效。模块不得清空或关闭共享后端。 模糊、目标切换、原版或独立 renderer 绘制前调用 `event.flush()`；Name
+Tags 的背景模糊保留了这一顺序屏障。 HUD 与界面 UI 继续使用各自的渲染作用域。
 
 ## Canvas 物品与方块预览
 
@@ -51,10 +50,10 @@ HUD 与界面 UI 继续使用各自的渲染作用域。
 `countText` 可覆盖数量文字。方块使用背包物品模型并遵循资源包定义；无物品形态的方块不绘制，不用于任意世界 BlockState 渲染。
 
 命令在录制时复制堆栈，持久 UI 需在堆栈、组件或数量改变时重新组合。每次 flush 都通过 `ItemModelResolver` 的 GUI 上下文
-重新解析模型，在 Canvas pass 打开前使用原版 `GuiItemAtlas` 或 `OversizedItemRenderer` 准备纹理，保留原版附魔光效与动画。
-图集 UV 不进入持久几何缓存，最终四边形使用预乘 alpha，并正确处理 Canvas 的乘色和淡出。资源重载及 GUI 缩放变化会使纹理
-缓存失效，调度器在销毁时释放这些资源。Inventory HUD、Target HUD 装备、注册表物品/方块预览及灵动岛搭路图标均使用该路径，
-不再延迟到 `GuiGraphicsExtractor` 物品 overlay 阶段。
+重新解析模型，在 Canvas pass 打开前使用原版 `GuiItemAtlas` 或 `OversizedItemRenderer` 准备纹理，保留原版附魔光效与动画。 图集
+UV 不进入持久几何缓存，最终四边形使用预乘 alpha，并正确处理 Canvas 的乘色和淡出。资源重载及 GUI 缩放变化会使纹理
+缓存失效，调度器在销毁时释放这些资源。Inventory HUD、Target HUD 装备、注册表物品/方块预览及灵动岛搭路图标均使用该路径， 不再延迟到
+`GuiGraphicsExtractor` 物品 overlay 阶段。
 
 ## 持久 UI 与有序 2D 渲染
 
