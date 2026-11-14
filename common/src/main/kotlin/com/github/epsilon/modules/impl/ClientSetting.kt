@@ -18,6 +18,7 @@ import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.TranslationManager
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.SettingGroup
+import com.github.epsilon.settings.applyWhenRelease
 import com.github.epsilon.settings.globalSetting
 import com.github.epsilon.settings.group
 import com.mojang.blaze3d.Blaze3D
@@ -137,10 +138,11 @@ object ClientSetting : Module("Client Setting", null) {
         "Custom Language",
         "", { language == EpsilonLanguage.Custom },
         onChanged = { EpsilonLanguageManager.refreshCustomLanguage() }
-    ).group(sgGeneral)
+    ).group(sgGeneral).applyWhenRelease()
 
     private val renderScale by doubleSetting("Render Scale", 2.0, 1.0..6.0, 0.5)
         .group(sgGeneral)
+        .applyWhenRelease()
 
 
     val i18nFallback by boolSetting(
@@ -155,7 +157,7 @@ object ClientSetting : Module("Client Setting", null) {
         "Custom Font",
         "",
         { font == FontMode.Custom }
-    ).group(sgGeneral)
+    ).group(sgGeneral).applyWhenRelease()
 
     val fontGlyphsPerFrame by intSetting(
         "Font Glyphs Per Frame",

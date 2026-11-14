@@ -325,6 +325,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         inputBuffer = current.substring(0, start) + value + current.substring(end)
         cursorIndex = start + value.length
         clearSelection()
+        previewInput()
     }
 
     private fun deleteBackward() {
@@ -336,6 +337,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         if (buffer != null && cursorIndex > 0) {
             inputBuffer = buffer.substring(0, cursorIndex - 1) + buffer.substring(cursorIndex)
             cursorIndex--
+            previewInput()
         }
     }
 
@@ -347,6 +349,13 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
         val buffer = inputBuffer
         if (buffer != null && cursorIndex < buffer.length) {
             inputBuffer = buffer.substring(0, cursorIndex) + buffer.substring(cursorIndex + 1)
+            previewInput()
+        }
+    }
+
+    private fun previewInput() {
+        if (!stringSetting.isApplyWhenRelease) {
+            applyValue(getDisplayBuffer())
         }
     }
 

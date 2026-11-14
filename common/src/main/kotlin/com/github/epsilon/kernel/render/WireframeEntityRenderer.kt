@@ -41,6 +41,19 @@ object WireframeEntityRenderer {
         .withCull(false)
         .build()
 
+    private val SIDES_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        .withLocation(ResourceLocationUtils.getIdentifier("pipeline/wireframe_entity_sides_depth"))
+        .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+        .withCull(false)
+        .build()
+
+    private val LINES_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+        .withLocation(ResourceLocationUtils.getIdentifier("pipeline/wireframe_entity_lines_depth"))
+        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+        .withCull(false)
+        .build()
+
     private var sideColor: Color = Color.WHITE
     private var lineColor: Color = Color.WHITE
     private var lineWidth: Float = 1.0f
@@ -55,11 +68,11 @@ object WireframeEntityRenderer {
     private var offsetY: Double = 0.0
     private var offsetZ: Double = 0.0
 
-    fun beginBatch(renderStack: PoseStack) {
+    fun beginBatch(renderStack: PoseStack, throughWalls: Boolean = true) {
         if (isBatching()) {
             throw IllegalStateException("Wireframe entity renderer is already batching")
         }
-        beginDraw(renderStack)
+        beginDraw(renderStack, throughWalls)
     }
 
     fun endBatch() {
@@ -135,12 +148,12 @@ object WireframeEntityRenderer {
         return sidesBuilder != null && linesBuilder != null
     }
 
-    private fun beginDraw(renderStack: PoseStack) {
+    private fun beginDraw(renderStack: PoseStack, throughWalls: Boolean) {
         val pose = renderStack.last()
         drawMatrix = pose.pose()
         linePose = pose
-        sidesBuilder = LuminImmediateRenderer.beginPosColorQuads(SIDES_PIPELINE)
-        linesBuilder = LuminImmediateRenderer.beginLines(LINES_PIPELINE)
+        sidesBuilder = LuminImmediateRenderer.beginPosColorQuads(if (throughWalls) SIDES_PIPELINE else SIDES_DEPTH_PIPELINE)
+        linesBuilder = LuminImmediateRenderer.beginLines(if (throughWalls) LINES_PIPELINE else LINES_DEPTH_PIPELINE)
     }
 
     private fun endDraw() {

@@ -1939,7 +1939,8 @@
         "side color": "侧面颜色",
         "line color": "线条颜色",
         "scale": "缩放",
-        "line width": "线条宽度"
+        "line width": "线条宽度",
+        "through walls": "穿墙"
       },
       "customsky": {
         "_value": "自定义天空",

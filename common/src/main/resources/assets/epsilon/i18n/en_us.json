@@ -1939,7 +1939,8 @@
         "side color": "Side Color",
         "line color": "Line Color",
         "scale": "Scale",
-        "line width": "Line Width"
+        "line width": "Line Width",
+        "through walls": "Through Walls"
       },
       "customsky": {
         "_value": "Custom Sky",
