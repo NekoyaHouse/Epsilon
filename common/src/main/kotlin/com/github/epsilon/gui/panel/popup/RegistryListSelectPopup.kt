@@ -26,6 +26,7 @@ import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.core.Registry
+import net.minecraft.core.particles.ParticleType
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
@@ -630,6 +631,9 @@ class RegistryListSelectPopup<T : Any> private constructor(
                 RegistryListSetting.Type.SOUND_EVENT ->
                     soundEventPopup(bounds, setting as RegistryListSetting<SoundEvent>)
 
+                RegistryListSetting.Type.PARTICLE_TYPE ->
+                    particleTypePopup(bounds, setting as RegistryListSetting<ParticleType<*>>)
+
                 RegistryListSetting.Type.ENCHANTMENT ->
                     enchantmentPopup(bounds, setting as RegistryListSetting<String>)
             }
@@ -674,6 +678,17 @@ class RegistryListSelectPopup<T : Any> private constructor(
                     val key = BuiltInRegistries.SOUND_EVENT.getKey(sound)
                     key?.path ?: ""
                 },
+                { value -> setting.add(value) }, { value -> setting.remove(value) }
+            )
+        }
+
+        private fun particleTypePopup(
+            bounds: UiRect,
+            setting: RegistryListSetting<ParticleType<*>>
+        ): RegistryListSelectPopup<ParticleType<*>> {
+            return RegistryListSelectPopup(
+                bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
+                { particle -> formatPath(BuiltInRegistries.PARTICLE_TYPE.getKey(particle)?.path ?: "") },
                 { value -> setting.add(value) }, { value -> setting.remove(value) }
             )
         }

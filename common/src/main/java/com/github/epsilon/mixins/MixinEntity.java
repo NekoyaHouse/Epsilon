@@ -4,6 +4,7 @@ import com.github.epsilon.events.impl.RaytraceEvent;
 import com.github.epsilon.events.impl.StrafeEvent;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.modules.impl.render.FreeCamera;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.entity.Entity;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import static com.github.epsilon.kernel.MinecraftWrapper.mc;
@@ -60,6 +62,17 @@ public class MixinEntity {
                 args.set(2, 0.0);
             }
         }
+    }
+
+    @Inject(method = "isInvisibleTo", at = @At("HEAD"), cancellable = true)
+    private void epsilon$showInvisibleEntity(CallbackInfoReturnable<Boolean> cir) {
+        if (((Entity) (Object) this).level().isClientSide() && NoRender.INSTANCE.noInvisibility())
+            cir.setReturnValue(false);
+    }
+
+    @Inject(method = "isCurrentlyGlowing", at = @At("HEAD"), cancellable = true)
+    private void epsilon$hideGlowing(CallbackInfoReturnable<Boolean> cir) {
+        if (((Entity) (Object) this).level().isClientSide() && NoRender.INSTANCE.noGlowing()) cir.setReturnValue(false);
     }
 
 }

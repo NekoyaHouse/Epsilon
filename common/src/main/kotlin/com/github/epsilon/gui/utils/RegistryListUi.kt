@@ -11,6 +11,7 @@ object RegistryListUi {
             RegistryListSetting.Type.ITEM -> EpsilonTranslations.Gui.LIST_ITEMS.getTranslatedName()
             RegistryListSetting.Type.ENTITY_TYPE -> EpsilonTranslations.Gui.LIST_ENTITIES.getTranslatedName()
             RegistryListSetting.Type.SOUND_EVENT -> EpsilonTranslations.Gui.LIST_SOUNDS.getTranslatedName()
+            RegistryListSetting.Type.PARTICLE_TYPE -> EpsilonTranslations.Gui.LIST_PARTICLES.getTranslatedName()
             RegistryListSetting.Type.ENCHANTMENT -> EpsilonTranslations.Gui.LIST_ENCHANTMENTS.getTranslatedName()
         }
     }

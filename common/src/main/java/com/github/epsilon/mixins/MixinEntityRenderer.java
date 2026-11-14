@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.CrystalChams;
 import com.github.epsilon.modules.impl.render.NameTags;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.Shaders;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -35,7 +36,7 @@ public class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> 
 
     @Inject(method = "extractNameTags(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FDD)V", at = @At("HEAD"), cancellable = true)
     private void hookExtractNameTags(T entity, S state, float partialTicks, double nameTagDistance, double belowNameDistance, CallbackInfo ci) {
-        if (NameTags.INSTANCE.isEnabled() && entity instanceof Player) {
+        if (NoRender.INSTANCE.noNametags() || NameTags.INSTANCE.isEnabled() && entity instanceof Player) {
             ci.cancel();
         }
     }

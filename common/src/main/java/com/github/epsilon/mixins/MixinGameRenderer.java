@@ -4,7 +4,9 @@ import com.github.epsilon.graphics.shaders.HandOpacityShader;
 import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.modules.impl.render.CameraClip;
 import com.github.epsilon.modules.impl.render.FreeCamera;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.Shaders;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -90,6 +92,11 @@ public class MixinGameRenderer {
     private void hookBobView(PoseStack instance, float xo, float yo, float zo, Operation<Void> original) {
         CameraClip cameraClip = CameraClip.INSTANCE;
         if (!cameraClip.isEnabled() || !cameraClip.getBetterBobView()) original.call(instance, xo, yo, zo);
+    }
+
+    @ModifyExpressionValue(method = "renderLevel", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0))
+    private float epsilon$hideNausea(float original) {
+        return NoRender.INSTANCE.noNausea() ? 0.0F : original;
     }
 
 }

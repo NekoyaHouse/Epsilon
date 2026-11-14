@@ -4,13 +4,16 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.player.InvManager;
 import com.github.epsilon.modules.impl.player.JumpCooldown;
 import com.github.epsilon.modules.impl.render.HandView;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.Vec3;
 import org.objectweb.asm.Opcodes;
@@ -111,6 +114,11 @@ public class MixinLivingEntity {
                 cir.setReturnValue(false);
             }
         }
+    }
+
+    @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
+    private void epsilon$hideEatingParticles(ItemStack stack, int count, CallbackInfo ci) {
+        if (NoRender.INSTANCE.noEatParticles() && stack.has(DataComponents.FOOD)) ci.cancel();
     }
 
 }

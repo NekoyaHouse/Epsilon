@@ -1,6 +1,8 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.WorldTweaks;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.client.renderer.fog.FogRenderer;
@@ -23,6 +25,11 @@ public class MixinFogRenderer {
             return fog;
         }
         return fog;
+    }
+
+    @ModifyExpressionValue(method = "getBuffer", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;fogEnabled:Z"))
+    private boolean epsilon$hideFog(boolean original) {
+        return original && !NoRender.INSTANCE.noFog();
     }
 
 }

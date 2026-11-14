@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.combat.elytra_combat.combat
 
-import com.github.epsilon.interfaces.ClientboundEntityEventPacketAccessor
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.world.damagesource.DamageTypes
@@ -66,7 +65,7 @@ class CombatHitTracker {
         if (packet.eventId != EntityEvent.KINETIC_HIT) {
             return
         }
-        if (packet is ClientboundEntityEventPacketAccessor && packet.`epsilon$getEntityId`() == this.localPlayerId) {
+        if (packet.entityId == this.localPlayerId) {
             this.pendingHits.offer(HitType.SPEAR)
         }
     }
