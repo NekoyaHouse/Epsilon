@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import java.nio.ByteBuffer
+import java.util.*
 
 object HandOpacityShader {
 

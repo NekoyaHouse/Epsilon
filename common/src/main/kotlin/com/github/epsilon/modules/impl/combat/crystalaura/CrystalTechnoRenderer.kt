@@ -13,6 +13,7 @@ import java.awt.Color
 
 internal class CrystalTechnoRenderer {
     private val pulses = ArrayList<Int>()
+    val hasPulses: Boolean get() = pulses.any { it >= 0 }
     private val texture = ResourceLocationUtils.getIdentifier("textures/crystalaura/techno.png")
     private val pipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/crystal_techno"))
@@ -44,9 +45,13 @@ internal class CrystalTechnoRenderer {
         fill: Boolean,
         outline: Boolean,
     ) {
-        val box = frame.box
+        val top = frame.center.y + 0.5
+        val box = AABB(
+            frame.center.x - 0.5, top - frame.height, frame.center.z - 0.5,
+            frame.center.x + 0.5, top, frame.center.z + 0.5
+        )
         val capColor = faded(lineColor, frame.scale * 0.4)
-        if (fill) {
+        if (fill && frame.height > 0.0) {
             val camera = mc.gameRenderer.mainCamera().position()
             val minX = (box.minX - camera.x).toFloat()
             val minY = (box.minY - camera.y).toFloat()
@@ -54,42 +59,43 @@ internal class CrystalTechnoRenderer {
             val maxX = (box.maxX - camera.x).toFloat()
             val maxY = (box.maxY - camera.y).toFloat()
             val maxZ = (box.maxZ - camera.z).toFloat()
+            val bottomV = frame.height.toFloat()
             val offset = (ticks - 1.0f + partialTick) % 80.0f / 80.0f
             val bottomColor = faded(sideColor, frame.scale * 0.1)
             val topColor = faded(lineColor, frame.scale)
             val matrix = stack.last().pose()
             val renderer = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, texture)
 
-            renderer.vertex(matrix, minX, minY, minZ, offset, 1.0f, bottomColor)
+            renderer.vertex(matrix, minX, minY, minZ, offset, bottomV, bottomColor)
             renderer.vertex(matrix, minX, maxY, minZ, offset, 0.0f, topColor)
             renderer.vertex(matrix, maxX, maxY, minZ, offset + 0.32f, 0.0f, topColor)
-            renderer.vertex(matrix, maxX, minY, minZ, offset + 0.32f, 1.0f, bottomColor)
+            renderer.vertex(matrix, maxX, minY, minZ, offset + 0.32f, bottomV, bottomColor)
 
-            renderer.vertex(matrix, maxX, minY, minZ, offset + 0.32f, 1.0f, bottomColor)
+            renderer.vertex(matrix, maxX, minY, minZ, offset + 0.32f, bottomV, bottomColor)
             renderer.vertex(matrix, maxX, maxY, minZ, offset + 0.32f, 0.0f, topColor)
             renderer.vertex(matrix, maxX, maxY, maxZ, offset + 0.64f, 0.0f, topColor)
-            renderer.vertex(matrix, maxX, minY, maxZ, offset + 0.64f, 1.0f, bottomColor)
+            renderer.vertex(matrix, maxX, minY, maxZ, offset + 0.64f, bottomV, bottomColor)
 
-            renderer.vertex(matrix, maxX, minY, maxZ, offset + 0.64f, 1.0f, bottomColor)
-            renderer.vertex(matrix, minX, minY, maxZ, offset + 0.96f, 1.0f, bottomColor)
+            renderer.vertex(matrix, maxX, minY, maxZ, offset + 0.64f, bottomV, bottomColor)
+            renderer.vertex(matrix, minX, minY, maxZ, offset + 0.96f, bottomV, bottomColor)
             renderer.vertex(matrix, minX, maxY, maxZ, offset + 0.96f, 0.0f, topColor)
             renderer.vertex(matrix, maxX, maxY, maxZ, offset + 0.64f, 0.0f, topColor)
 
-            renderer.vertex(matrix, minX, minY, maxZ, offset + 0.96f, 1.0f, bottomColor)
-            renderer.vertex(matrix, minX, minY, minZ, offset + 1.28f, 1.0f, bottomColor)
+            renderer.vertex(matrix, minX, minY, maxZ, offset + 0.96f, bottomV, bottomColor)
+            renderer.vertex(matrix, minX, minY, minZ, offset + 1.28f, bottomV, bottomColor)
             renderer.vertex(matrix, minX, maxY, minZ, offset + 1.28f, 0.0f, topColor)
             renderer.vertex(matrix, minX, maxY, maxZ, offset + 0.96f, 0.0f, topColor)
             renderer.end()
 
-            Render3DScheduler.addFilledSide(box, capColor, Direction.UP)
+            Render3DScheduler.addFilledSide(box, faded(lineColor, frame.scale * frame.height * 0.4), Direction.UP)
         }
         if (outline) {
             Render3DScheduler.addSideOutline(box, capColor, 2.0f, Direction.UP)
             for (remaining in pulses) {
                 val progress = 0.5 + ((remaining + 1.0f - partialTick) / 8.0f).coerceIn(0.0f, 0.5f)
-                val half = (progress - 0.5) * frame.scale
+                val half = progress - 0.5
                 if (half <= 0.0) continue
-                val y = box.maxY - (1.0 - progress) * frame.scale
+                val y = box.maxY - (1.0 - progress) * frame.height
                 val pulseBox = AABB(
                     frame.center.x - half, y, frame.center.z - half,
                     frame.center.x + half, y, frame.center.z + half

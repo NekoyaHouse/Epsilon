@@ -4,7 +4,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 internal class CrystalRenderAnimation {
-    data class Frame(val center: Vec3, val scale: Double) {
+    data class Frame(val center: Vec3, val scale: Double, val height: Double = scale) {
         val box: AABB
             get() {
                 val half = scale * 0.5

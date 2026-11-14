@@ -364,7 +364,7 @@
         "rotate": "Rotate",
         "rotation mode": {
           "_value": "Rotation Mode",
-          "motion": "",
+          "motion": "Motion",
           "silent": "Silent"
         },
         "rotation speed": "Rotation Speed",
@@ -642,37 +642,6 @@
         "bow range": "Bow Range",
         "bow smooth": "Bow Smooth"
       },
-      "anti bot": "Anti Bot",
-      "backtrack": {
-        "_value": "Backtrack",
-        "min range": "Min Range",
-        "max range": "Max Range",
-        "min delay": "Min Delay",
-        "max delay": "Max Delay",
-        "next backtrack min": "Next Backtrack Min",
-        "next backtrack max": "Next Backtrack Max",
-        "tracking buffer": "Tracking Buffer",
-        "chance": "Chance",
-        "pause on hurt time": "Pause On Hurt Time",
-        "hurt time": "Hurt Time",
-        "target mode": {
-          "_value": "Target Mode",
-          "attack": "Attack",
-          "range": "Range"
-        },
-        "last attack time": "Last Attack Time",
-        "players": "Players",
-        "mobs": "Mobs",
-        "animals": "Animals",
-        "villagers": "Villagers",
-        "ambient": "Ambient",
-        "water": "Water",
-        "others": "Others",
-        "invisible": "Invisible",
-        "esp": "ESP",
-        "side color": "Side Color",
-        "outline color": "Outline Color"
-      },
       "auto clicker": {
         "_value": "Auto Clicker",
         "button": {
@@ -891,6 +860,8 @@
         "safety": "Safety",
         "safety override": "Safety Override",
         "block destruction": "Block Destruction",
+        "motion predict": "Motion Predict",
+        "predict ticks": "Predict Ticks",
         "self extrapolate": "Self Extrapolate",
         "extrapolation ticks": "Extrapolation Ticks",
         "enemy range": "Enemy Range",
@@ -913,7 +884,7 @@
           "_value": "Render",
           "off": "Off",
           "box": "Box",
-          "techno": ""
+          "techno": "Techno"
         },
         "box mode": {
           "_value": "Box Mode",
@@ -921,17 +892,14 @@
           "fill": "Fill",
           "lines": "Lines"
         },
-        "side": "Side",
-        "line": "Line",
-        "fade time": "Fade Time",
-        "render damage": "Render Damage",
-        "target damage": "Target Damage",
-        "self damage": "Self Damage",
-        "motion predict": "Motion Predict",
-        "predict ticks": "Predict Ticks",
+        "side color": "Side Color",
+        "line color": "Line Color",
+        "fading time": "Fading Time",
         "moving length": "Moving Length",
         "fade length": "Fade Length",
-        "fade": ""
+        "render damage": "Render Damage",
+        "target damage": "Target Damage",
+        "self damage": "Self Damage"
       },
       "self trap": {
         "_value": "Self Trap",
@@ -957,7 +925,7 @@
         "rotate": "Rotate",
         "rotation mode": {
           "_value": "Rotation Mode",
-          "motion": "",
+          "motion": "Motion",
           "silent": "Silent"
         },
         "rotation speed": "Rotation Speed",
@@ -1447,7 +1415,8 @@
       },
       "disabler": {
         "_value": "Disabler",
-        "multiactionsc": "MultiActionsC"
+        "multiactionsc": "MultiActionsC",
+        "aimmodulo360": "Aim Modulo 360"
       },
       "elytra swap": {
         "_value": "Elytra Swap",
@@ -1842,8 +1811,7 @@
         "mode": {
           "_value": "Mode",
           "cancel": "Cancel",
-          "reduce": "Reduce",
-          "delay": "Delay"
+          "reduce": "Reduce"
         },
         "server motion": "Server Motion",
         "explosion": "Explosion",
@@ -1854,9 +1822,7 @@
         "attack counts": "Attack Counts",
         "sprint ticks": "Sprint Ticks",
         "max delay": "Max Delay",
-        "swing hand": "Swing Hand",
-        "delay ticks": "Delay Ticks",
-        "jump reset": "Jump Reset"
+        "swing hand": "Swing Hand"
       },
       "ac spoof": "AC Spoof",
       "kill effect": {
@@ -1956,12 +1922,12 @@
       "crystal chams": {
         "_value": "Crystal Chams",
         "through walls": "Through Walls",
-        "side color": "Side Color",
-        "line color": "Line Color",
         "scale": "Scale",
         "spin speed": "Spin Speed",
         "float speed": "Float Speed",
-        "line width": "Line Width"
+        "line width": "Line Width",
+        "side color": "Side Color",
+        "line color": "Line Color"
       },
       "customsky": {
         "_value": "Custom Sky",
@@ -2037,9 +2003,9 @@
         "main hand": "Main Hand",
         "off hand": "Off Hand",
         "arm": "Arm",
+        "opacity": "Opacity",
         "disable swap main": "Disable Swap Main",
         "disable swap off": "Disable Swap Off",
-        "opacity": "Opacity",
         "blocking animation": "Blocking Animation",
         "blocking mode": {
           "_value": "Blocking Mode",
@@ -2204,37 +2170,6 @@
         "side color": "Side Color",
         "line color": "Line Color"
       },
-      "mas effects": {
-        "_value": "Mas Effects",
-        "general": "General",
-        "mace": "Mace",
-        "hitboxes": "Hitboxes",
-        "wind particles": "Wind Particles",
-        "custom totem effect": "Custom Totem Effect",
-        "totem effect opacity": "Totem Effect Opacity",
-        "player death effect": "Player Death Effect",
-        "pearl trail particles": "Pearl Trail Particles",
-        "pearl trail opacity": "Pearl Trail Opacity",
-        "glide icon": "Glide Icon",
-        "mace shockwave": "Mace Shockwave",
-        "mace shockwave size": "Mace Shockwave Size",
-        "mace shockwave opacity": "Mace Shockwave Opacity",
-        "mace spark": "Mace Spark",
-        "mace flash": "Mace Flash",
-        "shield effect": "Shield Effect",
-        "armor particles": "Armor Particles",
-        "legacy mace shockwave": "Remove Shockwave Spikes",
-        "custom hitbox": "Custom Hitbox",
-        "pearl hitbox colors": "Pearl Hitbox Colors",
-        "pearl allies": "Pearl Allies",
-        "self pearl color": "Self Pearl Color",
-        "ally pearl color": "Ally Pearl Color",
-        "other pearl color": "Other Pearl Color",
-        "mob hitbox opacity": "Mob Hitbox Opacity",
-        "player hitbox opacity": "Player Hitbox Opacity",
-        "hitbox fade distance": "Hitbox Fade Distance",
-        "projectile fade distance": "Projectile Fade Distance"
-      },
       "motion blur": {
         "_value": "Motion Blur",
         "strength": "Strength",
@@ -2317,6 +2252,38 @@
         "no mob in spawner": "No Mob In Spawner",
         "no dead entities": "No Dead Entities",
         "no nametags": "No Nametags"
+      },
+      "particles": {
+        "_value": "Particles",
+        "mode": {
+          "_value": "Mode",
+          "star": "Star",
+          "firefly": "Firefly",
+          "dollar": "Dollar",
+          "heart": "Heart",
+          "snowflake": "Snowflake",
+          "drop": "Drop",
+          "cloud": "Cloud"
+        },
+        "color mode": {
+          "_value": "Color Mode",
+          "custom": "Custom",
+          "sync": "Theme Sync",
+          "rgb": "RGB",
+          "sky": "Sky",
+          "lightrgb": "Light RGB"
+        },
+        "physics": {
+          "_value": "Physics",
+          "drop": "Drop",
+          "fly": "Fly",
+          "fallingstars": "Falling Stars",
+          "rain": "Rain"
+        },
+        "color": "Color",
+        "amount": "Amount",
+        "time": "Life Time (ticks)",
+        "size": "Size"
       },
       "pop chams": {
         "_value": "Pop Chams",
@@ -2610,38 +2577,6 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
-      },
-      "particles": {
-        "_value": "Particles",
-        "mode": {
-          "_value": "Mode",
-          "star": "Star",
-          "firefly": "Firefly",
-          "dollar": "Dollar",
-          "heart": "Heart",
-          "snowflake": "Snowflake",
-          "drop": "Drop",
-          "cloud": "Cloud"
-        },
-        "color mode": {
-          "_value": "Color Mode",
-          "custom": "Custom",
-          "sync": "Theme Sync",
-          "rgb": "RGB",
-          "sky": "Sky",
-          "lightrgb": "Light RGB"
-        },
-        "physics": {
-          "_value": "Physics",
-          "drop": "Drop",
-          "fly": "Fly",
-          "fallingstars": "Falling Stars",
-          "rain": "Rain"
-        },
-        "color": "Color",
-        "amount": "Amount",
-        "time": "Life Time (ticks)",
-        "size": "Size"
       }
     },
     "elements": {

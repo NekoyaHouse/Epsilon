@@ -364,7 +364,7 @@
         "rotate": "转头",
         "rotation mode": {
           "_value": "转头模式",
-          "motion": "",
+          "motion": "平滑旋转",
           "silent": "静默"
         },
         "rotation speed": "转头速度",
@@ -642,37 +642,6 @@
         "bow range": "弓瞄准距离",
         "bow smooth": "弓瞄平滑"
       },
-      "anti bot": "反人机",
-      "backtrack": {
-        "_value": "回溯",
-        "min range": "最小距离",
-        "max range": "最大距离",
-        "min delay": "最小延迟",
-        "max delay": "最大延迟",
-        "next backtrack min": "下次回溯最小间隔",
-        "next backtrack max": "下次回溯最大间隔",
-        "tracking buffer": "追踪缓冲",
-        "chance": "触发概率",
-        "pause on hurt time": "受伤时暂停",
-        "hurt time": "受伤时间",
-        "target mode": {
-          "_value": "目标模式",
-          "attack": "攻击",
-          "range": "范围"
-        },
-        "last attack time": "攻击有效时间",
-        "players": "玩家",
-        "mobs": "怪物",
-        "animals": "动物",
-        "villagers": "村民",
-        "ambient": "环境生物",
-        "water": "水生生物",
-        "others": "其他",
-        "invisible": "隐身",
-        "esp": "ESP",
-        "side color": "侧面颜色",
-        "outline color": "轮廓颜色"
-      },
       "auto clicker": {
         "_value": "连点器",
         "button": {
@@ -891,6 +860,8 @@
         "safety": "自身安全检查",
         "safety override": "覆盖安全限制",
         "block destruction": "考虑地形破坏",
+        "motion predict": "运动预测",
+        "predict ticks": "目标预测刻数",
         "self extrapolate": "自身位置预测",
         "extrapolation ticks": "预测刻数",
         "enemy range": "敌人搜索范围",
@@ -913,7 +884,7 @@
           "_value": "显示模式",
           "off": "关闭",
           "box": "方框",
-          "techno": ""
+          "techno": "科技"
         },
         "box mode": {
           "_value": "方框模式",
@@ -921,17 +892,14 @@
           "fill": "填充",
           "lines": "轮廓"
         },
-        "side": "填充颜色",
-        "line": "轮廓颜色",
-        "fade time": "淡出时间",
-        "render damage": "显示伤害",
-        "target damage": "目标伤害",
-        "self damage": "自身伤害",
-        "motion predict": "运动预测",
-        "predict ticks": "目标预测刻数",
+        "side color": "填充颜色",
+        "line color": "轮廓颜色",
+        "fading time": "消失前停留时间",
         "moving length": "移动动画时长",
         "fade length": "淡入淡出时长",
-        "fade": ""
+        "render damage": "显示伤害",
+        "target damage": "目标伤害",
+        "self damage": "自身伤害"
       },
       "self trap": {
         "_value": "自我包围",
@@ -957,7 +925,7 @@
         "rotate": "转头",
         "rotation mode": {
           "_value": "转头模式",
-          "motion": "",
+          "motion": "平滑旋转",
           "silent": "静默"
         },
         "rotation speed": "转头速度",
@@ -1447,7 +1415,8 @@
       },
       "disabler": {
         "_value": "反作弊干扰",
-        "multiactionsc": "MultiActionsC"
+        "multiactionsc": "MultiActionsC",
+        "aimmodulo360": "视角取模 360"
       },
       "elytra swap": {
         "_value": "鞘翅切换",
@@ -1842,8 +1811,7 @@
         "mode": {
           "_value": "模式",
           "cancel": "取消",
-          "reduce": "减少",
-          "delay": "延迟"
+          "reduce": "减少"
         },
         "server motion": "服务端移动",
         "explosion": "爆炸",
@@ -1854,9 +1822,7 @@
         "attack counts": "攻击次数",
         "sprint ticks": "冲刺刻数",
         "max delay": "最大延迟",
-        "swing hand": "挥手",
-        "delay ticks": "延迟刻数",
-        "jump reset": "跳跃重置"
+        "swing hand": "挥手"
       },
       "ac spoof": "反作弊伪装",
       "kill effect": {
@@ -1956,12 +1922,12 @@
       "crystal chams": {
         "_value": "水晶透视",
         "through walls": "穿墙",
-        "side color": "侧面颜色",
-        "line color": "线条颜色",
         "scale": "缩放",
         "spin speed": "旋转速度",
         "float speed": "浮动速度",
-        "line width": "线条宽度"
+        "line width": "线条宽度",
+        "side color": "侧面颜色",
+        "line color": "线条颜色"
       },
       "customsky": {
         "_value": "自定义天空",
@@ -2037,9 +2003,9 @@
         "main hand": "主手",
         "off hand": "副手",
         "arm": "空手手臂",
+        "opacity": "不透明度",
         "disable swap main": "禁用主手交换",
         "disable swap off": "禁用副手交换",
-        "opacity": "不透明度",
         "blocking animation": "格挡动画",
         "blocking mode": {
           "_value": "格挡模式",
@@ -2204,37 +2170,6 @@
         "side color": "侧面颜色",
         "line color": "线条颜色"
       },
-      "mas effects": {
-        "_value": "战斗视觉特效",
-        "general": "常规",
-        "mace": "重锤",
-        "hitboxes": "碰撞箱",
-        "wind particles": "风弹粒子",
-        "custom totem effect": "自定义图腾效果",
-        "totem effect opacity": "图腾效果透明度",
-        "player death effect": "玩家死亡效果",
-        "pearl trail particles": "末影珍珠轨迹",
-        "pearl trail opacity": "珍珠轨迹透明度",
-        "glide icon": "滑翔图标",
-        "mace shockwave": "重锤冲击波",
-        "mace shockwave size": "冲击波大小",
-        "mace shockwave opacity": "冲击波透明度",
-        "mace spark": "重锤火花",
-        "mace flash": "重锤闪光",
-        "shield effect": "盾牌冲击效果",
-        "armor particles": "破甲碎屑",
-        "legacy mace shockwave": "移除冲击波尖刺",
-        "custom hitbox": "自定义碰撞箱",
-        "pearl hitbox colors": "珍珠碰撞箱着色",
-        "pearl allies": "珍珠盟友",
-        "self pearl color": "自己的珍珠颜色",
-        "ally pearl color": "盟友珍珠颜色",
-        "other pearl color": "其他玩家珍珠颜色",
-        "mob hitbox opacity": "生物碰撞箱透明度",
-        "player hitbox opacity": "玩家碰撞箱透明度",
-        "hitbox fade distance": "碰撞箱淡出距离",
-        "projectile fade distance": "投射物渐显距离"
-      },
       "motion blur": {
         "_value": "动态模糊",
         "strength": "强度",
@@ -2317,6 +2252,38 @@
         "no mob in spawner": "刷怪笼内无生物",
         "no dead entities": "无死亡实体",
         "no nametags": "无名称标签"
+      },
+      "particles": {
+        "_value": "环境粒子",
+        "mode": {
+          "_value": "贴图",
+          "star": "星星",
+          "firefly": "萤火",
+          "dollar": "美元",
+          "heart": "爱心",
+          "snowflake": "雪花",
+          "drop": "水滴",
+          "cloud": "云朵"
+        },
+        "color mode": {
+          "_value": "颜色模式",
+          "custom": "自定义",
+          "sync": "主题同步",
+          "rgb": "RGB",
+          "sky": "天空色",
+          "lightrgb": "浅色 RGB"
+        },
+        "physics": {
+          "_value": "运动模式",
+          "drop": "下落",
+          "fly": "飘浮",
+          "fallingstars": "流星",
+          "rain": "雨滴"
+        },
+        "color": "颜色",
+        "amount": "数量",
+        "time": "寿命（tick）",
+        "size": "尺寸"
       },
       "pop chams": {
         "_value": "死亡透视",
@@ -2610,38 +2577,6 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
-      },
-      "particles": {
-        "_value": "环境粒子",
-        "mode": {
-          "_value": "贴图",
-          "star": "星星",
-          "firefly": "萤火",
-          "dollar": "美元",
-          "heart": "爱心",
-          "snowflake": "雪花",
-          "drop": "水滴",
-          "cloud": "云朵"
-        },
-        "color mode": {
-          "_value": "颜色模式",
-          "custom": "自定义",
-          "sync": "主题同步",
-          "rgb": "RGB",
-          "sky": "天空色",
-          "lightrgb": "浅色 RGB"
-        },
-        "physics": {
-          "_value": "运动模式",
-          "drop": "下落",
-          "fly": "飘浮",
-          "fallingstars": "流星",
-          "rain": "雨滴"
-        },
-        "color": "颜色",
-        "amount": "数量",
-        "time": "寿命（tick）",
-        "size": "尺寸"
       }
     },
     "elements": {

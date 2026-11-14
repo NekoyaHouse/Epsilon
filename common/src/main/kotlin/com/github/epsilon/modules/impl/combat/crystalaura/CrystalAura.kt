@@ -245,25 +245,26 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     )
 
     private val renderMode by enumSetting(
-        "Render", RenderMode.Box,
+        "Render", RenderMode.Techno,
         onChanged = {
             renderAnimation.clear()
+            technoAnimation.clear()
             technoRenderer.clear()
         }
     ).group(sgRender)
     private val shape by enumSetting("Box Mode", BoxMode.Both, { renderMode != RenderMode.Off }).group(sgRender)
     private val sideColor by colorSetting(
-        "Side",
-        Color(255, 183, 197, 70),
+        "Side Color",
+        Color(38, 127, 168, 160),
         true,
         { renderMode != RenderMode.Off }).group(sgRender)
     private val lineColor by colorSetting(
-        "Line",
-        Color(255, 183, 197, 211),
+        "Line Color",
+        Color(142, 235, 255, 230),
         true,
         { renderMode != RenderMode.Off }
     ).group(sgRender)
-    private val fadingTime by intSetting("Fading Time", 250, 0..1000, 10).group(sgRender)
+    private val fadingTime by intSetting("Fading Time", 0, 0..1000, 10).group(sgRender)
     private val movingLength by intSetting(
         "Moving Length", 400, 0..1000, 50,
         { renderMode != RenderMode.Off }
@@ -292,6 +293,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private var renderedAt = 0L
     private var renderTargetActive = false
     private val renderAnimation = CrystalRenderAnimation()
+    private val technoAnimation = CrystalTechnoAnimation()
     private val technoRenderer = CrystalTechnoRenderer()
     private var originalSlot = -1
     private var normalSlot = -1
@@ -404,7 +406,10 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 if (selfDamage) add(String.format(Locale.ROOT, "%.1f", candidate.selfDamage))
             }
             if (labels.isEmpty()) return@safeEventHandler
-            val screen = WorldToScreen.calcWorld2Screen(frame.center)
+            val center = if (renderMode == RenderMode.Techno) {
+                frame.center.add(0.0, (1.0 - frame.height) * 0.5, 0.0)
+            } else frame.center
+            val screen = WorldToScreen.calcWorld2Screen(center)
                 ?: return@safeEventHandler
             val renderer = textRenderer.get()
             val font = StaticFontLoader.defaultFont()
@@ -415,7 +420,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 screen.x - renderer.getWidth(label, scale, font) * 0.5f,
                 screen.y - renderer.getHeight(scale, font) * 0.5f,
                 scale,
-                faded(Color.WHITE, frame.scale),
+                faded(Color.WHITE, if (renderMode == RenderMode.Techno) frame.scale * frame.height else frame.scale),
                 font
             )
             renderer.drawAndClear()
@@ -1102,7 +1107,9 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         val time = now()
         val keepLast = time - renderedAt < fadingTime
         val target = rendered?.takeIf { isEnabled && (renderTargetActive || keepLast) }?.let { Vec3.atCenterOf(it.pos) }
-        return renderAnimation.sample(target, time, movingLength, fadeLength)
+        return if (renderMode == RenderMode.Techno) {
+            technoAnimation.sample(target, time, movingLength, fadeLength, technoRenderer.hasPulses)
+        } else renderAnimation.sample(target, time, movingLength, fadeLength)
     }
 
     private fun scanPositions(origin: Vec3, radius: Int): Sequence<BlockPos> = sequence {
