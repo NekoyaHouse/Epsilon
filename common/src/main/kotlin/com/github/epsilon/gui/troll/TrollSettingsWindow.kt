@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.*
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.Setting
@@ -26,7 +25,7 @@ class TrollSettingsWindow(
         position(x, y)
     }
 
-    override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
+    override fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float) {
         val previous: List<TrollSettingRow?> = entries.stream()
             .filter { it.row != null }
             .map { it.row }
@@ -42,12 +41,12 @@ class TrollSettingsWindow(
         for (row in previous) {
             if (entries.none { it.row === row }) row!!.resetInput()
         }
-        var width = maxOf(180.0f, metrics.getWidth(module.translatedName, TrollTheme.TEXT_SCALE) + 18.0f)
+        var width = maxOf(180.0f, metrics.textWidth(module.translatedName, TrollTheme.TEXT_SCALE) + 18.0f)
         for (entry in entries) {
             val entryWidth = if (entry.row != null) {
                 entry.row.minimumWidth(metrics)
             } else {
-                metrics.getWidth(entry.section!!.title(), TrollTheme.TEXT_SCALE) + 30.0f
+                metrics.textWidth(entry.section!!.title(), TrollTheme.TEXT_SCALE) + 30.0f
             }
             width = maxOf(width, entryWidth + entry.depth * 15.0f + TrollTheme.xMargin() * 2.0f)
         }
@@ -117,30 +116,29 @@ class TrollSettingsWindow(
         }
     }
 
-    override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
-        TrollTheme.window(scope, bounds, headerHeight, module.translatedName, metrics)
-        scope.scissor(viewport) { content ->
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
+        TrollTheme.run { Window(headerHeight, module.translatedName) }
+        Clip(viewport.x, viewport.y, viewport.width, viewport.height) {
             for (entry in entries) {
                 if (entry.row != null) {
-                    content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(entry.row) {
-                        entry.row.draw(tree, metrics, mouseX, mouseY)
+                    LuminUIItem(entry.row) {
+                        entry.row.drawInScope(this, mouseX, mouseY)
                     }
                 } else {
-                    content.asUiScope(TrollTheme.metrics(metrics))
-                        .Interaction(key = entry.section!!, bounds = entry.bounds) {
-                            onClick { entry.section.toggleCollapsed(); true }
-                            onClick(InputConstants.MOUSE_BUTTON_RIGHT) { entry.section.toggleCollapsed(); true }
-                        }
+                    Interaction(key = entry.section!!, bounds = entry.bounds) {
+                        onClick { entry.section.toggleCollapsed(); true }
+                        onClick(InputConstants.MOUSE_BUTTON_RIGHT) { entry.section.toggleCollapsed(); true }
+                    }
                     val hovered = entry.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                    content.layer(TrollZ.Base) { z ->
-                        z.rect(
+                    Layer(TrollZ.Base) {
+                        Rect(
                             entry.bounds.x, entry.bounds.y, entry.bounds.width, entry.bounds.height,
                             Color(255, 255, 255, if (hovered) 32 else 12)
                         )
                     }
                     val label = (if (entry.section.isCollapsed()) "+ " else "- ") + entry.section.title()
-                    content.layer(TrollZ.Text) { z ->
-                        z.textWithShadow(
+                    Layer(TrollZ.Text) {
+                        TextWithShadow(
                             TrollTheme.trim(label, metrics, TrollTheme.TEXT_SCALE, entry.bounds.width - 18.0f),
                             entry.bounds.x + 9.0f, entry.bounds.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
                         )
@@ -151,8 +149,8 @@ class TrollSettingsWindow(
                 val section = entry.section ?: continue
                 val card = entry.groupBounds.inset(0.6f)
                 val outline = TrollTheme.alpha(TrollTheme.primary(), 255)
-                content.layer(TrollZ.Overlay) { z ->
-                    z.rectOutline(card.x, card.y, card.width, card.height, 0.5f, outline)
+                Layer(TrollZ.Overlay) {
+                    RectOutline(card.x, card.y, card.width, card.height, 0.5f, outline)
                 }
             }
         }

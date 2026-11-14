@@ -25,6 +25,8 @@ A modern multi loader Minecraft utility client built on NeoForge & Fabric with a
 
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
+Troll GUI uses the same Lumin UI DSL as Dropdown: cached scenes, local window and setting-row scopes, and declarative input. Window dragging, resizing, search, settings, friends and configuration panels retain their existing behavior.
+
 ## ⚙️ Build & Run
 
 ```bash

@@ -2,11 +2,7 @@ package com.github.epsilon.gui.troll
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.assets.i18n.TranslateComponent
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.Interaction
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
@@ -36,7 +32,7 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         position(x, y)
     }
 
-    override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
+    override fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float) {
         headerHeight = TrollTheme.headerHeight(metrics)
         var step = TrollTheme.rowHeight(metrics) + 3.0f
         val channels = channelCount()
@@ -48,17 +44,17 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         )
         step = ((bounds.height - contentTop - CONTENT_PADDING + 3.0f) / (channels + 3)).coerceIn(1.0f, step)
         val fieldSize = (bounds.width * 0.48f - 27.0f).coerceIn(18.0f, bounds.height - contentTop - CONTENT_PADDING)
-        field = UiRect(bounds.x + 6.0f, bounds.y + contentTop, fieldSize, fieldSize)
+        field = UiRect(6.0f, contentTop, fieldSize, fieldSize)
         hueBar = UiRect(field.right() + 9.0f, field.y, 12.0f, fieldSize)
         val sliderX = hueBar.right() + 12.0f
-        val sliderWidth = maxOf(1.0f, bounds.right() - 6.0f - sliderX)
+        val sliderWidth = maxOf(1.0f, bounds.width - 6.0f - sliderX)
         for (i in 0 until channels) {
             sliders[i] = UiRect(sliderX, field.y + i * step, sliderWidth, step - 3.0f)
         }
         val buttonWidth = minOf(87.0f, sliderWidth * 0.48f)
         for (i in buttons.indices) {
             buttons[i] = UiRect(
-                bounds.right() - 6.0f - buttonWidth,
+                bounds.width - 6.0f - buttonWidth,
                 field.y + (channels + i) * step, buttonWidth, step - 3.0f
             )
         }
@@ -67,23 +63,21 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         currentColor = previousColor.translate(previewWidth + 3.0f, 0.0f)
     }
 
-    override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
-        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
-        val origin = ui.origin
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
         for (part in 0 until channelCount() + 2) {
             val region = when (part) {
                 0 -> field; 1 -> hueBar; else -> sliders[part - 2]
             }
-            ui.Interaction("picker" to part, region) {
+            Interaction("picker" to part, region) {
                 onDrag(
-                    onStart = { draggingPart = part; update(it.x - origin.x, it.y - origin.y); true },
+                    onStart = { draggingPart = part; update(region.x + it.localX, region.y + it.localY); true },
                     onEnd = { draggingPart = -1 }, onCancel = { draggingPart = -1 }) {
-                    update(it.x - origin.x, it.y - origin.y)
+                    update(region.x + it.localX, region.y + it.localY)
                 }
             }
         }
         for (index in buttons.indices) {
-            ui.Interaction("button" to index, buttons[index]) {
+            Interaction("button" to index, buttons[index]) {
                 onClick {
                     when (index) {
                         0 -> confirm(); 1 -> cancel(); else -> setting.value = color()
@@ -93,35 +87,29 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
             }
         }
 
-        TrollTheme.window(
-            scope,
-            bounds,
-            headerHeight,
-            EpsilonTranslations.TrollGui.COLOR_PICKER.getTranslatedName(),
-            metrics
-        )
+        TrollTheme.run { Window(headerHeight, EpsilonTranslations.TrollGui.COLOR_PICKER.getTranslatedName()) }
         val hueColor = Color.getHSBColor(hue, 1.0f, 1.0f)
-        scope.layer(TrollZ.Base) { z ->
-            z.rectGradient(field.x, field.y, field.width, field.height, Color.WHITE, Color.WHITE, hueColor, hueColor)
-            z.rectGradient(
+        Layer(TrollZ.Base) {
+            RectGradient(field.x, field.y, field.width, field.height, Color.WHITE, Color.WHITE, hueColor, hueColor)
+            RectGradient(
                 field.x, field.y, field.width, field.height,
                 Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, Color(0, 0, 0, 0)
             )
             for (i in 0 until 6) {
                 val top = Color.getHSBColor(i / 6.0f, 1.0f, 1.0f)
                 val bottom = Color.getHSBColor((i + 1) / 6.0f, 1.0f, 1.0f)
-                z.rectGradient(
+                RectGradient(
                     hueBar.x, hueBar.y + hueBar.height * i / 6.0f, hueBar.width, hueBar.height / 6.0f + 0.3f,
                     top, bottom, bottom, top
                 )
             }
         }
-        scope.layer(TrollZ.Highlight) { z ->
-            z.rectOutline(
+        Layer(TrollZ.Highlight) {
+            RectOutline(
                 field.x + saturation * field.width - 3.0f, field.y + (1.0f - brightness) * field.height - 3.0f,
                 6.0f, 6.0f, 0.8f, Color.WHITE
             )
-            z.rect(hueBar.x - 3.0f, hueBar.y + hue * hueBar.height - 1.5f, hueBar.width + 6.0f, 3.0f, Color.WHITE)
+            Rect(hueBar.x - 3.0f, hueBar.y + hue * hueBar.height - 1.5f, hueBar.width + 6.0f, 3.0f, Color.WHITE)
         }
         val current = color()
         val values = intArrayOf(current.red, current.green, current.blue, alpha)
@@ -130,9 +118,9 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         )
         for (i in 0 until channelCount()) {
             val slider = sliders[i]
-            scope.layer(TrollZ.Base) { z ->
-                z.rect(slider.x, slider.y, slider.width, slider.height, Color(0, 0, 0, 40))
-                z.rect(
+            Layer(TrollZ.Base) {
+                Rect(slider.x, slider.y, slider.width, slider.height, Color(0, 0, 0, 40))
+                Rect(
                     slider.x,
                     slider.y,
                     slider.width * values[i] / 255.0f,
@@ -140,8 +128,8 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
                     TrollTheme.alpha(fills[i], 200)
                 )
             }
-            scope.layer(TrollZ.Text) { z ->
-                z.textWithShadow(
+            Layer(TrollZ.Text) {
+                TextWithShadow(
                     TrollTheme.trim(
                         CHANNELS[i].getTranslatedName(),
                         metrics,
@@ -154,17 +142,17 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
                     TrollTheme.text()
                 )
                 val value = values[i].toString()
-                z.textWithShadow(
+                TextWithShadow(
                     value,
-                    slider.right() - metrics.getWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
-                    slider.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f,
+                    slider.right() - metrics.textWidth(value, TrollTheme.VALUE_SCALE) - 3.0f,
+                    slider.bottom() - metrics.textHeight(TrollTheme.VALUE_SCALE) - 3.0f,
                     TrollTheme.VALUE_SCALE,
                     TrollTheme.text()
                 )
             }
         }
-        drawPreview(scope, previousColor, original)
-        drawPreview(scope, currentColor, current)
+        drawPreview(previousColor, original)
+        drawPreview(currentColor, current)
         val labels = arrayOf(
             EpsilonTranslations.TrollGui.OKAY,
             EpsilonTranslations.TrollGui.CANCEL,
@@ -172,8 +160,8 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
         )
         for (i in buttons.indices) {
             val button = buttons[i]
-            scope.layer(TrollZ.Base) { z ->
-                z.rect(
+            Layer(TrollZ.Base) {
+                Rect(
                     button.x, button.y, button.width, button.height,
                     TrollTheme.alpha(
                         TrollTheme.primary(),
@@ -183,22 +171,22 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
             }
             val label =
                 TrollTheme.trim(labels[i].getTranslatedName(), metrics, TrollTheme.TEXT_SCALE, button.width - 6.0f)
-            scope.layer(TrollZ.Text) { z ->
-                z.textWithShadow(
-                    label, button.centerX() - metrics.getWidth(label, TrollTheme.TEXT_SCALE) / 2.0f,
+            Layer(TrollZ.Text) {
+                TextWithShadow(
+                    label, button.centerX() - metrics.textWidth(label, TrollTheme.TEXT_SCALE) / 2.0f,
                     button.y + 2.25f, TrollTheme.TEXT_SCALE, TrollTheme.text()
                 )
             }
         }
     }
 
-    private fun drawPreview(scope: UiTree.Scope, bounds: UiRect, color: Color) {
-        scope.layer(TrollZ.Base) { z ->
-            z.rect(bounds.x, bounds.y, bounds.width, bounds.height, Color.WHITE)
-            z.rect(bounds.x, bounds.centerY(), bounds.width, bounds.height / 2.0f, Color.BLACK)
+    private fun UiScope.drawPreview(bounds: UiRect, color: Color) {
+        Layer(TrollZ.Base) {
+            Rect(bounds.x, bounds.y, bounds.width, bounds.height, Color.WHITE)
+            Rect(bounds.x, bounds.centerY(), bounds.width, bounds.height / 2.0f, Color.BLACK)
         }
-        scope.layer(TrollZ.Highlight) { z ->
-            z.rect(bounds.x, bounds.y, bounds.width, bounds.height, color)
+        Layer(TrollZ.Highlight) {
+            Rect(bounds.x, bounds.y, bounds.width, bounds.height, color)
         }
     }
 

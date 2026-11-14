@@ -2,7 +2,6 @@ package com.github.epsilon.gui.troll
 
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
@@ -30,10 +29,10 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
     private var inputBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var listViewport: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var statusBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
-    private var metrics: TextRenderer? = null
+    private var metrics: UiTextMetrics? = null
     private var status: String by mutableStateOf<String>("")
 
-    override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
+    override fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float) {
         this.metrics = metrics
         val configs = ConfigManager.listConfigs()
         val activeConfig = ConfigManager.activeConfigName
@@ -43,28 +42,28 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         }
 
         headerHeight = TrollTheme.headerHeight(metrics)
-        var width = maxOf(240.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
+        var width = maxOf(240.0f, metrics.textWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
         for (type in ActionButtonType.values()) {
-            width = maxOf(width, metrics.getWidth(type.label(), TrollTheme.VALUE_SCALE) * 2.0f + 32.0f)
+            width = maxOf(width, metrics.textWidth(type.label(), TrollTheme.VALUE_SCALE) * 2.0f + 32.0f)
         }
         for (config in configs) {
-            width = maxOf(width, metrics.getWidth(config, TrollTheme.TEXT_SCALE) + 74.0f)
+            width = maxOf(width, metrics.textWidth(config, TrollTheme.TEXT_SCALE) + 74.0f)
         }
         width = minOf(minOf(width, 340.0f), screenWidth)
 
-        val contentTop = bounds.y + headerHeight + PADDING
+        val contentTop = headerHeight + PADDING
         var actionTop = contentTop + FIELD_HEIGHT + GAP
         val actionHeight = BUTTON_HEIGHT * 3.0f + GAP * 2.0f
         var statusTop = actionTop + actionHeight + GAP
         val statusHeight = if (status.isBlank()) 0.0f else ROW_HEIGHT
         var listTop = statusTop + statusHeight + GAP
-        val fixedHeight = listTop - bounds.y
+        val fixedHeight = listTop
         val listHeight = maxOf(ROW_HEIGHT, configs.size * (ROW_HEIGHT + GAP))
         val height = minOf(minOf(fixedHeight + listHeight + PADDING, 300.0f), screenHeight)
         size(width, height, screenWidth, screenHeight)
 
         val contentWidth = maxOf(1.0f, bounds.width - PADDING * 2.0f)
-        inputBounds = UiRect(bounds.x + PADDING, bounds.y + headerHeight + PADDING, contentWidth, FIELD_HEIGHT)
+        inputBounds = UiRect(PADDING, headerHeight + PADDING, contentWidth, FIELD_HEIGHT)
         actionTop = inputBounds.bottom() + GAP
         val buttonWidth = maxOf(1.0f, (contentWidth - GAP) / 2.0f)
         actionButtons.clear()
@@ -76,7 +75,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                 ActionButton(
                     types[i],
                     UiRect(
-                        bounds.x + PADDING + column * (buttonWidth + GAP),
+                        PADDING + column * (buttonWidth + GAP),
                         actionTop + row * (BUTTON_HEIGHT + GAP),
                         buttonWidth,
                         BUTTON_HEIGHT
@@ -85,13 +84,13 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
             )
         }
         statusTop = actionTop + BUTTON_HEIGHT * 3.0f + GAP * 2.0f + GAP
-        statusBounds = UiRect(bounds.x + PADDING, statusTop, contentWidth, ROW_HEIGHT)
+        statusBounds = UiRect(PADDING, statusTop, contentWidth, ROW_HEIGHT)
         listTop = statusTop + (if (status.isBlank()) 0.0f else ROW_HEIGHT) + GAP
         listViewport = UiRect(
-            bounds.x + PADDING,
+            PADDING,
             listTop,
             contentWidth,
-            maxOf(1.0f, bounds.bottom() - PADDING - listTop)
+            maxOf(1.0f, bounds.height - PADDING - listTop)
         )
 
         val contentHeight = configs.size * (ROW_HEIGHT + GAP)
@@ -106,74 +105,73 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
         }
     }
 
-    override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
-        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
-        ui.InputRegion(
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
+        InputRegion(
             inputField, inputBounds, onPress = { _, _ -> inputField.focus(); true },
             onKey = ::keyPressed, onText = ::charTyped, onBlur = inputField::blur
         )
 
-        TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
+        TrollTheme.run { Window(headerHeight, title()) }
         inputField.draw(
-            scope.asUiScope(TrollTheme.metrics(metrics)), inputBounds.x, inputBounds.y,
+            this, inputBounds.x, inputBounds.y,
             inputBounds.width, inputBounds.height, mouseX, mouseY,
             EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), TrollTheme.TEXT_SCALE, true
         )
 
         for (button in actionButtons) {
-            ui.Interaction(button.type, button.bounds) { onClick { handleAction(button.type); true } }
+            Interaction(button.type, button.bounds) { onClick { handleAction(button.type); true } }
             val hovered = button.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-            scope.layer(TrollZ.Base) { z ->
-                z.rect(
+            Layer(TrollZ.Base) {
+                Rect(
                     button.bounds.x, button.bounds.y, button.bounds.width, button.bounds.height,
                     TrollTheme.alpha(TrollTheme.primary(), if (hovered) 190 else 70)
                 )
             }
             val label =
                 TrollTheme.trim(button.type.label(), metrics, TrollTheme.VALUE_SCALE, button.bounds.width - 8.0f)
-            scope.layer(TrollZ.Highlight) { z ->
-                z.textWithShadow(
+            Layer(TrollZ.Highlight) {
+                TextWithShadow(
                     label,
-                    button.bounds.centerX() - metrics.getWidth(label, TrollTheme.VALUE_SCALE) / 2.0f,
-                    button.bounds.y + (button.bounds.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
+                    button.bounds.centerX() - metrics.textWidth(label, TrollTheme.VALUE_SCALE) / 2.0f,
+                    button.bounds.y + (button.bounds.height - metrics.textHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
                     TrollTheme.VALUE_SCALE, TrollTheme.text()
                 )
             }
         }
 
         if (status.isNotBlank()) {
-            scope.layer(TrollZ.Highlight) { z ->
-                z.textWithShadow(
+            Layer(TrollZ.Highlight) {
+                TextWithShadow(
                     TrollTheme.trim(status, metrics, TrollTheme.VALUE_SCALE, statusBounds.width),
                     statusBounds.x,
-                    statusBounds.y + (statusBounds.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
+                    statusBounds.y + (statusBounds.height - metrics.textHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
                     TrollTheme.VALUE_SCALE,
                     TrollTheme.text()
                 )
             }
         }
 
-        scope.scissor(listViewport) { content ->
+        Clip(listViewport.x, listViewport.y, listViewport.width, listViewport.height) {
             if (rows.isEmpty()) {
                 val empty = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName()
-                content.layer(TrollZ.Highlight) { z ->
-                    z.textWithShadow(
+                Layer(TrollZ.Highlight) {
+                    TextWithShadow(
                         empty,
-                        listViewport.centerX() - metrics.getWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
-                        listViewport.y + (listViewport.height - metrics.getHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
+                        listViewport.centerX() - metrics.textWidth(empty, TrollTheme.VALUE_SCALE) / 2.0f,
+                        listViewport.y + (listViewport.height - metrics.textHeight(TrollTheme.VALUE_SCALE)) / 2.0f,
                         TrollTheme.VALUE_SCALE, TrollTheme.text()
                     )
                 }
-                return@scissor
+                return@Clip
             }
             for (row in rows) {
-                content.asUiScope(TrollTheme.metrics(metrics)).LuminUIItem(row.name) {
+                LuminUIItem(row.name) {
                     Interaction("switch", row.bounds) { onClick { trySwitchConfig(row.name); true } }
                     Interaction("delete", row.deleteBounds) { onClick { openDeleteConfirmation(row.name); true } }
                     val active = row.name == ConfigManager.activeConfigName
                     val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                    tree.layer(TrollZ.Base) { z ->
-                        z.rect(
+                    Layer(TrollZ.Base) {
+                        Rect(
                             row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
                             if (active) {
                                 TrollTheme.alpha(TrollTheme.primary(), 110)
@@ -184,8 +182,8 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                     }
 
                     val nameScale = TrollTheme.VALUE_SCALE
-                    tree.layer(TrollZ.Highlight) { z ->
-                        z.textWithShadow(
+                    Layer(TrollZ.Highlight) {
+                        TextWithShadow(
                             TrollTheme.trim(
                                 row.name,
                                 metrics,
@@ -202,7 +200,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                         } else {
                             EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName()
                         }
-                        z.textWithShadow(
+                        TextWithShadow(
                             TrollTheme.trim(
                                 hint,
                                 metrics,
@@ -210,30 +208,30 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                                 row.bounds.width - DELETE_BUTTON_SIZE - 18.0f
                             ),
                             row.bounds.x + 5.0f,
-                            row.bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE * 0.82f) - 2.0f,
+                            row.bounds.bottom() - metrics.textHeight(TrollTheme.VALUE_SCALE * 0.82f) - 2.0f,
                             TrollTheme.VALUE_SCALE * 0.82f,
                             TrollTheme.alpha(TrollTheme.text(), 180)
                         )
                     }
 
                     val deleteHovered = row.deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())
-                    tree.layer(TrollZ.Text) { z ->
-                        z.rect(
+                    Layer(TrollZ.Text) {
+                        Rect(
                             row.deleteBounds.x, row.deleteBounds.y,
                             row.deleteBounds.width, row.deleteBounds.height,
                             TrollTheme.alpha(TrollTheme.primary(), if (deleteHovered) 180 else 40)
                         )
                     }
                     val iconScale = TrollTheme.VALUE_SCALE
-                    tree.layer(TrollZ.Content) { z ->
-                        z.textWithShadow(
+                    Layer(TrollZ.Content) {
+                        TextWithShadow(
                             IconChars.CLOSE,
-                            row.deleteBounds.centerX() - metrics.getWidth(
+                            row.deleteBounds.centerX() - metrics.textWidth(
                                 IconChars.CLOSE,
                                 iconScale,
                                 StaticFontLoader.ICONS
                             ) / 2.0f,
-                            row.deleteBounds.y + (row.deleteBounds.height - metrics.getHeight(
+                            row.deleteBounds.y + (row.deleteBounds.height - metrics.textHeight(
                                 iconScale,
                                 StaticFontLoader.ICONS
                             )) / 2.0f,

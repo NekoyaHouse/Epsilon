@@ -2,12 +2,8 @@ package com.github.epsilon.gui.troll
 
 import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.state.luminBlink
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
 import com.github.epsilon.gui.screen.PlatformNoticeScreen
@@ -46,6 +42,8 @@ class TrollSettingRow {
     private val click: Animation = Animation(Easing.EASE_OUT_CUBIC, 300L)
     private var bounds: UiRect by mutableStateOf<UiRect>(UiRect(0.0f, 0.0f, 0.0f, 0.0f))
     private var input: DropdownTextField? by mutableStateOf<DropdownTextField?>(null)
+    private var inputOriginX = 0f
+    private var inputOriginY = 0f
     private var originalText: String? = null
     private var listening: Boolean by mutableStateOf<Boolean>(false)
     private var dragging: Boolean by mutableStateOf<Boolean>(false)
@@ -124,29 +122,36 @@ class TrollSettingRow {
         }
     }
 
-    fun minimumWidth(metrics: TextRenderer): Float {
+    fun minimumWidth(metrics: UiTextMetrics): Float {
         if (setting is ColorSetting) {
             return maxOf(
                 120.0f,
-                metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getHeight(TrollTheme.TEXT_SCALE) + 39.0f
+                metrics.textWidth(label(), TrollTheme.TEXT_SCALE) + metrics.textHeight(TrollTheme.TEXT_SCALE) + 39.0f
             )
         }
         return maxOf(
             120.0f,
-            metrics.getWidth(label(), TrollTheme.TEXT_SCALE) + metrics.getWidth(
+            metrics.textWidth(label(), TrollTheme.TEXT_SCALE) + metrics.textWidth(
                 valueText(),
                 TrollTheme.VALUE_SCALE
             ) + 24.0f
         )
     }
 
-    fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
-        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
-        val origin = ui.origin
+    /** 将列表布局提供的局部矩形转换为独立的行作用域。 */
+    fun drawInScope(scope: UiScope, mouseX: Int, mouseY: Int) {
+        scope.Positioned(bounds.x, bounds.y, bounds.width, bounds.height) {
+            draw((mouseX - bounds.x).toInt(), (mouseY - bounds.y).toInt())
+        }
+    }
+
+    private fun UiScope.draw(mouseX: Int, mouseY: Int) {
+        inputOriginX = origin.x
+        inputOriginY = origin.y
         fun eventInModel(event: MouseButtonEvent) =
-            MouseButtonEvent(event.x() - origin.x, event.y() - origin.y, event.buttonInfo())
-        ui.InputRegion(
-            key = this, bounds = bounds,
+            MouseButtonEvent(event.x() - inputOriginX + bounds.x, event.y() - inputOriginY + bounds.y, event.buttonInfo())
+        InputRegion(
+            key = this@TrollSettingRow, screenCoordinates = false,
             onPreviewPress = { event, _ -> captureMouseBind(eventInModel(event)) },
             onPress = { event, _ -> captureMouseBind(eventInModel(event)) || mouseClicked(eventInModel(event)) },
             onDrag = { event, _, _ -> mouseDragged(eventInModel(event)) },
@@ -155,27 +160,27 @@ class TrollSettingRow {
             onBlur = { finishEditing(true); listening = false }, autoFocus = listening
         )
 
-        val h = scope.animate(hover, bounds.contains(mouseX.toDouble(), mouseY.toDouble()))
-        val clicked = scope.animate(click, pressed)
-        val p = scope.animate(progress, target())
-        scope.layer(TrollZ.Base) { z ->
-            z.rect(bounds.x, bounds.y, bounds.width, bounds.height, Color(0, 0, 0, 40))
+        val h = animate(hover, size.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val clicked = animate(click, pressed)
+        val p = animate(progress, target())
+        Layer(TrollZ.Base) {
+            Rect(0f, 0f, width, height, Color(0, 0, 0, 40))
             if (p > 0.001f) {
-                z.rect(bounds.x, bounds.y, bounds.width * p, bounds.height, TrollTheme.primary())
+                Rect(0f, 0f, width * p, height, TrollTheme.primary())
             }
         }
         val hoverAlpha = GuiSetting.hoverAlpha
-        scope.layer(TrollZ.Highlight) { z ->
-            z.rect(bounds.x, bounds.y, bounds.width, bounds.height, Color(255, 255, 255, (hoverAlpha * h).toInt()))
+        Layer(TrollZ.Highlight) {
+            Rect(0f, 0f, width, height, Color(255, 255, 255, (hoverAlpha * h).toInt()))
         }
         if (isEditing()) {
             if (setting is IntSetting || setting is DoubleSetting) {
-                drawNumericEditing(scope, metrics)
+                drawNumericEditing()
             } else {
                 val activeInput = input ?: return
-                scope.layer(TrollZ.Text) { z ->
+                Layer(TrollZ.Text) {
                     activeInput.draw(
-                        z.asUiScope(TrollTheme.metrics(metrics)), bounds.x, bounds.y, bounds.width, bounds.height,
+                        this, 0f, 0f, width, height,
                         mouseX, mouseY, "", TrollTheme.TEXT_SCALE, true
                     )
                 }
@@ -184,76 +189,76 @@ class TrollSettingRow {
         }
         val value = displayValueText()
         val valueWidth = if (setting is ColorSetting) {
-            metrics.getHeight(TrollTheme.TEXT_SCALE) + 9.0f
+            metrics.textHeight(TrollTheme.TEXT_SCALE) + 9.0f
         } else {
-            minOf(metrics.getWidth(value, TrollTheme.VALUE_SCALE), bounds.width * 0.48f)
+            minOf(metrics.textWidth(value, TrollTheme.VALUE_SCALE), width * 0.48f)
         }
         val scale = TrollTheme.TEXT_SCALE * (1.0f + h * 0.05f - clicked * 0.1f)
         val text = if (setting != null && !setting.isSupported()) TrollTheme.alpha(
             TrollTheme.text(),
             110
         ) else TrollTheme.text()
-        scope.layer(TrollZ.Text) { z ->
-            z.textWithShadow(
-                TrollTheme.trim(label(), metrics, scale, bounds.width - valueWidth - 10.5f),
-                bounds.x + 3.0f + h * 3.0f, bounds.y + 2.25f, scale, text
+        Layer(TrollZ.Text) {
+            TextWithShadow(
+                TrollTheme.trim(label(), metrics, scale, width - valueWidth - 10.5f),
+                3.0f + h * 3.0f, 2.25f, scale, text
             )
         }
         if (setting is ColorSetting) {
-            drawColorSwatch(scope, metrics, setting.value)
+            drawColorSwatch(setting.value)
             return
         }
-        scope.layer(TrollZ.Text) { z ->
-            z.textWithShadow(
+        Layer(TrollZ.Text) {
+            TextWithShadow(
                 TrollTheme.trim(value, metrics, TrollTheme.VALUE_SCALE, valueWidth),
-                bounds.right() - valueWidth - 3.0f, bounds.bottom() - metrics.getHeight(TrollTheme.VALUE_SCALE) - 3.0f,
+                width - valueWidth - 3.0f, height - metrics.textHeight(TrollTheme.VALUE_SCALE) - 3.0f,
                 TrollTheme.VALUE_SCALE, text
             )
         }
     }
 
-    private fun drawNumericEditing(scope: UiTree.Scope, metrics: TextRenderer) {
+    private fun UiScope.drawNumericEditing() {
         val activeInput = input ?: return
         val text = activeInput.text
         val labelScale = TrollTheme.TEXT_SCALE
         val valueScale = TrollTheme.VALUE_SCALE
-        val textY = bounds.y + 2.25f
-        val valueWidth = minOf(metrics.getWidth(text, valueScale), bounds.width * 0.48f)
-        val valueX = bounds.right() - valueWidth - 3.0f
+        val textY = 2.25f
+        val valueWidth = minOf(metrics.textWidth(text, valueScale), width * 0.48f)
+        val valueX = width - valueWidth - 3.0f
 
-        scope.layer(TrollZ.Text) { z ->
-            z.textWithShadow(
-                TrollTheme.trim(label(), metrics, labelScale, maxOf(1.0f, bounds.width - valueWidth - 10.5f)),
-                bounds.x + 3.0f, textY, labelScale, TrollTheme.text()
+        Layer(TrollZ.Text) {
+            TextWithShadow(
+                TrollTheme.trim(label(), metrics, labelScale, maxOf(1.0f, width - valueWidth - 10.5f)),
+                3.0f, textY, labelScale, TrollTheme.text()
             )
-            z.textWithShadow(
+            TextWithShadow(
                 TrollTheme.trim(text, metrics, valueScale, valueWidth),
-                valueX, bounds.bottom() - metrics.getHeight(valueScale) - 3.0f,
+                valueX, height - metrics.textHeight(valueScale) - 3.0f,
                 valueScale, TrollTheme.text()
             )
         }
 
         val cursor = activeInput.getCursorIndex()
-        var caretX = valueX + metrics.getWidth(text.substring(0, cursor), valueScale)
-        caretX = minOf(caretX, bounds.right() - 3.0f)
-        val caretY = bounds.bottom() - metrics.getHeight(valueScale) - 3.0f
-        if (luminBlink(this to "caret")) {
-            scope.layer(TrollZ.Content) { z ->
-                z.rect(caretX, caretY, 0.8f, metrics.getHeight(valueScale), TrollTheme.text())
+        var caretX = valueX + metrics.textWidth(text.substring(0, cursor), valueScale)
+        caretX = minOf(caretX, width - 3.0f)
+        val caretY = height - metrics.textHeight(valueScale) - 3.0f
+        if (luminBlink(this@TrollSettingRow to "caret")) {
+            Layer(TrollZ.Content) {
+                Rect(caretX, caretY, 0.8f, metrics.textHeight(valueScale), TrollTheme.text())
             }
         }
-        IMEFocusHelper.updateCursorPos(caretX, caretY)
+        IMEFocusHelper.updateCursorPos(origin.x + caretX, origin.y + caretY)
     }
 
-    private fun drawColorSwatch(scope: UiTree.Scope, metrics: TextRenderer, color: Color) {
-        val size = metrics.getHeight(TrollTheme.TEXT_SCALE)
-        val x = bounds.right() - size - 6.0f
-        val y = bounds.y + (bounds.height - size) / 2.0f
-        scope.layer(TrollZ.Text) { z ->
-            z.rect(x - 1.5f, y - 1.5f, size + 3.0f, size + 3.0f, Color(0, 0, 0, 80))
+    private fun UiScope.drawColorSwatch(color: Color) {
+        val size = metrics.textHeight(TrollTheme.TEXT_SCALE)
+        val x = width - size - 6.0f
+        val y = (height - size) / 2.0f
+        Layer(TrollZ.Text) {
+            Rect(x - 1.5f, y - 1.5f, size + 3.0f, size + 3.0f, Color(0, 0, 0, 80))
         }
-        scope.layer(TrollZ.Content) { z ->
-            z.rect(x, y, size, size, color)
+        Layer(TrollZ.Content) {
+            Rect(x, y, size, size, color)
         }
     }
 
@@ -278,11 +283,11 @@ class TrollSettingRow {
             module.isHidden = !module.isHidden
         } else if (action == ModuleAction.TOGGLE && module != null) {
             if (button == InputConstants.MOUSE_BUTTON_RIGHT || module.category == null) {
-                TrollGuiScreen.INSTANCE.openSettings(module, event.x(), event.y())
+                TrollGuiScreen.INSTANCE.openSettings(module, event.x() - bounds.x + inputOriginX, event.y() - bounds.y + inputOriginY)
             } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 module.toggle()
             } else if (button == InputConstants.MOUSE_BUTTON_MIDDLE) {
-                TrollGuiScreen.INSTANCE.openSettings(module, event.x(), event.y()).listenForBind()
+                TrollGuiScreen.INSTANCE.openSettings(module, event.x() - bounds.x + inputOriginX, event.y() - bounds.y + inputOriginY).listenForBind()
             }
         } else if (setting is BoolSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             setting.value = !setting.value
@@ -300,7 +305,7 @@ class TrollSettingRow {
         } else if (setting is StringSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             startEditing()
         } else if (setting is ColorSetting && button == InputConstants.MOUSE_BUTTON_RIGHT) {
-            TrollGuiScreen.INSTANCE.openColorPicker(setting, event.x(), event.y())
+            TrollGuiScreen.INSTANCE.openColorPicker(setting, event.x() - bounds.x + inputOriginX, event.y() - bounds.y + inputOriginY)
         } else if (setting is ButtonSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             setting.value.run()
         } else if (setting is StringListSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
