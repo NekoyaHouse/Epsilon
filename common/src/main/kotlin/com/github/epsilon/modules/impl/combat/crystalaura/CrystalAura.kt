@@ -379,7 +379,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 if (selfDamage) add(String.format(Locale.ROOT, "%.1f", candidate.selfDamage))
             }
             if (labels.isEmpty()) return@safeEventHandler
-            val screen = WorldToScreen.calcWorld2Screen(frame.center.add(0.0, 0.6, 0.0))
+            val screen = WorldToScreen.calcWorld2Screen(frame.center)
                 ?: return@safeEventHandler
             val renderer = textRenderer.get()
             val font = StaticFontLoader.defaultFont()
@@ -388,7 +388,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             renderer.addText(
                 label,
                 screen.x - renderer.getWidth(label, scale, font) * 0.5f,
-                screen.y,
+                screen.y - renderer.getHeight(scale, font) * 0.5f,
                 scale,
                 faded(Color.WHITE, frame.scale),
                 font
