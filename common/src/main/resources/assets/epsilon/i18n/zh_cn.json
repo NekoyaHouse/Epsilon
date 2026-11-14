@@ -926,7 +926,11 @@
         "fade time": "淡出时间",
         "render damage": "显示伤害",
         "target damage": "目标伤害",
-        "self damage": "自身伤害"
+        "self damage": "自身伤害",
+        "motion predict": "运动预测",
+        "predict ticks": "目标预测刻数",
+        "moving length": "移动动画时长",
+        "fade length": "淡入淡出时长"
       },
       "self trap": {
         "_value": "自我包围",

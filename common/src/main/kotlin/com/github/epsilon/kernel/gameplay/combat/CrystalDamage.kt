@@ -72,14 +72,16 @@ object CrystalDamage {
             }
     }
 
+    /** 预测在客户端线程完成；距离、盾牌方向与暴露采样使用同一预测位置和碰撞箱。 */
     fun NonNullContext.snapshot(
         entity: LivingEntity,
         predictionTicks: Int = 0,
         assumeBestArmor: Boolean = false
     ): Snapshot {
+        val currentBox = entity.boundingBox
         val box = if (predictionTicks > 0 && entity is AbstractClientPlayer) {
-            ExtrapolationManager.extrapolate(entity, predictionTicks, 2) ?: entity.boundingBox
-        } else entity.boundingBox
+            ExtrapolationManager.extrapolate(entity, predictionTicks, 2) ?: currentBox
+        } else currentBox
         var protection = 0
         val durability = ArrayList<Double>()
         for (slot in armorSlots) {
@@ -92,7 +94,7 @@ object CrystalDamage {
         }
         return Snapshot(
             entity.id,
-            entity.position(),
+            entity.position().add(box.minX - currentBox.minX, box.minY - currentBox.minY, box.minZ - currentBox.minZ),
             box,
             (entity.health + entity.absorptionAmount).toDouble(),
             entity.armorValue.toFloat(),
