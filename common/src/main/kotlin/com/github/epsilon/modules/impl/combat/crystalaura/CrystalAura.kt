@@ -5,7 +5,7 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.kernel.gameplay.combat.CrystalDamage
@@ -27,7 +27,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.PacketMine
 import com.github.epsilon.modules.impl.movement.Blink
 import com.github.epsilon.settings.group
-import com.google.common.base.Suppliers
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
@@ -260,7 +259,6 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     private val timing = CrystalTiming()
     private val totems = HashMap<Int, Long>()
-    private val textRenderer = Suppliers.memoize { TextRenderer.create() }
     private var breakCandidate: CrystalCandidate? = null
     private val placementResult = CrystalResult<CrystalCandidate>()
     private val placeCandidate: CrystalCandidate? get() = placementResult.value
@@ -381,19 +379,18 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             if (labels.isEmpty()) return@safeEventHandler
             val screen = WorldToScreen.calcWorld2Screen(frame.center)
                 ?: return@safeEventHandler
-            val renderer = textRenderer.get()
+            val metrics = LevelRender2D.textMetrics()
             val font = StaticFontLoader.defaultFont()
             val scale = 0.8f
             val label = labels.joinToString(" / ")
-            renderer.addText(
+            LevelRender2D.canvas().addText(
                 label,
-                screen.x - renderer.getWidth(label, scale, font) * 0.5f,
-                screen.y - renderer.getHeight(scale, font) * 0.5f,
+                screen.x - metrics.getWidth(label, scale, font) * 0.5f,
+                screen.y - metrics.getHeight(scale, font) * 0.5f,
                 scale,
                 faded(Color.WHITE, frame.scale),
                 font
             )
-            renderer.drawAndClear()
         }
     }
 

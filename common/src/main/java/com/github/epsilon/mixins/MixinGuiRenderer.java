@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.impl.Render2DEvent;
+import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.troll.TrollGuiScreen;
 import com.github.epsilon.kernel.render.EpsilonGuiRenderer;
@@ -81,7 +82,7 @@ public class MixinGuiRenderer {
         HudEditorScreen.INSTANCE.renderPendingHudElements();
 
         GuiGraphicsExtractor levelGuiGraphics = new GuiGraphicsExtractor(mc, epsilon$levelRenderState, mouseX, mouseY);
-        new Render2DEvent.Level(levelGuiGraphics).post();
+        LevelRender2D.render(() -> new Render2DEvent.Level(levelGuiGraphics).post());
         epsilon$levelGuiRenderer.render();
         epsilon$levelGuiRenderer.endFrame();
 

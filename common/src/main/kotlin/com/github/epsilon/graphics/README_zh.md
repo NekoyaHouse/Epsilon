@@ -31,6 +31,17 @@ canvas API 替代旧 layer handle API。
 
 ---
 
+## 世界标签共享渲染
+
+`LevelRender2D` 为 `Render2DEvent.Level` 延迟创建一个共享 `Render2DScheduler`。Crystal Aura、TNT Timer、Logout Spots、
+Name Tags 和 ESP 2D 共用字体度量、几何与绘制后端。`MixinGuiRenderer` 通过 `LevelRender2D.render` 包围事件派发，
+在原版世界 GUI 绘制前统一提交；提交异常时也执行当帧清理。调度器的 GPU 资源由 `RendererManager` 在退出时销毁。
+
+在 Level 事件中使用 `LevelRender2D.textMetrics()` 测量，使用 `LevelRender2D.canvas()` 提交。每次申请 canvas 都分配后续图层，
+保持模块和标签的提交顺序；相关图元复用同一个 canvas，需要更晚图层时再申请。模块不得清空或关闭共享后端。
+模糊、目标切换、原版或独立 renderer 绘制前调用 `LevelRender2D.flush()`；Name Tags 的背景模糊保留了这一顺序屏障。
+HUD 与界面 UI 继续使用各自的渲染作用域。
+
 ## 持久 UI 与有序 2D 渲染
 
 `UiScene` 持有组合树和共享 2D 后端。组合节点保存自身的 DisplayList 与子节点引用；未变化的记录复用局部坐标 GPU

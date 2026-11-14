@@ -7,8 +7,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.renderers.RectRenderer
-import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor
 import com.github.epsilon.kernel.client.ChatMessages
@@ -17,7 +16,6 @@ import com.github.epsilon.kernel.render.WireframeEntityRenderer
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.google.common.base.Suppliers
 import com.google.common.collect.Maps
 import com.mojang.authlib.GameProfile
 import com.mojang.blaze3d.vertex.PoseStack
@@ -30,7 +28,6 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Act
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.util.*
-import java.util.function.Supplier
 
 object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
@@ -48,9 +45,6 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
 
     private val playerCache: MutableMap<UUID, Player> = Maps.newConcurrentMap()
     private val logoutCache: MutableMap<UUID, LogoutPlayer> = Maps.newConcurrentMap()
-
-    private val rectRendererSupplier: Supplier<RectRenderer> = Suppliers.memoize { RectRenderer.create() }
-    private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize { TextRenderer.create() }
 
     init {
         onEnable {
@@ -137,8 +131,9 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
         }
 
         handler<Render2DEvent.Level> {
-            val rectRenderer = rectRendererSupplier.get()
-            val textRenderer = textRendererSupplier.get()
+            val backgrounds = LevelRender2D.canvas()
+            val labels = LevelRender2D.canvas()
+            val metrics = LevelRender2D.textMetrics()
 
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val screenWidth = LuminRenderSystem.getScaledWidth()
@@ -160,8 +155,8 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                             logoutPlayer.health + logoutPlayer.absorptionAmount
                         ) + " X: " + logoutPlayer.x.toInt() + " Z: " + logoutPlayer.z.toInt()
 
-                val textWidth = textRenderer.getWidth(text, textScale)
-                val textHeight = textRenderer.getHeight(textScale)
+                val textWidth = metrics.getWidth(text, textScale)
+                val textHeight = metrics.getHeight(textScale)
                 val boxWidth = textWidth + padding * 2.0f
                 val boxHeight = textHeight + padding * 2.0f
                 if (!projectedAnchor.x.isFinite() || !projectedAnchor.y.isFinite()) {
@@ -176,12 +171,9 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
                     continue
                 }
 
-                rectRenderer.addRect(boxX, boxY, boxWidth, boxHeight, Color(0, 0, 0, 153))
-                textRenderer.addText(text, boxX + padding, boxY + padding, textScale, Color.WHITE)
+                backgrounds.addRect(boxX, boxY, boxWidth, boxHeight, Color(0, 0, 0, 153))
+                labels.addText(text, boxX + padding, boxY + padding, textScale, Color.WHITE)
             }
-
-            rectRenderer.drawAndClear()
-            textRenderer.drawAndClear()
         }
     }
 

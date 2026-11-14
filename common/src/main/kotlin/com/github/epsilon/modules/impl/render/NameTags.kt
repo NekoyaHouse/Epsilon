@@ -4,6 +4,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
@@ -15,11 +16,9 @@ import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.google.common.base.Suppliers
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
-import java.util.function.Supplier
 import kotlin.math.roundToInt
 
 object NameTags : Module("Name Tags", Category.RENDER) {
@@ -80,26 +79,20 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         { dropShadow }
     )
 
-    private val schedulerSupplier: Supplier<Render2DScheduler> = Suppliers.memoize { Render2DScheduler() }
-
     init {
         handler<Render2DEvent.Level> {
             runSafe {
-                val scheduler = schedulerSupplier.get()
-                scheduler.clear()
-
-                val tags = collectTags(scheduler.textMetrics())
+                val tags = collectTags(LevelRender2D.textMetrics())
                 if (tags.isEmpty()) return@runSafe
 
                 if (backgroundBlur) {
+                    LevelRender2D.flush()
                     renderBlur(tags)
                 }
 
                 for (index in tags.indices) {
-                    renderTag(scheduler.canvas(index), tags[index])
+                    renderTag(LevelRender2D.canvas(), tags[index])
                 }
-
-                scheduler.flushAndClear()
             }
         }
     }

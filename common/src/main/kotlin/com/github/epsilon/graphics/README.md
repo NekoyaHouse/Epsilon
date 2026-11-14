@@ -38,6 +38,19 @@ safely. Standalone renderers keep their existing ring-buffer behavior.
 
 ---
 
+## Shared world labels
+
+`LevelRender2D` owns one lazy `Render2DScheduler` for `Render2DEvent.Level`. Crystal Aura, TNT Timer, Logout Spots,
+Name Tags and ESP 2D share its text metrics, geometry and draw backend. `MixinGuiRenderer` wraps event dispatch in
+`LevelRender2D.render`, then flushes before vanilla level GUI rendering. Cleanup runs even when submission fails;
+the scheduler's GPU resources follow `RendererManager` shutdown.
+
+Within a Level event, use `LevelRender2D.textMetrics()` to measure and `LevelRender2D.canvas()` to submit. Each canvas
+reserves the next layer, preserving module and label order. Keep the returned canvas for related primitives; request
+another for a later layer. Modules must not clear or close the shared backend. Call `LevelRender2D.flush()` before
+blur, target changes, vanilla or standalone renderer draws. Name Tags uses this barrier before its background blur.
+HUD and screen UI keep their own render scopes.
+
 ## Retained UI and ordered 2D rendering
 
 `UiScene` owns the composition tree and a shared 2D backend. Composition nodes keep their own display lists and child
