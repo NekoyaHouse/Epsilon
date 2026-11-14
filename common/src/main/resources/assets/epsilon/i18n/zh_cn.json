@@ -1429,10 +1429,10 @@
       },
       "fake player": {
         "_value": "假人",
-        "name": "名称",
-        "copy inventory": "复制背包",
-        "record": "录制",
-        "playback": "回放"
+        "record / stop": "录制 / 停止",
+        "play / stop": "播放 / 停止",
+        "copy inventory": "复制装备",
+        "name": "名称"
       },
       "ghost hand": "幽灵手",
       "inv manager": {

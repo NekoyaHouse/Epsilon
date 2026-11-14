@@ -9,11 +9,11 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.managers.RendererManager
+import com.mojang.renderpearl.api.commands.RenderPass
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Block
-import com.mojang.renderpearl.api.commands.RenderPass
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import java.awt.Color
 import kotlin.math.cos
 import kotlin.math.sin
@@ -406,10 +406,12 @@ class Render2DScheduler : IRenderer {
                     stats.geometryBuilds++
                     stats.geometryNanos += System.nanoTime() - buildStart
                     val bounds = group.commands.map { it.orderingBounds() }.reduce { a, b -> a.include(b) }
-                    result.add(CompiledBatch(
-                        first.kind(), first.scissor, first.sequence, bundle, temporary, bounds,
-                        group.commands.filterIsInstance<Render2DCommand.Item>()
-                    ))
+                    result.add(
+                        CompiledBatch(
+                            first.kind(), first.scissor, first.sequence, bundle, temporary, bounds,
+                            group.commands.filterIsInstance<Render2DCommand.Item>()
+                        )
+                    )
                 } catch (failure: Throwable) {
                     bundle.close(); throw failure
                 }
@@ -748,10 +750,12 @@ class Render2DScheduler : IRenderer {
             owner: LivingEntity? = null, seed: Int = 0, decorations: Boolean = false, countText: String? = null,
         ) {
             if (stack.isEmpty || !size.isFinite() || size <= 0f || color.alpha == 0) return
-            scheduler.add(Render2DCommand.Item(
-                layerIndex, scheduler.nextSequence(), Render2DBounds.of(x, y, size, size), currentScissor,
-                stack.copy(), color, owner, seed, decorations, countText
-            ))
+            scheduler.add(
+                Render2DCommand.Item(
+                    layerIndex, scheduler.nextSequence(), Render2DBounds.of(x, y, size, size), currentScissor,
+                    stack.copy(), color, owner, seed, decorations, countText
+                )
+            )
         }
 
         /** 方块的背包模型；无物品形态的方块不绘制。 */

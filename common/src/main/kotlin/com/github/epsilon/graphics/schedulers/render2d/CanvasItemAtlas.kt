@@ -17,7 +17,7 @@ import net.minecraft.client.renderer.state.gui.pip.OversizedItemRenderState
 import net.minecraft.world.item.ItemDisplayContext
 import org.joml.Matrix3x2f
 import java.awt.Color
-import java.util.IdentityHashMap
+import java.util.*
 import kotlin.math.ceil
 
 /**
@@ -70,8 +70,15 @@ internal class CanvasItemAtlas(private val metrics: TextRenderer) : AutoCloseabl
         // 同一图集共享纹理引用，令相邻物品能够合并为一个纹理批次。
         val textures = IdentityHashMap<GpuTextureView, LuminTexture>()
         fun borrowed(view: GpuTextureView) = textures.getOrPut(view) {
-            LuminTexture(view.texture(), view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST), false, false)
+            LuminTexture(
+                view.texture(),
+                view,
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST),
+                false,
+                false
+            )
         }
+
         val projection = RenderSystem.getProjectionMatrixBuffer()
         val projectionType = RenderSystem.getProjectionType()
         val modelView = RenderSystem.getModelViewStack()
@@ -84,7 +91,17 @@ internal class CanvasItemAtlas(private val metrics: TextRenderer) : AutoCloseabl
                 val bounds = state.oversizedItemBounds()
                 if (bounds == null) {
                     atlas?.getOrUpdate(state.itemStackRenderState())?.let { slot ->
-                        commands.add(texture(command, borrowed(slot.textureView()), command.bounds, slot.u0(), slot.v0(), slot.u1(), slot.v1()))
+                        commands.add(
+                            texture(
+                                command,
+                                borrowed(slot.textureView()),
+                                command.bounds,
+                                slot.u0(),
+                                slot.v0(),
+                                slot.u1(),
+                                slot.v1()
+                            )
+                        )
                     }
                 } else {
                     val entry = oversized.getOrPut(state.itemStackRenderState().modelIdentity) {
@@ -92,8 +109,14 @@ internal class CanvasItemAtlas(private val metrics: TextRenderer) : AutoCloseabl
                     }
                     entry.frame = frame
                     val gui = GuiRenderState()
-                    val pip = OversizedItemRenderState(state, bounds.left(), bounds.top(), bounds.right(), bounds.bottom())
-                    entry.renderer.prepare(pip, gui, mc.gameRenderer.featureRenderDispatcher(), maxOf(1, ceil(scale).toInt()))
+                    val pip =
+                        OversizedItemRenderState(state, bounds.left(), bounds.top(), bounds.right(), bounds.bottom())
+                    entry.renderer.prepare(
+                        pip,
+                        gui,
+                        mc.gameRenderer.featureRenderDispatcher(),
+                        maxOf(1, ceil(scale).toInt())
+                    )
                     gui.forEachElement({ element ->
                         if (element is BlitRenderState) {
                             val size = command.bounds.width / 16f
@@ -101,10 +124,12 @@ internal class CanvasItemAtlas(private val metrics: TextRenderer) : AutoCloseabl
                                 command.bounds.x + element.x0() * size, command.bounds.y + element.y0() * size,
                                 (element.x1() - element.x0()) * size, (element.y1() - element.y0()) * size
                             )
-                            commands.add(texture(
-                                command, borrowed(checkNotNull(element.textureSetup().texure0())), area,
-                                element.u0(), element.v0(), element.u1(), element.v1()
-                            ))
+                            commands.add(
+                                texture(
+                                    command, borrowed(checkNotNull(element.textureSetup().texure0())), area,
+                                    element.u0(), element.v0(), element.u1(), element.v1()
+                                )
+                            )
                         }
                     }, GuiRenderState.TraverseRange.ALL)
                 }
@@ -145,17 +170,20 @@ internal class CanvasItemAtlas(private val metrics: TextRenderer) : AutoCloseabl
                 color.red * item.color.red / 255, color.green * item.color.green / 255,
                 color.blue * item.color.blue / 255, color.alpha * item.color.alpha / 255
             )
-            output.add(Render2DCommand.Rect(
-                item.layer, item.sequence, Render2DBounds.of(
-                    item.bounds.x + x * size, item.bounds.y + y * size, width * size, height * size
-                ), item.scissor, tint, tint, tint, tint
-            ))
+            output.add(
+                Render2DCommand.Rect(
+                    item.layer, item.sequence, Render2DBounds.of(
+                        item.bounds.x + x * size, item.bounds.y + y * size, width * size, height * size
+                    ), item.scissor, tint, tint, tint, tint
+                )
+            )
         }
         if (stack.isBarVisible) {
             rect(2f, 13f, 13f, 2f, Color.BLACK)
             rect(2f, 13f, stack.barWidth.toFloat(), 1f, Color(stack.barColor))
         }
-        val cooldown = mc.player?.cooldowns?.getCooldownPercent(stack, mc.deltaTracker.getGameTimeDeltaPartialTick(true)) ?: 0f
+        val cooldown =
+            mc.player?.cooldowns?.getCooldownPercent(stack, mc.deltaTracker.getGameTimeDeltaPartialTick(true)) ?: 0f
         if (cooldown > 0f) {
             val top = kotlin.math.floor(16f * (1f - cooldown))
             rect(0f, top, 16f, ceil(16f * cooldown), Color(255, 255, 255, 127))
@@ -167,14 +195,18 @@ internal class CanvasItemAtlas(private val metrics: TextRenderer) : AutoCloseabl
             val x = item.bounds.x + 17f * size - width
             val y = item.bounds.y + 9f * size
             val bounds = Render2DBounds.of(x, y, width, metrics.getHeight(textScale))
-            output.add(Render2DCommand.Text(
-                item.layer, item.sequence, bounds.copy(x = x + size, y = y + size), item.scissor,
-                text, x + size, y + size, textScale, Color(0, 0, 0, item.color.alpha), null, 0f, 0f, 0f
-            ))
-            output.add(Render2DCommand.Text(
-                item.layer, item.sequence, bounds, item.scissor,
-                text, x, y, textScale, item.color, null, 0f, 0f, 0f
-            ))
+            output.add(
+                Render2DCommand.Text(
+                    item.layer, item.sequence, bounds.copy(x = x + size, y = y + size), item.scissor,
+                    text, x + size, y + size, textScale, Color(0, 0, 0, item.color.alpha), null, 0f, 0f, 0f
+                )
+            )
+            output.add(
+                Render2DCommand.Text(
+                    item.layer, item.sequence, bounds, item.scissor,
+                    text, x, y, textScale, item.color, null, 0f, 0f, 0f
+                )
+            )
         }
     }
 

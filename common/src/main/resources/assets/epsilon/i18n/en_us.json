@@ -1429,10 +1429,10 @@
       },
       "fake player": {
         "_value": "Fake Player",
-        "name": "Name",
+        "record / stop": "Record / Stop",
+        "play / stop": "Play / Stop",
         "copy inventory": "Copy Inventory",
-        "record": "Record",
-        "playback": "Playback"
+        "name": "Name"
       },
       "ghost hand": "Ghost Hand",
       "inv manager": {
