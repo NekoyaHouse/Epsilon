@@ -7,7 +7,6 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor
 import com.github.epsilon.kernel.client.ChatMessages
@@ -130,10 +129,10 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
             }
         }
 
-        handler<Render2DEvent.Level> {
-            val backgrounds = LevelRender2D.canvas()
-            val labels = LevelRender2D.canvas()
-            val metrics = LevelRender2D.textMetrics()
+        safeEventHandler<Render2DEvent.Level> { event ->
+            val backgrounds = event.canvas
+            val labels = event.canvas
+            val metrics = event.textMetrics
 
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val screenWidth = LuminRenderSystem.getScaledWidth()

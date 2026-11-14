@@ -1,10 +1,9 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
-import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
@@ -21,7 +20,15 @@ import kotlin.math.PI
 object Hat : Module("Hat", Category.RENDER) {
 
     init {
-        handler<Render3DEvent> { onRender3D(it) }
+        safeEventHandler<Render3DEvent> { event ->
+            if (lastSize != size || lastPoints != points) {
+                lastSize = size
+                lastPoints = points
+                computeChineseHatPoints(lastPoints, lastSize)
+            }
+
+            drawHat(event.poseStack, player)
+        }
     }
 
     private enum class Mode {
@@ -65,18 +72,6 @@ object Hat : Module("Hat", Category.RENDER) {
             val circleZ = radius * StrictMath.sin(i * PI * 2 / points)
             this.positions[i][0] = circleX
             this.positions[i][1] = circleZ
-        }
-    }
-
-    private fun onRender3D(event: Render3DEvent) {
-        if (this.lastSize != this.size || this.lastPoints != this.points) {
-            this.lastSize = this.size
-            this.lastPoints = this.points
-            this.computeChineseHatPoints(this.lastPoints, this.lastSize)
-        }
-
-        runSafe {
-            drawHat(event.poseStack, player)
         }
     }
 

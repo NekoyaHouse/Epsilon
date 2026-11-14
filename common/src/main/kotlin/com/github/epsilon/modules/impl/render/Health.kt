@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.ColorUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -57,9 +56,7 @@ object Health : Module("Health", Category.RENDER) {
         }
 
         safeEventHandler<Render2DEvent.HUD> { event ->
-            runSafe {
-                renderHealth(event.guiGraphics)
-            }
+            renderHealth(event.guiGraphics)
         }
     }
 

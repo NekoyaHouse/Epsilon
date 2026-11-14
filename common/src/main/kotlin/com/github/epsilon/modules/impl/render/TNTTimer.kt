@@ -1,13 +1,11 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
-import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
-import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -57,14 +55,9 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         .build()
 
     init {
-        handler<Render2DEvent.Level> { onRender2D(it) }
-        handler<Render3DEvent> { onRender3D(it) }
-    }
-
-    private fun onRender2D(event: Render2DEvent.Level) {
-        runSafe {
-            val layer = LevelRender2D.canvas()
-            val metrics = LevelRender2D.textMetrics()
+        safeEventHandler<Render2DEvent.Level> { event ->
+            val layer = event.canvas
+            val metrics = event.textMetrics
             val partial = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             for (entity in level.entitiesForRendering()) {
                 if (entity !is PrimedTnt) continue
@@ -84,10 +77,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
                 )
             }
         }
-    }
-
-    private fun onRender3D(event: Render3DEvent) {
-        runSafe {
+        safeEventHandler<Render3DEvent> { event ->
             val stack = event.poseStack
             val camera = mc.gameRenderer.mainCamera().position()
             val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)

@@ -1,15 +1,13 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
@@ -80,19 +78,17 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     )
 
     init {
-        handler<Render2DEvent.Level> {
-            runSafe {
-                val tags = collectTags(LevelRender2D.textMetrics())
-                if (tags.isEmpty()) return@runSafe
+        safeEventHandler<Render2DEvent.Level> { event ->
+            val tags = collectTags(event.textMetrics)
+            if (tags.isEmpty()) return@safeEventHandler
 
-                if (backgroundBlur) {
-                    LevelRender2D.flush()
-                    renderBlur(tags)
-                }
+            if (backgroundBlur) {
+                event.flush()
+                renderBlur(tags)
+            }
 
-                for (index in tags.indices) {
-                    renderTag(LevelRender2D.canvas(), tags[index])
-                }
+            for (index in tags.indices) {
+                renderTag(event.canvas, tags[index])
             }
         }
     }
@@ -130,7 +126,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
             tags.add(tag)
         }
 
-        tags.sortWith(compareByDescending<TagLayout> { it.distanceSquared })
+        tags.sortWith(compareByDescending { it.distanceSquared })
         return tags
     }
 

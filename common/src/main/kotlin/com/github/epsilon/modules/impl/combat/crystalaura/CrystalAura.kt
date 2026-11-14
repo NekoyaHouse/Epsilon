@@ -5,7 +5,6 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
-import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.kernel.gameplay.combat.CrystalDamage
@@ -368,7 +367,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             if (shape != BoxMode.Lines) Render3DScheduler.addFilledBox(frame.box, faded(sideColor, frame.scale))
             if (shape != BoxMode.Fill) Render3DScheduler.addOutlineBox(frame.box, faded(lineColor, frame.scale))
         }
-        safeEventHandler<Render2DEvent.Level> {
+        safeEventHandler<Render2DEvent.Level> { event ->
             val candidate = rendered ?: return@safeEventHandler
             val frame = renderFrame() ?: return@safeEventHandler
             if (!renderDamage) return@safeEventHandler
@@ -379,11 +378,11 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             if (labels.isEmpty()) return@safeEventHandler
             val screen = WorldToScreen.calcWorld2Screen(frame.center)
                 ?: return@safeEventHandler
-            val metrics = LevelRender2D.textMetrics()
+            val metrics = event.textMetrics
             val font = StaticFontLoader.defaultFont()
             val scale = 0.8f
             val label = labels.joinToString(" / ")
-            LevelRender2D.canvas().addText(
+            event.canvas.addText(
                 label,
                 screen.x - metrics.getWidth(label, scale, font) * 0.5f,
                 screen.y - metrics.getHeight(scale, font) * 0.5f,

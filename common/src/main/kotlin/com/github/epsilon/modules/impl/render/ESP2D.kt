@@ -1,11 +1,9 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.schedulers.render2d.LevelRender2D
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
@@ -64,12 +62,8 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
     )
 
     init {
-        handler<Render2DEvent.Level> { onRender2D() }
-    }
-
-    private fun onRender2D() {
-        runSafe {
-            val rectRenderer = LevelRender2D.canvas()
+        safeEventHandler<Render2DEvent.Level> { event ->
+            val rectRenderer = event.canvas
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val screenWidth = LuminRenderSystem.getScaledWidth()
             val screenHeight = LuminRenderSystem.getScaledHeight()

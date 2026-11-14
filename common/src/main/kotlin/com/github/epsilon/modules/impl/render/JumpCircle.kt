@@ -6,7 +6,6 @@ import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
@@ -33,7 +32,30 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
             groundedCache.clear()
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> { onTick(it) }
+        safeEventHandler<PlayerTickEvent.Pre> {
+            for (candidate in level.players()) {
+                if (!shouldTrack(candidate)) {
+                    groundedCache.remove(candidate.uuid)
+                    continue
+                }
+
+                val id = candidate.uuid
+                if (candidate.onGround()) {
+                    if (!groundedCache.contains(id)) {
+                        groundedCache.add(id)
+                    }
+                } else if (groundedCache.remove(id)) {
+                    circles.add(
+                        Circle(
+                            Vec3(candidate.x, floor(candidate.y) + 0.001, candidate.z),
+                            TimerUtils()
+                        )
+                    )
+                }
+            }
+
+            circles.removeAll { circle -> circle.timer.passedMillise(if (easeOut) 5000L else 6000L) }
+        }
         handler<Render3DEvent> { onRender3D(it) }
     }
 
@@ -57,33 +79,6 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
-
-    private fun onTick(event: PlayerTickEvent.Pre) {
-        runSafe {
-            for (candidate in level.players()) {
-                if (!shouldTrack(candidate)) {
-                    groundedCache.remove(candidate.uuid)
-                    continue
-                }
-
-                val id = candidate.uuid
-                if (candidate.onGround()) {
-                    if (!groundedCache.contains(id)) {
-                        groundedCache.add(id)
-                    }
-                } else if (groundedCache.remove(id)) {
-                    circles.add(
-                        Circle(
-                            Vec3(candidate.x, floor(candidate.y) + 0.001, candidate.z),
-                            TimerUtils()
-                        )
-                    )
-                }
-            }
-        }
-
-        circles.removeAll { circle -> circle.timer.passedMillise(if (easeOut) 5000L else 6000L) }
-    }
 
     private fun onRender3D(event: Render3DEvent) {
         if (circles.isEmpty()) return
