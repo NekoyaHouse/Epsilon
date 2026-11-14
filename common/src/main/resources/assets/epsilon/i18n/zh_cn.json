@@ -913,7 +913,7 @@
           "_value": "显示模式",
           "off": "关闭",
           "box": "方框",
-          "fade": "淡出"
+          "techno": ""
         },
         "box mode": {
           "_value": "方框模式",
@@ -930,7 +930,8 @@
         "motion predict": "运动预测",
         "predict ticks": "目标预测刻数",
         "moving length": "移动动画时长",
-        "fade length": "淡入淡出时长"
+        "fade length": "淡入淡出时长",
+        "fade": ""
       },
       "self trap": {
         "_value": "自我包围",

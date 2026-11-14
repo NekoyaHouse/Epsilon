@@ -9,17 +9,11 @@ import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.renderpearl.api.pipeline.BindGroupLayout
-import com.mojang.renderpearl.api.pipeline.BlendFactor
-import com.mojang.renderpearl.api.pipeline.BlendFunction
-import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import com.mojang.renderpearl.api.pipeline.UniformType
+import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import java.nio.ByteBuffer
-import java.util.Optional
 
 object HandOpacityShader {
 
@@ -47,12 +41,18 @@ object HandOpacityShader {
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hand_opacity"))
             .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
             .withFragmentShader(ResourceLocationUtils.getIdentifier("hand_opacity"))
-            .withColorTargetState(ColorTargetState(BlendFunction(
-                BlendFactor.SRC_ALPHA, BlendFactor.ONE_MINUS_SRC_ALPHA,
-                BlendFactor.ZERO, BlendFactor.ONE
-            )))
-            .withBindGroupLayout(BindGroupLayout.builder()
-                .withUniform("HandOpacity", UniformType.UNIFORM_BUFFER).build())
+            .withColorTargetState(
+                ColorTargetState(
+                    BlendFunction(
+                        BlendFactor.SRC_ALPHA, BlendFactor.ONE_MINUS_SRC_ALPHA,
+                        BlendFactor.ZERO, BlendFactor.ONE
+                    )
+                )
+            )
+            .withBindGroupLayout(
+                BindGroupLayout.builder()
+                    .withUniform("HandOpacity", UniformType.UNIFORM_BUFFER).build()
+            )
             .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
             .withCull(false)
             .build().also { pipeline = it }

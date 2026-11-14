@@ -913,7 +913,7 @@
           "_value": "Render",
           "off": "Off",
           "box": "Box",
-          "fade": "Fade"
+          "techno": ""
         },
         "box mode": {
           "_value": "Box Mode",
@@ -930,7 +930,8 @@
         "motion predict": "Motion Predict",
         "predict ticks": "Predict Ticks",
         "moving length": "Moving Length",
-        "fade length": "Fade Length"
+        "fade length": "Fade Length",
+        "fade": ""
       },
       "self trap": {
         "_value": "Self Trap",
