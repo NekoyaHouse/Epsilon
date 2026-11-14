@@ -128,48 +128,38 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
     }
 
     private fun drawChrome(layout: PanelLayout.Layout) {
-
         scene.LuminUIScene(layout.panel, UiLayer.CHROME, LayerOffset(-20), key = "panel-chrome") {
             Shadow(
-                0.0f, 0.0f, layout.panel.width, layout.panel.height,
+                0.0f, 0.0f, width, height,
                 MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.PANEL_SHADOW_BLUR,
                 MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA)
             )
             RoundRect(
-                0.0f, 0.0f, layout.panel.width, layout.panel.height,
+                0.0f, 0.0f, width, height,
                 MD3Theme.PANEL_RADIUS.toFloat(), MD3Theme.SURFACE
             )
-            val localRail = layout.rail.relativeTo(layout.panel)
-            Positioned(localRail.x, localRail.y, localRail.width, localRail.height) {
-                RoundRect(
-                    0.0f, 0.0f, layout.rail.width, layout.rail.height,
-                    MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
-                )
-            }
-            if (state.isClientSettingMode()) {
-                val csW = layout.detail.right() - layout.modules.x
-                val csH = layout.modules.height
-                Positioned(
-                    layout.modules.x - layout.panel.x, layout.modules.y - layout.panel.y, csW, csH
-                ) {
-                    RoundRect(0.0f, 0.0f, csW, csH, MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM)
-                }
-            } else {
-                val localModules = layout.modules.relativeTo(layout.panel)
-                Positioned(localModules.x, localModules.y, localModules.width, localModules.height) {
-                    RoundRect(
-                        0.0f, 0.0f, layout.modules.width, layout.modules.height,
-                        MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
-                    )
-                }
-                val localDetail = layout.detail.relativeTo(layout.panel)
-                Positioned(localDetail.x, localDetail.y, localDetail.width, localDetail.height) {
-                    RoundRect(
-                        0.0f, 0.0f, layout.detail.width, layout.detail.height,
-                        MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
-                    )
-                }
-            }
+        }
+
+        // 外层 panel 尺寸不随侧栏动画变化，各栏背景必须按自身边界独立失效。
+        drawSectionBackground(layout.rail, "panel-rail-background")
+        if (state.isClientSettingMode()) {
+            val bounds = UiRect(
+                layout.modules.x, layout.modules.y,
+                layout.detail.right() - layout.modules.x, layout.modules.height
+            )
+            drawSectionBackground(bounds, "panel-client-settings-background")
+        } else {
+            drawSectionBackground(layout.modules, "panel-modules-background")
+            drawSectionBackground(layout.detail, "panel-detail-background")
+        }
+    }
+
+    private fun drawSectionBackground(bounds: UiRect, key: String) {
+        scene.LuminUIScene(bounds, UiLayer.CHROME, LayerOffset(-20), key = key) {
+            RoundRect(
+                0.0f, 0.0f, width, height,
+                MD3Theme.SECTION_RADIUS.toFloat(), MD3Theme.SURFACE_DIM
+            )
         }
     }
 

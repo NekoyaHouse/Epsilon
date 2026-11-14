@@ -152,6 +152,10 @@ position-dependent callbacks. Use deferred `Transform` for scrolling; the legacy
 shifts coordinates during composition and can trigger rebuilding. Dropdown category rows use the deferred transform
 path. Other legacy layout and animated widgets recompose when their geometry inputs change.
 
+Panel section backgrounds use separate scenes with stable keys and their own layout bounds. Sidebar expansion changes
+these bounds while the outer panel stays the same size, so each section updates throughout the animation. Switching to
+client settings submits one combined content background; unused section scenes are released at frame end.
+
 Clipping uses hardware scissor. Rotated or skewed clips use their transformed axis-aligned bounding boxes, not an exact
 rotated mask. Offscreen ranges are culled, but the first compilation still prepares their geometry; this is not list
 virtualization.
