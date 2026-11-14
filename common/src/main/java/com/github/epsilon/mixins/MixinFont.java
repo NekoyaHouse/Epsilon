@@ -3,8 +3,6 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.graphics.text.minecraft.EpsilonFontGlyph;
 import com.github.epsilon.graphics.text.minecraft.EpsilonFontMetrics;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.modules.impl.render.NoRender;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.network.chat.FormattedText;
@@ -57,12 +55,6 @@ public class MixinFont {
                 cir.setReturnValue(Mth.ceil(width));
             }
         }
-    }
-
-    @ModifyExpressionValue(method = "getGlyph", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/Style;isObfuscated()Z"))
-    private boolean onIsObfuscated(boolean original) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getObfuscation()) return false;
-        return original;
     }
 
 }

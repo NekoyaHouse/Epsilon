@@ -4,8 +4,10 @@ import com.github.epsilon.events.impl.AfterRender3DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.shaders.CustomSkyShader;
 import com.github.epsilon.managers.ShaderManager;
-import com.github.epsilon.modules.impl.render.*;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.github.epsilon.modules.impl.render.Chams;
+import com.github.epsilon.modules.impl.render.CustomSky;
+import com.github.epsilon.modules.impl.render.MotionBlur;
+import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -22,7 +24,6 @@ import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -87,21 +88,6 @@ public class MixinLevelRenderer {
             this.targets.main = target;
             pass.executes(() -> CustomSkyShader.INSTANCE.render(target.get(), CustomSky.INSTANCE));
         }
-    }
-
-    @ModifyExpressionValue(
-            method = {
-                    "addSkyPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;)V",
-                    "addSkyPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lorg/joml/Matrix4fc;)V" // For NeoForge
-            },
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/CameraEntityRenderState;doesMobEffectBlockSky:Z", opcode = Opcodes.GETFIELD),
-            require = 0
-    )
-    private boolean modifyMobEffectBlocksSky(boolean original) {
-        if (NoRender.INSTANCE.isEnabled() && (NoRender.INSTANCE.getBlindness() || NoRender.INSTANCE.getDarkness())) {
-            return false;
-        }
-        return original;
     }
 
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PostChain;addToFrame(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;IILnet/minecraft/client/renderer/PostChain$TargetBundle;)V", ordinal = 0))

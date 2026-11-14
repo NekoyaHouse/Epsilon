@@ -4,7 +4,6 @@ import com.github.epsilon.elements.impl.island.Island;
 import com.github.epsilon.modules.impl.render.BetterScoreboard;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.GameAnimation;
-import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -13,7 +12,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,30 +31,9 @@ public class MixinHud {
         return FreeCamera.INSTANCE.isEnabled() || firstPerson;
     }
 
-    @Inject(method = "extractEffects", at = @At("HEAD"), cancellable = true)
-    private void onExtractEffects(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getPotionIcons()) ci.cancel();
-    }
-
-    @Inject(method = "extractPortalOverlay", at = @At("HEAD"), cancellable = true)
-    private void onExtractPortalOverlay(GuiGraphicsExtractor graphics, float alpha, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getPortalOverlay()) ci.cancel();
-    }
-
-    @Inject(method = "extractVignette", at = @At("HEAD"), cancellable = true)
-    private void onExtractVignette(GuiGraphicsExtractor graphics, Entity camera, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getVignette()) ci.cancel();
-    }
-
-    @Inject(method = "extractScoreboardSidebar", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractScoreboardSidebar", at = @At("HEAD"))
     private void onExtractScoreboardSidebar(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         if (BetterScoreboard.INSTANCE.isEnabled()) BetterScoreboard.INSTANCE.beginScoreboardExtraction();
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getScoreboard()) ci.cancel();
-    }
-
-    @Inject(method = "extractChat", at = @At("HEAD"), cancellable = true)
-    private void onExtractChat(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getChat()) ci.cancel();
     }
 
     @WrapOperation(method = "displayScoreboardSidebar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"))
@@ -75,31 +52,6 @@ public class MixinHud {
             y += BetterScoreboard.INSTANCE.getRoundedYOffset();
         }
         original.call(graphics, font, text, x, y, color, dropShadow);
-    }
-
-    @Inject(method = "extractSpyglassOverlay", at = @At("HEAD"), cancellable = true)
-    private void onExtractSpyglassOverlay(GuiGraphicsExtractor graphics, float scale, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getSpyglassOverlay()) ci.cancel();
-    }
-
-    @Inject(method = "extractCrosshair", at = @At("HEAD"), cancellable = true)
-    private void onExtractCrosshair(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getCrosshair()) ci.cancel();
-    }
-
-    @Inject(method = "extractTitle", at = @At("HEAD"), cancellable = true)
-    private void onExtractTitle(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getTitle()) ci.cancel();
-    }
-
-    @Inject(method = "extractSelectedItemName", at = @At("HEAD"), cancellable = true)
-    private void onExtractSelectedItemName(GuiGraphicsExtractor graphics, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getHeldItemName()) ci.cancel();
-    }
-
-    @Inject(method = "extractConfusionOverlay", at = @At("HEAD"), cancellable = true)
-    private void onExtractConfusionOverlay(GuiGraphicsExtractor graphics, float strength, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getNausea()) ci.cancel();
     }
 
     @Inject(method = "extractTabList", at = @At("HEAD"), cancellable = true)
