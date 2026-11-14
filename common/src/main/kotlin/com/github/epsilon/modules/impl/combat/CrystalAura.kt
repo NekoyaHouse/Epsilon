@@ -213,8 +213,11 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private val safety by boolSetting("Safety", true).group(sgDamage)
     private val safetyOverride by boolSetting("Safety Override", false).group(sgDamage)
     private val blockDestruction by boolSetting("Block Destruction", true).group(sgDamage)
+    private val motionPredict by boolSetting("Motion Predict", true, onChanged = { cancelPlacement() }).group(sgDamage)
+    private val predictTicks by intSetting("Predict Ticks", 8, 0..20, 1, { motionPredict },
+        onChanged = { cancelPlacement() }).group(sgDamage)
     private val selfExtrapolate by boolSetting("Self Extrapolate", true).group(sgDamage)
-    private val extrapolationTicks by intSetting("Extrapolation Ticks", 5, 0..10, 1).group(sgDamage)
+    private val extrapolationTicks by intSetting("Extrapolation Ticks", 5, 0..10, 1, { selfExtrapolate }).group(sgDamage)
 
     private val enemyRange by doubleSetting("Enemy Range", 10.0, 1.0..13.0, 0.5).group(sgTarget)
     private val ignoreNakeds by boolSetting("Ignore Nakeds", false).group(sgTarget)
@@ -673,7 +676,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 FriendManager.isFriend(entity.name.string) || player.distanceToSqr(entity) > enemyRange * enemyRange ||
                 ignoreNakeds && CrystalDamage.armorSlots.all { entity.getItemBySlot(it).isEmpty }
             ) continue
-            val snapshot = snapshot(entity, extrapolationTicks, assumeBestArmor)
+            val snapshot = snapshot(entity, if (motionPredict) predictTicks else 0, assumeBestArmor)
             val nearbyShulker = shulkers && entity is Player && scanPositions(entity.position(), 3).any {
                 level.getBlockState(it).block is ShulkerBoxBlock
             }

@@ -27,6 +27,10 @@ See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/R
 
 Troll GUI uses the same Lumin UI DSL as Dropdown: cached scenes, local window and setting-row scopes, and declarative input. Window dragging, resizing, search, settings, friends and configuration panels retain their existing behavior.
 
+## Crystal Aura
+
+`Motion Predict` controls collision-aware player target prediction, with `Predict Ticks` (default 8, range 0–20) applying to both placement and breaking damage. Disabling it or setting zero uses current target positions. `Self Extrapolate` and `Extrapolation Ticks` independently control self-damage prediction. Distance, shield direction and exposure use the same predicted position and bounding box; background placement only reads captured snapshots.
+
 ## ⚙️ Build & Run
 
 ```bash
