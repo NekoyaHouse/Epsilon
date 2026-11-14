@@ -76,7 +76,7 @@ class TrollFriendWindow : TrollWindow() {
         )
 
         Interaction("add", addBounds) { onClick { addFriend(); true } }
-        val addHovered = addBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+        val addHovered = isHovered(mouseX, mouseY, addBounds)
         Layer(TrollZ.Base) {
             Rect(
                 addBounds.x, addBounds.y, addBounds.width, addBounds.height,
@@ -107,7 +107,7 @@ class TrollFriendWindow : TrollWindow() {
             for (row in rows) {
                 LuminUIItem(row.name) {
                     Interaction("remove", row.removeBounds) { onClick { FriendManager.removeFriend(row.name); true } }
-                    val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    val hovered = isHovered(mouseX, mouseY, row.bounds)
                     Layer(TrollZ.Base) {
                         Rect(
                             row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
@@ -129,7 +129,7 @@ class TrollFriendWindow : TrollWindow() {
                         )
                     }
 
-                    val removeHovered = row.removeBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    val removeHovered = isHovered(mouseX, mouseY, row.removeBounds)
                     Layer(TrollZ.Text) {
                         Rect(
                             row.removeBounds.x, row.removeBounds.y,

@@ -165,7 +165,7 @@ class TrollColorPicker(private val setting: ColorSetting, x: Float, y: Float) : 
                     button.x, button.y, button.width, button.height,
                     TrollTheme.alpha(
                         TrollTheme.primary(),
-                        if (button.contains(mouseX.toDouble(), mouseY.toDouble())) 180 else 70
+                        if (isHovered(mouseX, mouseY, button)) 180 else 70
                     )
                 )
             }

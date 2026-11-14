@@ -129,7 +129,7 @@ class TrollSettingsWindow(
                         onClick { entry.section.toggleCollapsed(); true }
                         onClick(InputConstants.MOUSE_BUTTON_RIGHT) { entry.section.toggleCollapsed(); true }
                     }
-                    val hovered = entry.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    val hovered = isHovered(mouseX, mouseY, entry.bounds)
                     Layer(TrollZ.Base) {
                         Rect(
                             entry.bounds.x, entry.bounds.y, entry.bounds.width, entry.bounds.height,

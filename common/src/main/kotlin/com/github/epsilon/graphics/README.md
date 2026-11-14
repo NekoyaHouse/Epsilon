@@ -153,8 +153,10 @@ shifts coordinates during composition and can trigger rebuilding. Dropdown categ
 path. Other legacy layout and animated widgets recompose when their geometry inputs change.
 
 Troll GUI submits its post-processing passes with `UiRenderBatch.LuminUIScene`. Windows and setting rows draw in
-`UiScope` receivers positioned relative to their parent; only window drag/resize models and popup anchors use screen
-coordinates. Stable window/row keys preserve composition identity. Deferred `Transform` and `Clip` apply the opening
+`UiScope` receivers positioned relative to their parent. Pointer parameters retain screen coordinates, including the
+sentinel used to suppress hover on covered windows; hover queries translate local rectangles to screen coordinates
+without rounding pointer positions. Window drag/resize models and popup anchors also use screen coordinates.
+Stable window/row keys preserve composition identity. Deferred `Transform` and `Clip` apply the opening
 translation and reveal to drawing and input together, while the existing per-window blur and layer order remain intact.
 
 Panel section backgrounds use separate scenes with stable keys and their own layout bounds. Sidebar expansion changes

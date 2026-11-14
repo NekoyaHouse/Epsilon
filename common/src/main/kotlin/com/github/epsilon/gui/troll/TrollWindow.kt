@@ -38,13 +38,14 @@ abstract class TrollWindow protected constructor() {
 
     abstract fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float)
 
+    /** 绘制使用局部坐标，鼠标参数保留宿主屏幕坐标（包括屏蔽 hover 的哨兵值）。 */
     abstract fun UiScope.draw(mouseX: Int, mouseY: Int)
 
     /** 窗口内容与输入区域都使用窗口内的局部坐标。 */
     fun drawInScope(scope: UiScope, mouseX: Int, mouseY: Int) {
         scope.Positioned(bounds.x, bounds.y, bounds.width, bounds.height) {
             bindInput()
-            draw((mouseX - bounds.x).toInt(), (mouseY - bounds.y).toInt())
+            draw(mouseX, mouseY)
         }
     }
 

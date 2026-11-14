@@ -120,7 +120,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
 
         for (button in actionButtons) {
             Interaction(button.type, button.bounds) { onClick { handleAction(button.type); true } }
-            val hovered = button.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
+            val hovered = isHovered(mouseX, mouseY, button.bounds)
             Layer(TrollZ.Base) {
                 Rect(
                     button.bounds.x, button.bounds.y, button.bounds.width, button.bounds.height,
@@ -169,7 +169,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                     Interaction("switch", row.bounds) { onClick { trySwitchConfig(row.name); true } }
                     Interaction("delete", row.deleteBounds) { onClick { openDeleteConfirmation(row.name); true } }
                     val active = row.name == ConfigManager.activeConfigName
-                    val hovered = row.bounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    val hovered = isHovered(mouseX, mouseY, row.bounds)
                     Layer(TrollZ.Base) {
                         Rect(
                             row.bounds.x, row.bounds.y, row.bounds.width, row.bounds.height,
@@ -214,7 +214,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
                         )
                     }
 
-                    val deleteHovered = row.deleteBounds.contains(mouseX.toDouble(), mouseY.toDouble())
+                    val deleteHovered = isHovered(mouseX, mouseY, row.deleteBounds)
                     Layer(TrollZ.Text) {
                         Rect(
                             row.deleteBounds.x, row.deleteBounds.y,

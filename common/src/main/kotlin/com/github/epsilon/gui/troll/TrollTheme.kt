@@ -5,6 +5,10 @@ import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.modules.impl.GuiSetting
 import java.awt.Color
 
+/** 局部矩形转换到屏幕坐标后查询；鼠标参数不做整数减法，保留宿主 hover 探针的坐标基准。 */
+internal fun UiScope.isHovered(mouseX: Int, mouseY: Int, bounds: UiRect = size): Boolean =
+    bounds.translate(origin.x, origin.y).contains(mouseX.toDouble(), mouseY.toDouble())
+
 object TrollTheme {
 
     const val TEXT_SCALE = 0.975f

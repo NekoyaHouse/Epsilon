@@ -141,7 +141,7 @@ class TrollSettingRow {
     /** 将列表布局提供的局部矩形转换为独立的行作用域。 */
     fun drawInScope(scope: UiScope, mouseX: Int, mouseY: Int) {
         scope.Positioned(bounds.x, bounds.y, bounds.width, bounds.height) {
-            draw((mouseX - bounds.x).toInt(), (mouseY - bounds.y).toInt())
+            draw(mouseX, mouseY)
         }
     }
 
@@ -160,7 +160,7 @@ class TrollSettingRow {
             onBlur = { finishEditing(true); listening = false }, autoFocus = listening
         )
 
-        val h = animate(hover, size.contains(mouseX.toDouble(), mouseY.toDouble()))
+        val h = animate(hover, isHovered(mouseX, mouseY))
         val clicked = animate(click, pressed)
         val p = animate(progress, target())
         Layer(TrollZ.Base) {
