@@ -914,7 +914,9 @@
         "target damage": "Target Damage",
         "self damage": "Self Damage",
         "motion predict": "Motion Predict",
-        "predict ticks": "Predict Ticks"
+        "predict ticks": "Predict Ticks",
+        "moving length": "Moving Length",
+        "fade length": "Fade Length"
       },
       "self trap": {
         "_value": "Self Trap",
