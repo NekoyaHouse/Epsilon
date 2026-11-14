@@ -1,6 +1,8 @@
 package com.github.epsilon.neoforge.mixins.iris
 
 import com.github.epsilon.managers.ShaderManager
+import com.github.epsilon.graphics.shaders.HandOpacityShader
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.modules.impl.render.Shaders
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
@@ -8,10 +10,21 @@ import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import org.spongepowered.asm.mixin.Mixin
 import org.spongepowered.asm.mixin.Pseudo
 import org.spongepowered.asm.mixin.injection.At
+import org.spongepowered.asm.mixin.injection.Inject
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 
 @Pseudo
 @Mixin(targets = ["net.irisshaders.iris.pathways.HandRenderer"], remap = false)
 abstract class MixinIrisHandRenderer {
+
+    @Inject(
+        method = ["renderSolid", "renderTranslucent"],
+        at = [At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;getColorTextureView()Lcom/mojang/renderpearl/api/textures/GpuTextureView;")],
+        remap = true,
+    )
+    private fun `epsilon$captureHandBackground`(ci: CallbackInfo) {
+        HandOpacityShader.captureBackground(mc.gameRenderer.mainRenderTarget())
+    }
 
     /**
      * Iris 的手部渲染同样在 `renderAllFeatures` 之后才关闭帧，而 Frame 关闭紧跟在 RenderPass 之后。
@@ -24,6 +37,7 @@ abstract class MixinIrisHandRenderer {
         remap = true,
     )
     private fun `epsilon$renderOutlineBeforeFrameClose`(frame: FeatureRenderDispatcher.PreparedFrame, original: Operation<Void>) {
+        HandOpacityShader.render(mc.gameRenderer.mainRenderTarget())
         if (Shaders.isEnabled && Shaders.hands) {
             try {
                 ShaderManager.renderHandOutline(frame)

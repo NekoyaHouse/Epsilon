@@ -2038,6 +2038,7 @@
         "arm": "Arm",
         "disable swap main": "Disable Swap Main",
         "disable swap off": "Disable Swap Off",
+        "opacity": "Opacity",
         "blocking animation": "Blocking Animation",
         "blocking mode": {
           "_value": "Blocking Mode",

@@ -38,6 +38,8 @@ object HandView : Module("Hand View", Category.RENDER) {
         OldExhibition
     }
 
+    val opacity by intSetting("Opacity", 100, 0..100, 1)
+
     val disableSwapMain by boolSetting("Disable Swap Main", true)
     val disableSwapOff by boolSetting("Disable Swap Off", true)
 

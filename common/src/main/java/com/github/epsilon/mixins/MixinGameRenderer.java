@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.managers.ShaderManager;
+import com.github.epsilon.graphics.shaders.HandOpacityShader;
 import com.github.epsilon.modules.impl.render.CameraClip;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.Shaders;
@@ -51,8 +52,14 @@ public class MixinGameRenderer {
         );
     }
 
+    @Inject(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;getColorTextureView()Lcom/mojang/renderpearl/api/textures/GpuTextureView;"))
+    private void captureHandBackground(CameraRenderState cameraState, PlayerRenderState playerState, GpuTextureView depthTextureView, CallbackInfo ci) {
+        HandOpacityShader.INSTANCE.captureBackground(minecraft.gameRenderer.mainRenderTarget());
+    }
+
     @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;close()V", ordinal = 0))
     private void renderHandOutlineBeforeFrameClose(FeatureRenderDispatcher.PreparedFrame frame, Operation<Void> original) {
+        HandOpacityShader.INSTANCE.render(minecraft.gameRenderer.mainRenderTarget());
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled() && shaders.getHands()) {
             try {

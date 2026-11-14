@@ -2038,6 +2038,7 @@
         "arm": "空手手臂",
         "disable swap main": "禁用主手交换",
         "disable swap off": "禁用副手交换",
+        "opacity": "不透明度",
         "blocking animation": "格挡动画",
         "blocking mode": {
           "_value": "格挡模式",
