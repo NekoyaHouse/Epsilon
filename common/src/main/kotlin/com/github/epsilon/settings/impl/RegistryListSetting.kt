@@ -3,6 +3,7 @@ package com.github.epsilon.settings.impl
 import com.github.epsilon.kernel.gameplay.world.BlockRegistryUtils
 import com.github.epsilon.settings.Setting
 import net.minecraft.core.Registry
+import net.minecraft.core.particles.ParticleType
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
@@ -26,6 +27,7 @@ class RegistryListSetting<T : Any>(
         ITEM,
         ENTITY_TYPE,
         SOUND_EVENT,
+        PARTICLE_TYPE,
         ENCHANTMENT;
 
         @Suppress("UNCHECKED_CAST")
@@ -34,6 +36,7 @@ class RegistryListSetting<T : Any>(
             ITEM -> BuiltInRegistries.ITEM
             ENTITY_TYPE -> BuiltInRegistries.ENTITY_TYPE
             SOUND_EVENT -> BuiltInRegistries.SOUND_EVENT
+            PARTICLE_TYPE -> BuiltInRegistries.PARTICLE_TYPE
             ENCHANTMENT -> null
         } as Registry<R>?
 
@@ -43,6 +46,7 @@ class RegistryListSetting<T : Any>(
             ITEM -> Predicate<Item> { item -> item !== Items.AIR } as Predicate<R>
             ENTITY_TYPE -> Predicate<EntityType<*>> { entityType -> entityType != null } as Predicate<R>
             SOUND_EVENT -> Predicate<SoundEvent> { sound -> sound != null } as Predicate<R>
+            PARTICLE_TYPE -> Predicate<ParticleType<*>> { particle -> particle != null } as Predicate<R>
             ENCHANTMENT -> Predicate<String> { id -> id != null && Identifier.tryParse(id) != null } as Predicate<R>
         }
 

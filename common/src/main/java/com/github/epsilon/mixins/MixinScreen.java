@@ -1,8 +1,10 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.GameAnimation;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -46,8 +48,12 @@ public class MixinScreen {
         epsilon$inventoryTransform = false;
     }
 
-    @Inject(method = "extractTransparentBackground", at = @At("HEAD"))
+    @Inject(method = "extractTransparentBackground", at = @At("HEAD"), cancellable = true)
     private void neutralizeBackgroundScale(GuiGraphicsExtractor graphics, CallbackInfo ci) {
+        if (Minecraft.getInstance().level != null && NoRender.INSTANCE.noGuiBackground()) {
+            ci.cancel();
+            return;
+        }
         if (!epsilon$inventoryTransform) return;
 
         epsilon$scaleAroundCenter(graphics, 1.0f / epsilon$inventoryScale);

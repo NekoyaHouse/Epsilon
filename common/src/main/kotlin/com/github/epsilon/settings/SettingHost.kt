@@ -1,11 +1,13 @@
 package com.github.epsilon.settings
 
 import com.github.epsilon.settings.impl.*
+import net.minecraft.core.particles.ParticleType
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Block
 import java.awt.Color
+import java.util.function.Predicate
 
 /**
  * 设置宿主：模块/HUD 通过这里声明的 DSL 创建并注册设置。
@@ -82,8 +84,9 @@ interface SettingHost {
         name: String,
         defaultValue: Collection<Block>,
         visible: Setting.Visibility? = null,
+        filter: Predicate<Block>? = null,
     ): RegistryListSetting<Block> =
-        addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.BLOCK, null, visible))
+        addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.BLOCK, filter, visible))
 
     fun itemListSetting(
         name: String,
@@ -139,6 +142,13 @@ interface SettingHost {
         defaultValue: Collection<String>,
         visible: Setting.Visibility? = null,
     ): StringListSetting = addSetting(StringListSetting(name, defaultValue, visible))
+
+    fun particleTypeListSetting(
+        name: String,
+        defaultValue: Collection<ParticleType<*>>,
+        visible: Setting.Visibility? = null,
+    ): RegistryListSetting<ParticleType<*>> =
+        addSetting(RegistryListSetting(name, defaultValue, RegistryListSetting.Type.PARTICLE_TYPE, null, visible))
 
     fun soundEventListSetting(
         name: String,

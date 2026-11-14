@@ -60,9 +60,8 @@ public class MixinFont {
     }
 
     @ModifyExpressionValue(method = "getGlyph", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/Style;isObfuscated()Z"))
-    private boolean onIsObfuscated(boolean original) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getObfuscation()) return false;
-        return original;
+    private boolean epsilon$hideObfuscation(boolean original) {
+        return original && !NoRender.INSTANCE.noObfuscation();
     }
 
 }

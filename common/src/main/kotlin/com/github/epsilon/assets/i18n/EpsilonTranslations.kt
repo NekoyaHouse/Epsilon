@@ -103,6 +103,7 @@ object EpsilonTranslations {
         Gui.LIST_ITEMS,
         Gui.LIST_ENTITIES,
         Gui.LIST_SOUNDS,
+        Gui.LIST_PARTICLES,
         Gui.LIST_ENCHANTMENTS,
         Gui.LIST_SELECTED,
         Gui.LIST_TYPE_TO_ADD,
@@ -313,6 +314,7 @@ object EpsilonTranslations {
         val LIST_ITEMS: TranslateComponent = create("gui", "list.items")
         val LIST_ENTITIES: TranslateComponent = create("gui", "list.entities")
         val LIST_SOUNDS: TranslateComponent = create("gui", "list.sounds")
+        val LIST_PARTICLES: TranslateComponent = create("gui", "list.particles")
         val LIST_ENCHANTMENTS: TranslateComponent = create("gui", "list.enchantments")
         val LIST_SELECTED: TranslateComponent = create("gui", "list.selected")
         val LIST_TYPE_TO_ADD: TranslateComponent = create("gui", "list.type_to_add")

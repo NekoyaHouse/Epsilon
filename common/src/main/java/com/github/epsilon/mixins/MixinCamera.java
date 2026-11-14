@@ -4,10 +4,16 @@ import com.github.epsilon.modules.impl.render.CameraClip;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.SneakTweak;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.core.Holder;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
@@ -51,13 +57,6 @@ public class MixinCamera {
     private boolean epsilon$isStandingCrouchingTransition() {
         Pose[] lastPoses = epsilon$getLastPoses();
         return lastPoses[1] == Pose.STANDING && lastPoses[0] == Pose.CROUCHING || lastPoses[1] == Pose.CROUCHING && lastPoses[0] == Pose.STANDING;
-    }
-
-    @Inject(method = "getFluidInCamera", at = @At("HEAD"), cancellable = true)
-    private void onGetFluidInCamera(CallbackInfoReturnable<FogType> cir) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getLiquidOverlay()) {
-            cir.setReturnValue(FogType.NONE);
-        }
     }
 
     @Inject(method = "getMaxZoom", at = @At("HEAD"), cancellable = true)
@@ -148,6 +147,18 @@ public class MixinCamera {
             return SneakTweak.INSTANCE.getCameraSmoothingModifier(modifier);
         }
         return modifier;
+    }
+
+    @Inject(method = "getFluidInCamera", at = @At("HEAD"), cancellable = true)
+    private void epsilon$hideLiquidOverlay(CallbackInfoReturnable<FogType> cir) {
+        if (NoRender.INSTANCE.noLiquidOverlay()) cir.setReturnValue(FogType.NONE);
+    }
+
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/core/Holder;)Z"))
+    private boolean epsilon$showSky(LivingEntity entity, Holder<MobEffect> effect, Operation<Boolean> original) {
+        if (effect == MobEffects.BLINDNESS && NoRender.INSTANCE.noBlindness()) return false;
+        if (effect == MobEffects.DARKNESS && NoRender.INSTANCE.noDarkness()) return false;
+        return original.call(entity, effect);
     }
 
 }

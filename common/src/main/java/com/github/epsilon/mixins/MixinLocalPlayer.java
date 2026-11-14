@@ -3,6 +3,7 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.github.epsilon.modules.impl.player.InvManager;
+import com.github.epsilon.modules.impl.render.NoRender;
 import com.github.epsilon.modules.impl.render.TotemAnimation;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -13,6 +14,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -105,7 +107,9 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Inject(method = "displayItemActivation(Lnet/minecraft/world/item/ItemStack;)V", at = @At("HEAD"), cancellable = true)
     private void onDisplayItemActivation(ItemStack itemStack, CallbackInfo ci) {
-        if (TotemAnimation.INSTANCE.isEnabled()) {
+        if (NoRender.INSTANCE.noTotemAnimation() && itemStack.is(Items.TOTEM_OF_UNDYING)) {
+            ci.cancel();
+        } else if (TotemAnimation.INSTANCE.isEnabled()) {
             TotemAnimation.INSTANCE.showFloatingItem(itemStack);
             ci.cancel();
         }

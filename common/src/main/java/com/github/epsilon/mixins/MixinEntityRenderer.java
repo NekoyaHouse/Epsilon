@@ -7,10 +7,8 @@ import com.github.epsilon.modules.impl.render.Shaders;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
-import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,31 +31,12 @@ public class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> 
     private void hookShouldRender(T entity, Frustum culler, double camX, double camY, double camZ, float partialTicks, CallbackInfoReturnable<Boolean> cir) {
         if (CrystalChams.INSTANCE.isEnabled() && entity instanceof EndCrystal) {
             cir.setReturnValue(false);
-            return;
-        }
-
-        NoRender noRender = NoRender.INSTANCE;
-        if (noRender.isEnabled() && (noRender.noEntity(entity.getType()) || (noRender.getFallingBlocks() && entity instanceof FallingBlockEntity))) {
-            cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "extractNameTags(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FDD)V", at = @At("HEAD"), cancellable = true)
     private void hookExtractNameTags(T entity, S state, float partialTicks, double nameTagDistance, double belowNameDistance, CallbackInfo ci) {
-        boolean hideGlobalNametags = NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getNoNametags();
-        boolean hidePlayerNametags = NameTags.INSTANCE.isEnabled() && entity instanceof Player;
-        if (hideGlobalNametags || hidePlayerNametags) {
-            ci.cancel();
-        }
-    }
-
-    @Inject(method = "finalizeRenderState(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;)V", at = @At("HEAD"), cancellable = true)
-    private void onFinalizeRenderState(T entity, S state, CallbackInfo ci) {
-        if (
-                NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getNoDeadEntities()
-                        && state instanceof LivingEntityRenderState livingState
-                        && livingState.deathTime > 0
-        ) {
+        if (NoRender.INSTANCE.noNametags() || NameTags.INSTANCE.isEnabled() && entity instanceof Player) {
             ci.cancel();
         }
     }

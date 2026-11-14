@@ -4,7 +4,6 @@ import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
-import com.github.epsilon.interfaces.ClientboundEntityEventPacketAccessor
 import com.github.epsilon.kernel.gameplay.inventory.FindItemResult
 import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
 import com.github.epsilon.kernel.gameplay.inventory.InvUtils.invSwap
@@ -369,9 +368,7 @@ object SpearAura : Module("Spear Aura", Category.COMBAT) {
             if (!isEnabled) return@handler
             val packet = event.packet as? ClientboundEntityEventPacket ?: return@handler
             if (packet.eventId != EntityEvent.KINETIC_HIT) return@handler
-            if (packet is ClientboundEntityEventPacketAccessor &&
-                packet.`epsilon$getEntityId`() == localPlayerId
-            ) {
+            if (packet.entityId == localPlayerId) {
                 spearHitPending = true
             }
         }

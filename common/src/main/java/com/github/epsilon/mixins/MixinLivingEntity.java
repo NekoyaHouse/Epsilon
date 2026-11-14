@@ -9,6 +9,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -116,11 +117,8 @@ public class MixinLivingEntity {
     }
 
     @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
-    private void onSpawnItemParticles(ItemStack itemStack, int count, CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getEatParticles()
-                && itemStack.getComponents().has(net.minecraft.core.component.DataComponents.FOOD)) {
-            ci.cancel();
-        }
+    private void epsilon$hideEatingParticles(ItemStack stack, int count, CallbackInfo ci) {
+        if (NoRender.INSTANCE.noEatParticles() && stack.has(DataComponents.FOOD)) ci.cancel();
     }
 
 }
