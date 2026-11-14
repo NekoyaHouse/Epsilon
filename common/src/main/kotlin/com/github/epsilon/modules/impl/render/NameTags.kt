@@ -8,6 +8,7 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
@@ -93,15 +94,15 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         }
     }
 
+    context(nn: NonNullContext)
     private fun collectTags(metrics: TextRenderer): MutableList<TagLayout> {
         val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         val screenWidth = LuminRenderSystem.getScaledWidth()
         val screenHeight = LuminRenderSystem.getScaledHeight()
         val maxDistanceSquared = Mth.square(range)
         val tags = ArrayList<TagLayout>()
-        val level = mc.level ?: return tags
 
-        for (entity in level.entitiesForRendering()) {
+        for (entity in nn.level.entitiesForRendering()) {
             if (entity !is Player || !shouldRender(entity, maxDistanceSquared)) continue
 
             val anchor = entity.getPosition(partialTick)
@@ -130,16 +131,18 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         return tags
     }
 
+    context(nn: NonNullContext)
     private fun shouldRender(player: Player, maxDistanceSquared: Double): Boolean {
         if (!player.isAlive || player.isRemoved) return false
         if (player.name.string.startsWith("CIT-")) return false
-        val self = mc.player ?: return false
+        val self = nn.player
         if (player === self) {
             return showSelf && !mc.options.cameraType.isFirstPerson
         }
         return self.distanceToSqr(player) <= maxDistanceSquared
     }
 
+    context(nn: NonNullContext)
     private fun createLayout(
         metrics: TextRenderer, player: Player, centerX: Float, anchorY: Float, renderScale: Float,
     ): TagLayout {
@@ -201,7 +204,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
 
         return TagLayout(
             startX, startY, totalWidth, tagHeight, radius, renderScale,
-            mc.player!!.distanceToSqr(player), segments
+            nn.player.distanceToSqr(player), segments
         )
     }
 
