@@ -26,6 +26,10 @@ import java.util.*
 import java.util.function.Supplier
 import kotlin.math.ceil
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
+
+internal fun limitTabListCornerRadius(radius: Float, paddingX: Float, paddingY: Float): Float =
+    minOf(radius, paddingX + paddingY + sqrt(2f * paddingX * paddingY))
 
 class TabListInstance(
     private val textRendererSupplier: Supplier<TextRenderer>,
@@ -48,6 +52,9 @@ class TabListInstance(
     private var footerBoxHeight: Float = 0f
     private var listHeight: Float = 0f
     private var blockRadius: Float = 0f
+
+    override val maxContainerRadius: Float
+        get() = limitTabListCornerRadius(Float.POSITIVE_INFINITY, OUTER_PADDING, OUTER_PADDING)
 
     override fun update() {
         resetLayout()
@@ -108,7 +115,7 @@ class TabListInstance(
         targetHeight = OUTER_PADDING * 2f + headerHeight + listHeight + footerHeight
 
         val targetRadiusPixels = RADIUS * listWidth * 0.5f
-        blockRadius = approximateGnRadius(listWidth, listHeight, targetRadiusPixels)
+        blockRadius = approximateGnRadius(listWidth, listHeight, targetRadiusPixels, LIST_INNER_PADDING_Y)
     }
 
     private fun resetLayout() {
@@ -528,7 +535,7 @@ class TabListInstance(
     }
 
     private fun computeBlockRadius(width: Float, height: Float): Float {
-        return approximateGnRadius(width, height, RADIUS * listWidth * 0.5f)
+        return approximateGnRadius(width, height, RADIUS * listWidth * 0.5f, HEADER_FOOTER_PADDING_Y)
     }
 
     private data class TextSegment(val text: String, val color: Color, val width: Float)
@@ -613,9 +620,18 @@ class TabListInstance(
             return Color(team.color.get().rgb())
         }
 
-        private fun approximateGnRadius(width: Float, height: Float, targetRadiusPixels: Float): Float {
+        private fun approximateGnRadius(
+            width: Float,
+            height: Float,
+            targetRadiusPixels: Float,
+            paddingY: Float
+        ): Float {
             val maximum = minOf(width, height) * 0.5f
-            return minOf(targetRadiusPixels, maximum) * 0.8f
+            return limitTabListCornerRadius(
+                minOf(targetRadiusPixels, maximum) * 0.8f,
+                INNER_PADDING - TEXT_SHADOW_OFFSET,
+                paddingY - TEXT_SHADOW_OFFSET
+            )
         }
 
         private fun legacyColor(code: Char): Color? {

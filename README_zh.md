@@ -25,8 +25,6 @@
 
 详见 [渲染系统文档](common/src/main/kotlin/com/github/epsilon/graphics/README_zh.md)
 
-Troll GUI 与 Dropdown 统一使用 Lumin UI DSL，通过可重组场景、窗口与设置行的局部坐标作用域和声明式输入实现；窗口拖拽、缩放、搜索、设置、好友与配置面板保留原有交互。
-
 ## ⚙️ 构建与运行
 
 ```bash

@@ -24,6 +24,9 @@ abstract class LandInstance(
     var targetWidth: Float = 0f
     var targetHeight: Float = 0f
 
+    open val maxContainerRadius: Float
+        get() = Float.POSITIVE_INFINITY
+
     private var contentAlpha: Float = 1.0f
 
     /**

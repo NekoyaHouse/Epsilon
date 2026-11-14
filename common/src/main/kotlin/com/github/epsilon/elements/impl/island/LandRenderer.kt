@@ -101,7 +101,10 @@ class LandRenderer(
 
         if (w < 1f || h < 1f) return
 
-        val radius = minOf(w, h) * 0.4f * radiusAnim.value.coerceIn(0f, 1f)
+        val radius = minOf(
+            minOf(w, h) * 0.4f * radiusAnim.value.coerceIn(0f, 1f),
+            current?.maxContainerRadius ?: Float.POSITIVE_INFINITY
+        )
 
         if (island.backgroundBlur) {
             // 背景模糊直接绘制到屏幕，需要绝对坐标
