@@ -50,10 +50,11 @@ object BlurShader {
     }
 
     private var pipeline: RenderPipeline? = null
+    private var alphaPreservingPipeline: RenderPipeline? = null
     private var boxPipeline: RenderPipeline? = null
     private var input: RenderTarget? = null
 
-    private fun ensureProgram() {
+    private fun ensureProgram(preserveAlpha: Boolean) {
         if (this.pipeline == null) {
             this.pipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipeline/blur"))
@@ -62,6 +63,23 @@ object BlurShader {
                 .withBindGroupLayout(LuminBindGroupLayouts.BLUR)
                 .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                 .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+                .withCull(false)
+                .build()
+        }
+        if (preserveAlpha && alphaPreservingPipeline == null) {
+            alphaPreservingPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+                .withLocation(ResourceLocationUtils.getIdentifier("pipeline/blur_preserve_alpha"))
+                .withVertexShader(BLUR_PATH)
+                .withFragmentShader(BLUR_PATH)
+                .withBindGroupLayout(LuminBindGroupLayouts.BLUR)
+                .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
+                .withColorTargetState(
+                    ColorTargetState(
+                        Optional.empty(),
+                        GpuFormat.RGBA8_UNORM,
+                        ColorTargetState.WRITE_COLOR
+                    )
+                )
                 .withCull(false)
                 .build()
         }
@@ -120,9 +138,10 @@ object BlurShader {
         width: Float,
         height: Float,
         radius: Float,
-        blurStrength: Float
+        blurStrength: Float,
+        preserveAlpha: Boolean = false
     ) {
-        render(source, x, y, width, height, radius, radius, radius, radius, blurStrength, null, null, 0)
+        render(source, x, y, width, height, radius, radius, radius, radius, blurStrength, null, null, 0, preserveAlpha)
     }
 
     fun render(
@@ -138,9 +157,10 @@ object BlurShader {
         blurStrength: Float,
         segmentRects: FloatArray?,
         segmentRadii: FloatArray?,
-        segmentCount: Int
+        segmentCount: Int,
+        preserveAlpha: Boolean = false
     ) {
-        this.ensureProgram()
+        this.ensureProgram(preserveAlpha)
 
         if (width <= 0.0f || height <= 0.0f) {
             return
@@ -216,7 +236,7 @@ object BlurShader {
             targetView,
             Optional.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline!!))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(if (preserveAlpha) alphaPreservingPipeline!! else pipeline!!))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("BlurUniforms", blurUniforms)
             renderPass.setUniform(

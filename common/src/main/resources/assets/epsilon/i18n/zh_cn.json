@@ -516,6 +516,20 @@
         "replace minecraft font": "替换 Minecraft 字体",
         "close gui on outside": "点击空白关闭 GUI",
         "dropdown hints": "瀑布式提示词",
+        "dropdown entrance animation": {
+          "_value": "下拉界面入场动画",
+          "focus": "聚焦",
+          "slide": "滑入",
+          "classic": "经典",
+          "none": "无"
+        },
+        "panel entrance animation": {
+          "_value": "面板界面入场动画",
+          "focus": "聚焦",
+          "slide": "滑入",
+          "fade": "淡入",
+          "none": "无"
+        },
         "modify crosshair": "修改准心",
         "hide mode": {
           "_value": "隐藏模式",

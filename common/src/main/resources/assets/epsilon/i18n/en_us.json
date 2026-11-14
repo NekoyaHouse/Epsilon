@@ -516,6 +516,20 @@
         "replace minecraft font": "Replace Minecraft Font",
         "close gui on outside": "Close Gui On Outside",
         "dropdown hints": "Dropdown Hints",
+        "dropdown entrance animation": {
+          "_value": "Dropdown Entrance Animation",
+          "focus": "Focus",
+          "slide": "Slide",
+          "classic": "Classic",
+          "none": "None"
+        },
+        "panel entrance animation": {
+          "_value": "Panel Entrance Animation",
+          "focus": "Focus",
+          "slide": "Slide",
+          "fade": "Fade",
+          "none": "None"
+        },
         "modify crosshair": "Modify Crosshair",
         "hide mode": {
           "_value": "Hide Mode",

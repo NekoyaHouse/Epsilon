@@ -87,6 +87,7 @@ abstract class AbstractDropdownPanel protected constructor(
         introAnim.startValue = 0.0f
         introAnim.run(0.0f)
         introAnim.run(1.0f)
+        introAnim.reset()
         openAnim.startValue = if (openedState) 1.0f else 0.0f
     }
 
@@ -119,6 +120,7 @@ abstract class AbstractDropdownPanel protected constructor(
             InputRegion(
                 key = this@AbstractDropdownPanel to "header",
                 bounds = UiRect(left, top, panelWidth, DropdownTheme.PANEL_HEADER_HEIGHT),
+                screenCoordinates = false,
                 onPress = { event, _ ->
                     when (event.button()) {
                         InputConstants.MOUSE_BUTTON_LEFT -> {
@@ -214,6 +216,7 @@ abstract class AbstractDropdownPanel protected constructor(
                 scrollbarViewport.right() - UiScrollBar.HOVER_WIDTH - scope.origin.x,
                 scrollbarViewport.y - scope.origin.y, UiScrollBar.HOVER_WIDTH, scrollbarViewport.height
             ),
+            screenCoordinates = false,
             onPress = { event, _ ->
                 val handled =
                     scrollBar.mouseClicked(event.x(), event.y(), scrollbarViewport, scroll, maxScroll, contentHeight)

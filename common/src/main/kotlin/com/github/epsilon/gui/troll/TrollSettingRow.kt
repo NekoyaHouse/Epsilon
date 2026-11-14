@@ -149,7 +149,11 @@ class TrollSettingRow {
         inputOriginX = origin.x
         inputOriginY = origin.y
         fun eventInModel(event: MouseButtonEvent) =
-            MouseButtonEvent(event.x() - inputOriginX + bounds.x, event.y() - inputOriginY + bounds.y, event.buttonInfo())
+            MouseButtonEvent(
+                event.x() - inputOriginX + bounds.x,
+                event.y() - inputOriginY + bounds.y,
+                event.buttonInfo()
+            )
         InputRegion(
             key = this@TrollSettingRow, screenCoordinates = false,
             onPreviewPress = { event, _ -> captureMouseBind(eventInModel(event)) },
@@ -283,11 +287,19 @@ class TrollSettingRow {
             module.isHidden = !module.isHidden
         } else if (action == ModuleAction.TOGGLE && module != null) {
             if (button == InputConstants.MOUSE_BUTTON_RIGHT || module.category == null) {
-                TrollGuiScreen.INSTANCE.openSettings(module, event.x() - bounds.x + inputOriginX, event.y() - bounds.y + inputOriginY)
+                TrollGuiScreen.INSTANCE.openSettings(
+                    module,
+                    event.x() - bounds.x + inputOriginX,
+                    event.y() - bounds.y + inputOriginY
+                )
             } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 module.toggle()
             } else if (button == InputConstants.MOUSE_BUTTON_MIDDLE) {
-                TrollGuiScreen.INSTANCE.openSettings(module, event.x() - bounds.x + inputOriginX, event.y() - bounds.y + inputOriginY).listenForBind()
+                TrollGuiScreen.INSTANCE.openSettings(
+                    module,
+                    event.x() - bounds.x + inputOriginX,
+                    event.y() - bounds.y + inputOriginY
+                ).listenForBind()
             }
         } else if (setting is BoolSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             setting.value = !setting.value
@@ -305,7 +317,11 @@ class TrollSettingRow {
         } else if (setting is StringSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             startEditing()
         } else if (setting is ColorSetting && button == InputConstants.MOUSE_BUTTON_RIGHT) {
-            TrollGuiScreen.INSTANCE.openColorPicker(setting, event.x() - bounds.x + inputOriginX, event.y() - bounds.y + inputOriginY)
+            TrollGuiScreen.INSTANCE.openColorPicker(
+                setting,
+                event.x() - bounds.x + inputOriginX,
+                event.y() - bounds.y + inputOriginY
+            )
         } else if (setting is ButtonSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             setting.value.run()
         } else if (setting is StringListSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {

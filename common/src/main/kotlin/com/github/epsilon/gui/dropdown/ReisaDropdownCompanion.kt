@@ -7,6 +7,7 @@ import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.managers.AssetManager
+import com.github.epsilon.modules.impl.ClientSetting
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.util.Util
@@ -37,8 +38,9 @@ class ReisaDropdownCompanion {
         shownAction = Action.IDLE
         activeAction = null
         texturesPrewarmed = false
-        entranceAnim.snapTo(0.0f)
+        entranceAnim.snapTo(if (ClientSetting.dropdownEntranceAnimation == ClientSetting.DropdownEntranceAnimation.Classic) 0.0f else 1.0f)
         entranceAnim.target = 1.0f
+        entranceAnim.reset()
 
         val now = Util.getMillis()
         nextBlinkMs = now + 2_800L + (newSessionId * 347L).mod(1_300L)

@@ -45,6 +45,20 @@ object ClientSetting : Module("Client Setting", null) {
         TrollHack,
     }
 
+    enum class DropdownEntranceAnimation {
+        Focus,
+        Slide,
+        Classic,
+        None,
+    }
+
+    enum class PanelEntranceAnimation {
+        Focus,
+        Slide,
+        Fade,
+        None,
+    }
+
     enum class MainMenuStyle {
         Columbina,
         Classic,
@@ -179,6 +193,18 @@ object ClientSetting : Module("Client Setting", null) {
         "Dropdown Hints",
         true,
         { guiMode == GuiMode.Dropdown }
+    ).group(sgGeneral)
+
+    val dropdownEntranceAnimation by enumSetting(
+        "Dropdown Entrance Animation",
+        DropdownEntranceAnimation.Focus,
+        { guiMode == GuiMode.Dropdown }
+    ).group(sgGeneral)
+
+    val panelEntranceAnimation by enumSetting(
+        "Panel Entrance Animation",
+        PanelEntranceAnimation.Focus,
+        { guiMode == GuiMode.Panel }
     ).group(sgGeneral)
 
     // Teams

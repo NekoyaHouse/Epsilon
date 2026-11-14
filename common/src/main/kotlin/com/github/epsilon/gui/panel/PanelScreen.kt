@@ -1,10 +1,15 @@
 package com.github.epsilon.gui.panel
 
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.gui.lib.*
+import com.github.epsilon.graphics.shaders.BlurShader
+import com.github.epsilon.gui.lib.LuminUIScene
+import com.github.epsilon.gui.lib.RoundRect
+import com.github.epsilon.gui.lib.Shadow
+import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
+import com.github.epsilon.gui.lib.state.LuminAnimatable
 import com.github.epsilon.gui.lib.state.prepareLuminDataSources
 import com.github.epsilon.gui.panel.popup.PanelPopupHost
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper
@@ -14,6 +19,7 @@ import com.github.epsilon.gui.panel.view.ModuleDetailPanel
 import com.github.epsilon.gui.panel.view.ModuleListPanel
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.impl.ClientSetting
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.IMEPreeditOverlay
@@ -22,6 +28,7 @@ import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 
 /**
@@ -42,6 +49,22 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
     private var preeditOverlay: IMEPreeditOverlay? = null
 
     private var renderTarget: LuminRenderSystem.LuminRenderTarget? = null
+    private val entranceAnim = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 360L)
+    private var entranceMode = ClientSetting.PanelEntranceAnimation.Focus
+    private var entranceStarted = false
+    private var entranceScale = 1.0f
+    private var entranceOffsetY = 0.0f
+
+    override fun init() {
+        super.init()
+        if (!entranceStarted) {
+            entranceStarted = true
+            entranceMode = ClientSetting.panelEntranceAnimation
+            entranceAnim.snapTo(if (entranceMode == ClientSetting.PanelEntranceAnimation.None) 1.0f else 0.0f)
+            entranceAnim.target = 1.0f
+            entranceAnim.reset()
+        }
+    }
 
     override fun isPauseScreen(): Boolean {
         return false
@@ -60,13 +83,22 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
             target = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.width, window.height)
             renderTarget = target
         }
-        target.clear()
         target.resize(window.width, window.height)
+        target.clear()
 
         LuminRenderSystem.setActiveTarget(target)
         prepareLuminDataSources()
         scene.beginFrame()
         try {
+            val entrance = entranceAnim.value
+            val remaining = 1.0f - entrance
+            entranceScale =
+                if (entranceMode == ClientSetting.PanelEntranceAnimation.Focus) 1.0f - remaining * 0.08f else 1.0f
+            entranceOffsetY = when (entranceMode) {
+                ClientSetting.PanelEntranceAnimation.Focus -> remaining * 14.0f
+                ClientSetting.PanelEntranceAnimation.Slide -> remaining * 32.0f
+                else -> 0.0f
+            }
 
             state.ensureValidSelection()
 
@@ -77,8 +109,8 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
             popupHost.setOverlayBounds(layout.panel)
 
             drawChrome(layout)
-            val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
-            val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
+            val epsilonMouseX = panelMouseX(mouseX.toDouble()).toInt()
+            val epsilonMouseY = panelMouseY(mouseY.toDouble()).toInt()
             val popupActive = popupHost.activePopup != null
             val panelMouseX = if (popupActive) Int.MIN_VALUE else epsilonMouseX
             val panelMouseY = if (popupActive) Int.MIN_VALUE else epsilonMouseY
@@ -109,17 +141,46 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
             scene.clear()
             renderPopup(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick)
 
+            if (entranceMode == ClientSetting.PanelEntranceAnimation.Focus && entrance < 1.0f) {
+                val blurPad = MD3Theme.PANEL_SHADOW_BLUR
+                BlurShader.render(
+                    target, layout.panel.x - blurPad, layout.panel.y - blurPad,
+                    layout.panel.width + blurPad * 2.0f, layout.panel.height + blurPad * 2.0f,
+                    0.0f, remaining * 12.0f, preserveAlpha = true
+                )
+            }
             LuminRenderSystem.setActiveTarget(null)
 
             val overlay = preeditOverlay
             if (overlay != null) {
-                overlay.updateInputPosition(IMEFocusHelper.activeCursorX.toInt(), IMEFocusHelper.activeCursorY.toInt())
+                val centerX = LuminRenderSystem.getScaledWidth() * 0.5f
+                val centerY = LuminRenderSystem.getScaledHeight() * 0.5f
+                overlay.updateInputPosition(
+                    (((IMEFocusHelper.activeCursorX - centerX) * entranceScale + centerX) *
+                            window.guiScaledWidth / LuminRenderSystem.getScaledWidth()).toInt(),
+                    (((IMEFocusHelper.activeCursorY - centerY) * entranceScale + centerY + entranceOffsetY) *
+                            window.guiScaledHeight / LuminRenderSystem.getScaledHeight()).toInt()
+                )
                 guiGraphics.setPreeditOverlay(overlay)
             }
-            guiGraphics.blit(
-                target.getIdentifier(), 0, 0, window.guiScaledWidth, window.guiScaledHeight, 0.0f, 1.0f, 1.0f, 0.0f
-            )
-            popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick)
+            val pose = guiGraphics.pose()
+            pose.pushMatrix()
+            try {
+                pose.translate(
+                    window.guiScaledWidth * (1.0f - entranceScale) * 0.5f,
+                    window.guiScaledHeight * (1.0f - entranceScale) * 0.5f +
+                            entranceOffsetY * window.guiScaledHeight / LuminRenderSystem.getScaledHeight()
+                )
+                pose.scale(entranceScale, entranceScale)
+                guiGraphics.blit(
+                    RenderPipelines.GUI_TEXTURED, target.getIdentifier(), 0, 0, 0.0f, window.height.toFloat(),
+                    window.guiScaledWidth, window.guiScaledHeight, window.width, -window.height,
+                    window.width, window.height, ((entrance * 255).toInt() shl 24) or 0xFFFFFF
+                )
+                popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick)
+            } finally {
+                pose.popMatrix()
+            }
             scene.endFrame()
         } finally {
             scene.abortFrame()
@@ -189,8 +250,22 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
         return this
     }
 
+    private fun panelMouseX(mouseX: Double): Double {
+        val center = LuminRenderSystem.getScaledWidth() * 0.5
+        return (LuminRenderSystem.toEpsilonMouseX(mouseX) - center) / entranceScale + center
+    }
+
+    private fun panelMouseY(mouseY: Double): Double {
+        val center = LuminRenderSystem.getScaledHeight() * 0.5
+        return (LuminRenderSystem.toEpsilonMouseY(mouseY) - center - entranceOffsetY) / entranceScale + center
+    }
+
+    private fun panelMouseEvent(event: MouseButtonEvent): MouseButtonEvent {
+        return MouseButtonEvent(panelMouseX(event.x()), panelMouseY(event.y()), event.buttonInfo())
+    }
+
     override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
-        val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
+        val mouse = panelMouseEvent(event)
         if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
         val layout = PanelLayout.compute(
             LuminRenderSystem.getScaledWidthInt(),
@@ -207,32 +282,33 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         if (popupHost.activePopup != null) return popupHost.mouseScrolled(
-            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY
+            panelMouseX(mouseX), panelMouseY(mouseY), scrollX, scrollY
         )
         return scene.input.mouseScrolled(
-            LuminRenderSystem.toEpsilonMouseX(mouseX),
-            LuminRenderSystem.toEpsilonMouseY(mouseY),
+            panelMouseX(mouseX),
+            panelMouseY(mouseY),
             scrollX,
             scrollY
         )
     }
 
     override fun mouseReleased(event: MouseButtonEvent): Boolean {
-        if (popupHost.activePopup != null) return popupHost.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
+        if (popupHost.activePopup != null) return popupHost.mouseReleased(panelMouseEvent(event))
 
-        return scene.input.mouseReleased(LuminRenderSystem.toEpsilonMouseEvent(event))
+        return scene.input.mouseReleased(panelMouseEvent(event))
     }
 
     override fun mouseDragged(event: MouseButtonEvent, mouseX: Double, mouseY: Double): Boolean {
         if (popupHost.activePopup != null) return popupHost.mouseDragged(
-            LuminRenderSystem.toEpsilonMouseEvent(event),
-            LuminRenderSystem.toEpsilonMouseX(mouseX),
-            LuminRenderSystem.toEpsilonMouseY(mouseY)
+            panelMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX) / entranceScale,
+            LuminRenderSystem.toEpsilonMouseY(mouseY) / entranceScale
         )
 
         return scene.input.mouseDragged(
-            LuminRenderSystem.toEpsilonMouseEvent(event),
-            LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)
+            panelMouseEvent(event),
+            LuminRenderSystem.toEpsilonMouseX(mouseX) / entranceScale,
+            LuminRenderSystem.toEpsilonMouseY(mouseY) / entranceScale
         )
     }
 
@@ -264,6 +340,10 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
 
     override fun removed() {
         super.removed()
+        entranceStarted = false
+        entranceAnim.close()
+        entranceScale = 1.0f
+        entranceOffsetY = 0.0f
         scene.resetComposition()
         popupHost.close()
         moduleListPanel.resetTransientState()

@@ -16,6 +16,7 @@ abstract class TrollWindow protected constructor() {
 
     val scroll: TrollScroll = TrollScroll()
     var bounds: UiRect by mutableStateOf(UiRect(0.0f, 0.0f, 180.0f, 300.0f))
+
     /** 相对窗口左上角的内容视口；屏幕位置仅保存在 [bounds]。 */
     var viewport: UiRect by mutableStateOf(bounds)
     var headerHeight: Float by mutableStateOf(0.0f)

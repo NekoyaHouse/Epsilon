@@ -48,7 +48,8 @@ import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
 
-    private val textMetrics: Supplier<UiTextMetrics> = Suppliers.memoize(Supplier { TextRenderer.create().asUiTextMetrics() })
+    private val textMetrics: Supplier<UiTextMetrics> =
+        Suppliers.memoize(Supplier { TextRenderer.create().asUiTextMetrics() })
     private val scene: Supplier<UiScene> = Suppliers.memoize(Supplier { UiScene(EpsilonUiTheme) })
     private val windows: MutableList<TrollWindow> = ArrayList()
     private val popupHost: PanelPopupHost = PanelPopupHost { scene.get().input }
@@ -332,9 +333,11 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     ) {
         windowViews.getOrPut(window) { LuminView() }.render(mouseX, mouseY) {
             val windowProgress = window.getOpenProgress()
-            val revealHeight = window.headerHeight + maxOf(0f, window.bounds.height - window.headerHeight) * windowProgress
+            val revealHeight =
+                window.headerHeight + maxOf(0f, window.bounds.height - window.headerHeight) * windowProgress
             if (revealHeight <= 0.01f) return@render
-            val passBounds = UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
+            val passBounds =
+                UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
             queueWindow(frame, layer, relativeLayer, passBounds, window) {
                 if (window === settingsWindow || window === colorPicker) {
                     Interaction(key = window to "dismiss") {
@@ -354,8 +357,13 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
                 Transform({ Render2DTransform.translation(0f, guiOpenOffsetY) }) {
                     Clip({
                         val bounds = window.bounds
-                        UiRect(bounds.x, bounds.y, bounds.width,
-                            window.headerHeight + maxOf(0f, bounds.height - window.headerHeight) * window.getOpenProgress())
+                        UiRect(
+                            bounds.x, bounds.y, bounds.width,
+                            window.headerHeight + maxOf(
+                                0f,
+                                bounds.height - window.headerHeight
+                            ) * window.getOpenProgress()
+                        )
                     }) {
                         LuminUIGroup("content") {
                             window.drawInScope(this, mouseX, mouseY)
@@ -385,7 +393,14 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
                 ToggleButton(friendToggleBounds, IconChars.PEOPLE, friendWindowOpen, mouseX, mouseY, friendToggleHover)
             }
             LuminUIGroup("config") {
-                ToggleButton(configToggleBounds, IconChars.SETTINGS, configWindowOpen, mouseX, mouseY, configToggleHover)
+                ToggleButton(
+                    configToggleBounds,
+                    IconChars.SETTINGS,
+                    configWindowOpen,
+                    mouseX,
+                    mouseY,
+                    configToggleHover
+                )
             }
         }
     }
@@ -403,7 +418,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             val hover = animate(hoverAnimation, bounds.contains(mouseX.toDouble(), mouseY.toDouble()))
             val backgroundAlpha = if (active) (205 + 50 * hover).toInt() else (120 + 40 * hover).toInt()
             val background = if (active) TrollTheme.alpha(TrollTheme.primary(), backgroundAlpha)
-                else Color(0, 0, 0, backgroundAlpha)
+            else Color(0, 0, 0, backgroundAlpha)
             Layer(TrollZ.Highlight) { RoundRect(0f, 0f, width, height, width * 0.5f, background) }
             val iconScale = 0.92f
             val iconWidth = metrics.textWidth(icon, iconScale, StaticFontLoader.ICONS)
