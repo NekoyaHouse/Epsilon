@@ -1936,11 +1936,13 @@
       },
       "crystal chams": {
         "_value": "Crystal Chams",
+        "through walls": "Through Walls",
         "side color": "Side Color",
         "line color": "Line Color",
         "scale": "Scale",
-        "line width": "Line Width",
-        "through walls": "Through Walls"
+        "spin speed": "Spin Speed",
+        "float speed": "Float Speed",
+        "line width": "Line Width"
       },
       "customsky": {
         "_value": "Custom Sky",

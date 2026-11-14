@@ -9,10 +9,13 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.model.Model
+import net.minecraft.client.model.`object`.crystal.EndCrystalModel
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.SubmitNodeStorage
+import net.minecraft.client.renderer.entity.EndCrystalRenderer
 import net.minecraft.client.renderer.entity.EntityRenderer
+import net.minecraft.client.renderer.entity.state.EndCrystalRenderState
 import net.minecraft.client.renderer.entity.state.EntityRenderState
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.client.renderer.texture.UvMapping
@@ -57,6 +60,8 @@ object WireframeEntityRenderer {
     private var sideColor: Color = Color.WHITE
     private var lineColor: Color = Color.WHITE
     private var lineWidth: Float = 1.0f
+    private var spinSpeed: Float = 1.0f
+    private var floatSpeed: Float = 1.0f
 
     private var sidesBuilder: LuminImmediateRenderer.PosColorQuads? = null
     private var linesBuilder: LuminImmediateRenderer.Lines? = null
@@ -85,7 +90,9 @@ object WireframeEntityRenderer {
         scale: Double,
         sideColor: Color,
         lineColor: Color,
-        lineWidth: Float
+        lineWidth: Float,
+        spinSpeed: Float = 1.0f,
+        floatSpeed: Float = 1.0f,
     ) {
         var startedBatch = false
         if (!isBatching()) {
@@ -98,7 +105,7 @@ object WireframeEntityRenderer {
             else mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         }
         if (partialTick != null) {
-            renderEntity(entity, scale, sideColor, lineColor, lineWidth, partialTick)
+            renderEntity(entity, scale, sideColor, lineColor, lineWidth, spinSpeed, floatSpeed, partialTick)
         }
 
         if (startedBatch) {
@@ -112,11 +119,15 @@ object WireframeEntityRenderer {
         sideColor: Color,
         lineColor: Color,
         lineWidth: Float,
+        spinSpeed: Float,
+        floatSpeed: Float,
         partialTick: Float,
     ) {
         this.sideColor = sideColor
         this.lineColor = lineColor
         this.lineWidth = lineWidth
+        this.spinSpeed = spinSpeed
+        this.floatSpeed = floatSpeed
 
         offsetX = Mth.lerp(partialTick.toDouble(), entity.xOld, entity.x)
         offsetY = Mth.lerp(partialTick.toDouble(), entity.yOld, entity.y)
@@ -243,7 +254,16 @@ object WireframeEntityRenderer {
             uvMapping: UvMapping?,
             outlineColor: Int,
         ) {
-            model.setupAnim(state)
+            if (model is EndCrystalModel && state is EndCrystalRenderState) {
+                val ageInTicks = state.ageInTicks
+                state.ageInTicks = ageInTicks * spinSpeed
+                model.setupAnim(state)
+                model.outerGlass.y +=
+                    (EndCrystalRenderer.getY(ageInTicks * floatSpeed) - EndCrystalRenderer.getY(state.ageInTicks)) * 8.0f
+                state.ageInTicks = ageInTicks
+            } else {
+                model.setupAnim(state)
+            }
             model.renderToBuffer(poseStack, vertexConsumer, lightCoords, overlayCoords, tintedColor)
         }
 

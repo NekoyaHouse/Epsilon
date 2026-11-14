@@ -1,6 +1,5 @@
 package com.github.epsilon.modules.impl.movement
 
-import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientTickEvent
 import com.github.epsilon.modules.Category
@@ -17,14 +16,11 @@ object AutoSprint : Module("Auto Sprint", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<ClientTickEvent.Pre>(EventPriority.LOWEST) {
-            // ElytraFly 启动时会停一次疾跑，这段时间内不要立刻把疾跑键按回去。
-            if (ElytraFly.isSprintSuppressed) return@safeEventHandler
-
+        safeEventHandler<ClientTickEvent.Post> {
+            val guiCheck = mc.gui.screen() == null
+            val elytraFlyCheck = ElytraFly.isSprintSuppressed
             val sprintTransition = InvManager.isEnabled && InvManager.isSprintTransitionPending
-            if (sprintTransition) return@safeEventHandler
-
-            mc.options.keySprint.isDown = mc.gui.screen() == null
+            mc.options.keySprint.isDown = guiCheck && !elytraFlyCheck && !sprintTransition
         }
     }
 

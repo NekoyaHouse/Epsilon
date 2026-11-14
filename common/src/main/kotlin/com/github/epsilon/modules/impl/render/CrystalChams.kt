@@ -11,10 +11,12 @@ import java.awt.Color
 object CrystalChams : Module("Crystal Chams", Category.RENDER) {
 
     private val throughWalls by boolSetting("Through Walls", false)
+    private val scale by doubleSetting("Scale", 1.0, 0.1..3.0, 0.05)
+    private val spinSpeed by doubleSetting("Spin Speed", 1.0, 0.0..5.0, 0.1)
+    private val floatSpeed by doubleSetting("Float Speed", 1.0, 0.0..5.0, 0.1)
+    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5..5.0, 0.5)
     private val sideColor by colorSetting("Side Color", Color(133, 255, 200, 63))
     private val lineColor by colorSetting("Line Color", Color(133, 255, 200, 200))
-    private val scale by doubleSetting("Scale", 1.0, 0.1..3.0, 0.05)
-    private val lineWidth by doubleSetting("Line Width", 2.0, 0.5..5.0, 0.5)
 
     init {
         safeEventHandler<Render3DEvent> { event ->
@@ -44,7 +46,14 @@ object CrystalChams : Module("Crystal Chams", Category.RENDER) {
             try {
                 for ((entity) in candidates.sortedWith(NEAREST_FIRST)) {
                     WireframeEntityRenderer.render(
-                        event.poseStack, entity, scale, sideColor, lineColor, lineWidth.toFloat()
+                        event.poseStack,
+                        entity,
+                        scale,
+                        sideColor,
+                        lineColor,
+                        lineWidth.toFloat(),
+                        spinSpeed.toFloat(),
+                        floatSpeed.toFloat(),
                     )
                 }
             } finally {
