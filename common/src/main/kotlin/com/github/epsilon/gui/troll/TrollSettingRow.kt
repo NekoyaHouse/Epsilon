@@ -40,18 +40,18 @@ class TrollSettingRow {
     private val progress: Animation = Animation(Easing.EASE_OUT_QUART, 300L)
     private val hover: Animation = Animation(Easing.EASE_OUT_EXPO, 300L)
     private val click: Animation = Animation(Easing.EASE_OUT_CUBIC, 300L)
-    private var bounds: UiRect by mutableStateOf<UiRect>(UiRect(0.0f, 0.0f, 0.0f, 0.0f))
-    private var input: DropdownTextField? by mutableStateOf<DropdownTextField?>(null)
+    private var bounds: UiRect by mutableStateOf(UiRect(0.0f, 0.0f, 0.0f, 0.0f))
+    private var input: DropdownTextField? by mutableStateOf(null)
     private var inputOriginX = 0f
     private var inputOriginY = 0f
     private var originalText: String? = null
-    private var listening: Boolean by mutableStateOf<Boolean>(false)
-    private var dragging: Boolean by mutableStateOf<Boolean>(false)
-    private var pressed: Boolean by mutableStateOf<Boolean>(false)
-    private var enumDragged: Boolean by mutableStateOf<Boolean>(false)
+    private var listening: Boolean by mutableStateOf(false)
+    private var dragging: Boolean by mutableStateOf(false)
+    private var pressed: Boolean by mutableStateOf(false)
+    private var enumDragged: Boolean by mutableStateOf(false)
     private var dragStartX: Double = 0.0
-    private var pendingNumber: Double? by mutableStateOf<Double?>(null)
-    private var pendingEnumIndex: Int by mutableStateOf<Int>(-1)
+    private var pendingNumber: Double? by mutableStateOf(null)
+    private var pendingEnumIndex: Int by mutableStateOf(-1)
 
     constructor(setting: Setting<*>) {
         this.setting = setting

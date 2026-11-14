@@ -88,11 +88,11 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
     private var preeditOverlay: IMEPreeditOverlay? = null
     private var renderFrameId = 0
     private var panelElementCount = -1
-    private var selectedElement: HudModule? by mutableStateOf<HudModule?>(null)
+    private var selectedElement: HudModule? by mutableStateOf(null)
     private var draggingElement: HudModule? = null
     private var dragOffsetX = 0.0f
     private var dragOffsetY = 0.0f
-    private var currentSnap: SnapInfo by mutableStateOf<SnapInfo>(SnapInfo.none())
+    private var currentSnap: SnapInfo by mutableStateOf(SnapInfo.none())
 
     private val textMetrics: TextRenderer = TextRenderer.create()
     private val scene: UiScene = UiScene(EpsilonUiTheme)

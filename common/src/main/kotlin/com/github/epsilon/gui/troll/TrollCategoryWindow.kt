@@ -14,8 +14,8 @@ import java.util.*
 class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
 
     private val rows: MutableMap<Module, TrollSettingRow> = IdentityHashMap()
-    private var visibleModules: List<Module> by mutableStateOf<List<Module>>(emptyList())
-    private var filterStore: String by mutableStateOf<String>("")
+    private var visibleModules: List<Module> by mutableStateOf(emptyList())
+    private var filterStore: String by mutableStateOf("")
 
     private fun title(): String {
         return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.name

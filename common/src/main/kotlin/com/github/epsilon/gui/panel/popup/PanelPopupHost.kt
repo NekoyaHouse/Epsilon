@@ -23,7 +23,7 @@ import net.minecraft.client.input.PreeditEvent
  */
 class PanelPopupHost(private val input: () -> UiInputRouter) {
 
-    var activePopup: Popup? by mutableStateOf<Popup?>(null)
+    var activePopup: Popup? by mutableStateOf(null)
         private set
 
     private var overlayBounds: UiRect? = null

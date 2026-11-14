@@ -22,7 +22,7 @@ class CategoryPanel : AbstractDropdownPanel {
     private var cachedContentHeightFrameId = Int.MIN_VALUE
     private var cachedContentHeight = 0.0f
     private val moduleButtons: MutableList<ModuleButton> = ArrayList()
-    private var queryStore: String by mutableStateOf<String>("")
+    private var queryStore: String by mutableStateOf("")
 
     constructor(category: Category, panelIndex: Int) :
             super("category:$category", TitleSupplier { category.name }, category.icon, panelIndex) {

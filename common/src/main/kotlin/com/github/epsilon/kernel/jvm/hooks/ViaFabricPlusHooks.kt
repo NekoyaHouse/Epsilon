@@ -1,6 +1,7 @@
 package com.github.epsilon.kernel.jvm.hooks
 
 import com.github.epsilon.Constants
+import com.github.epsilon.kernel.state.MutableState
 import com.github.epsilon.kernel.state.StateTracking
 import com.github.epsilon.kernel.state.mutableStateOf
 import net.minecraft.SharedConstants
@@ -23,7 +24,7 @@ object ViaFabricPlusHooks {
     /**
      * 严格的版本限制使用此入口；未加载或查询失败时返回 null。
      */
-    private val uiVersion = mutableStateOf<SupportVersion?>(null)
+    private val uiVersion: MutableState<SupportVersion?> = mutableStateOf(null)
 
     fun refreshUiVersion() {
         uiVersion.value = queryVersion()

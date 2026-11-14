@@ -30,7 +30,7 @@ class TrollConfigWindow(private val popupHost: PanelPopupHost) : TrollWindow() {
     private var listViewport: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var statusBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var metrics: UiTextMetrics? = null
-    private var status: String by mutableStateOf<String>("")
+    private var status: String by mutableStateOf("")
 
     override fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float) {
         this.metrics = metrics

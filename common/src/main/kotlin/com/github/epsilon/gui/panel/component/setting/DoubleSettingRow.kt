@@ -27,9 +27,9 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
     internal var textMetrics: UiTextMetrics? = null
     private var dragging by mutableStateOf(false)
     private var focusedState by mutableStateOf(false)
-    private var inputBuffer: String? by mutableStateOf<String?>(null)
+    private var inputBuffer: String? by mutableStateOf(null)
     internal var cursorIndex by mutableStateOf(0)
-    private var pendingValue: Double? by mutableStateOf<Double?>(null)
+    private var pendingValue: Double? by mutableStateOf(null)
 
     init {
         hoverAnimation.startValue = 0.0f

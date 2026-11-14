@@ -15,15 +15,15 @@ import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 abstract class TrollWindow protected constructor() {
 
     val scroll: TrollScroll = TrollScroll()
-    var bounds: UiRect by mutableStateOf<UiRect>(UiRect(0.0f, 0.0f, 180.0f, 300.0f))
+    var bounds: UiRect by mutableStateOf(UiRect(0.0f, 0.0f, 180.0f, 300.0f))
     /** 相对窗口左上角的内容视口；屏幕位置仅保存在 [bounds]。 */
-    var viewport: UiRect by mutableStateOf<UiRect>(bounds)
-    var headerHeight: Float by mutableStateOf<Float>(0.0f)
-    protected var scrollPosition: Float by mutableStateOf<Float>(0.0f)
+    var viewport: UiRect by mutableStateOf(bounds)
+    var headerHeight: Float by mutableStateOf(0.0f)
+    protected var scrollPosition: Float by mutableStateOf(0.0f)
     private val openAnimation: Animation = Animation(Easing.EASE_OUT_QUART, 300L)
     private var manualWidth: Float = -1.0f
     private var manualHeight: Float = -1.0f
-    private var dragging: Boolean by mutableStateOf<Boolean>(false)
+    private var dragging: Boolean by mutableStateOf(false)
     private var resizing: Boolean = false
     private var resizeEdge: ResizeEdge = ResizeEdge.NONE
     private var resizeStartBounds: UiRect = bounds

@@ -20,7 +20,7 @@ import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 class KeybindWidget(setting: KeybindSetting) : SettingWidget<KeybindSetting>(setting) {
 
     private val hoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
-    private var listening: Boolean by mutableStateOf<Boolean>(false)
+    private var listening: Boolean by mutableStateOf(false)
     private var buttonX: Float = 0.0f
     private var buttonY: Float = 0.0f
     private var buttonW: Float = DropdownTheme.KEYBIND_WIDTH

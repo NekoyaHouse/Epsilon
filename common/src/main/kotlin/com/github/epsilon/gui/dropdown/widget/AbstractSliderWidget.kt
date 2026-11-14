@@ -21,8 +21,8 @@ abstract class AbstractSliderWidget<S : Setting<T>, T : Number>(
 ) : SettingWidget<S>(setting) {
 
     protected val inputField: DropdownTextField = DropdownTextField(maxInputLength, inputFilter)
-    protected var dragging: Boolean by mutableStateOf<Boolean>(false)
-    protected var pendingValue: T? by mutableStateOf<T?>(null)
+    protected var dragging: Boolean by mutableStateOf(false)
+    protected var pendingValue: T? by mutableStateOf(null)
     private var sessionId: Int = -1
 
     override fun getHeight(): Float {

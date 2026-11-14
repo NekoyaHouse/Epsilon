@@ -21,7 +21,7 @@ class StringSettingRow(private val stringSetting: StringSetting) : SettingRow<St
     // 绘制入口是与本类同文件的 [UiScope.StringSettingRow]，度量需要对该扩展函数可见。
     internal var textMetrics: UiTextMetrics? = null
     private var focusedState by mutableStateOf(false)
-    private var inputBuffer: String? by mutableStateOf<String?>(null)
+    private var inputBuffer: String? by mutableStateOf(null)
     private var cursorIndex by mutableStateOf(0)
     private var selectionAnchor by mutableStateOf(-1)
 

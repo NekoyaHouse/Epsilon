@@ -57,10 +57,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private val configToggleHover: Animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
     private var friendWindow: TrollFriendWindow? = null
     private var configWindow: TrollConfigWindow? = null
-    private var friendWindowOpen: Boolean by mutableStateOf<Boolean>(false)
-    private var configWindowOpen: Boolean by mutableStateOf<Boolean>(false)
+    private var friendWindowOpen: Boolean by mutableStateOf(false)
+    private var configWindowOpen: Boolean by mutableStateOf(false)
     private var guiAnimationStarted: Boolean = false
-    private var searchString: String by mutableStateOf<String>("")
+    private var searchString: String by mutableStateOf("")
     private val searchFade = Animation(0.0f, Easing.EASE_IN_CUBIC, SEARCH_TEXT_FADE_MS)
     private var friendToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var configToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
@@ -340,8 +340,8 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
                     Interaction(key = window to "dismiss") {
                         for (button in InputConstants.MOUSE_BUTTON_LEFT..InputConstants.MOUSE_BUTTON_8) onClick(button) {
                             if (window === colorPicker) {
-                                colorPicker?.cancel(); colorPicker = null
-                                windowViews.remove(window)?.close()
+                                colorPicker?.cancel()
+                                closeColorPicker()
                             } else closeSettings()
                             true
                         }
@@ -558,10 +558,18 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
 
         for (window in windows) window.blurInput()
         colorPicker?.cancel()
+        closeColorPicker()
         val created = TrollColorPicker(setting, x.toFloat(), y.toFloat())
         colorPicker = created
         created.startOpenAnimation()
         created.layout(textMetrics.get(), screenWidth(), screenHeight())
+    }
+
+    private fun closeColorPicker() {
+        val previous = colorPicker ?: return
+        colorPicker = null
+        windowViews.remove(previous)?.close()
+        previous.resetInput()
     }
 
     private fun closeSettings() {
@@ -575,8 +583,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
         if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, doubleClick)
+        val modal = settingsWindow != null || colorPicker != null
         val handled = scene.get().input.mouseClicked(mouse, doubleClick)
-        if (settingsWindow == null && colorPicker == null) {
+        if (colorPicker?.isClosed() == true) closeColorPicker()
+        if (!modal && settingsWindow == null && colorPicker == null) {
             hoveredWindow(mouse.x(), mouse.y())?.let { windows.remove(it); windows.add(it) }
         }
         return handled
@@ -621,7 +631,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             } else if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
                 colorPicker.confirm()
             }
-            if (colorPicker.isClosed()) this.colorPicker = null
+            if (colorPicker.isClosed()) closeColorPicker()
             return true
         }
         if (scene.get().input.keyPressed(event)) return true
@@ -718,7 +728,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         endPendingFrame()
         popupHost.close()
         colorPicker?.cancel()
-        colorPicker = null
+        closeColorPicker()
         closeSettings()
         clearSearch()
         for (window in windows) window.resetInput()
