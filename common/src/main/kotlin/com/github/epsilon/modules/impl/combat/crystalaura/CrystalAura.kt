@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat
+package com.github.epsilon.modules.impl.combat.crystalaura
 
 import com.github.epsilon.Constants
 import com.github.epsilon.events.api.EventPriority
@@ -24,7 +24,7 @@ import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.modules.impl.combat.crystalaura.*
+import com.github.epsilon.modules.impl.combat.PacketMine
 import com.github.epsilon.modules.impl.movement.Blink
 import com.github.epsilon.settings.group
 import com.google.common.base.Suppliers

@@ -25,14 +25,6 @@ A modern multi loader Minecraft utility client built on NeoForge & Fabric with a
 
 See [Lumin Graphics README](common/src/main/kotlin/com/github/epsilon/graphics/README.md) for details.
 
-Troll GUI uses the same Lumin UI DSL as Dropdown: cached scenes, local window and setting-row scopes, and declarative input. Window dragging, resizing, search, settings, friends and configuration panels retain their existing behavior.
-
-## Crystal Aura
-
-`Motion Predict` controls collision-aware player target prediction, with `Predict Ticks` (default 8, range 0–20) applying to both placement and breaking damage. Disabling it or setting zero uses current target positions. `Self Extrapolate` and `Extrapolation Ticks` independently control self-damage prediction. Distance, shield direction and exposure use the same predicted position and bounding box; background placement only reads captured snapshots.
-
-`Moving Length` (default 400 ms) smoothly moves the render box between selected positions. `Fade Length` (default 200 ms) controls its cubic fade and centered grow/shrink animation; damage text follows the animated position and opacity. Both accept 0–1000 ms, with zero applying immediately. In `Fade` render mode, `Fade Time` controls how long the last candidate remains before fading out. Rendering follows the selected candidate independently of attack/place delays and rotation readiness.
-
 ## ⚙️ Build & Run
 
 ```bash

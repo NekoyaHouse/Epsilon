@@ -13,6 +13,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.modules.impl.combat.*
+import com.github.epsilon.modules.impl.combat.crystalaura.CrystalAura
 import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
 import com.github.epsilon.modules.impl.combat.trap.AutoTrap
 import com.github.epsilon.modules.impl.combat.trap.FeetTrap
