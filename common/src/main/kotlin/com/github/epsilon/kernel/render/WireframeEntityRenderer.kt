@@ -152,8 +152,10 @@ object WireframeEntityRenderer {
         val pose = renderStack.last()
         drawMatrix = pose.pose()
         linePose = pose
-        sidesBuilder = LuminImmediateRenderer.beginPosColorQuads(if (throughWalls) SIDES_PIPELINE else SIDES_DEPTH_PIPELINE)
-        linesBuilder = LuminImmediateRenderer.beginLines(if (throughWalls) LINES_PIPELINE else LINES_DEPTH_PIPELINE)
+        sidesBuilder =
+            LuminImmediateRenderer.beginPosColorQuads(if (throughWalls) SIDES_PIPELINE else SIDES_DEPTH_PIPELINE)
+        linesBuilder =
+            LuminImmediateRenderer.beginLines(if (throughWalls) LINES_PIPELINE else LINES_DEPTH_PIPELINE)
     }
 
     private fun endDraw() {
