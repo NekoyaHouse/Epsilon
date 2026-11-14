@@ -95,6 +95,19 @@ object LuminRenderPipelines {
         .withCull(false)
         .build()
 
+    /** 原版物品图集和 PIP 纹理保存预乘 alpha；淡出时 RGB 与 alpha 同步衰减。 */
+    val ITEM_TEXTURE: RenderPipeline = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
+        .withLocation(ResourceLocationUtils.getIdentifier("pipelines/item_texture"))
+        .withVertexBinding(0, LuminVertexFormats.TEXTURE)
+        .withPrimitiveTopology(PrimitiveTopology.QUADS)
+        .withVertexShader(ResourceLocationUtils.getIdentifier("texture"))
+        .withFragmentShader(ResourceLocationUtils.getIdentifier("texture"))
+        .withBindGroupLayout(BindGroupLayouts.SAMPLER0)
+        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
+        .withShaderDefine("EPSILON_PREMULTIPLIED_ALPHA")
+        .withCull(false)
+        .build()
+
     val TRIANGLE: RenderPipeline = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipelines/triangle"))
         .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)

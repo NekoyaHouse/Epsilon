@@ -16,6 +16,9 @@ import com.github.epsilon.gui.lib.state.LuminRuntime
 import com.github.epsilon.kernel.render.animation.Animation
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.Block
 import java.awt.Color
 
 /**
@@ -578,6 +581,19 @@ class UiTree private constructor(
             text: String, x: Float, y: Float, scale: Float, color: Color, fontLoader: TtfFontLoader?, clip: UiRect
         ) {
             nodes.add(MarqueeTextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader, resolveRect(clip)))
+        }
+
+        /** 保存堆栈快照；模型动画、冷却和图集槽位由 Canvas 在提交时采样。 */
+        fun item(
+            stack: ItemStack, x: Float, y: Float, size: Float = 16f, color: Color = Color.WHITE,
+            owner: LivingEntity? = null, seed: Int = 0, decorations: Boolean = false, countText: String? = null,
+        ) {
+            if (stack.isEmpty || !size.isFinite() || size <= 0f || color.alpha == 0) return
+            nodes.add(ItemNode(stack.copy(), resolveX(x), resolveY(y), size, color, owner, seed, decorations, countText))
+        }
+
+        fun block(block: Block, x: Float, y: Float, size: Float = 16f, color: Color = Color.WHITE) {
+            item(block.asItem().defaultInstance, x, y, size, color)
         }
 
         fun texture(
@@ -1318,6 +1334,11 @@ class UiTree private constructor(
     data class MarqueeTextNode(
         val text: String, val x: Float, val y: Float, val scale: Float, val color: Color,
         val fontLoader: TtfFontLoader?, val clip: UiRect,
+    ) : UiNode
+
+    data class ItemNode(
+        val stack: ItemStack, val x: Float, val y: Float, val size: Float, val color: Color,
+        val owner: LivingEntity?, val seed: Int, val decorations: Boolean, val countText: String?,
     ) : UiNode
 
     data class TextureNode(

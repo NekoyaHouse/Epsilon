@@ -5,16 +5,10 @@ import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.*
-import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.animation.Animation
 import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.kernel.time.TimerUtils
-import net.minecraft.client.color.block.BlockTintSource
-import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.level.block.state.BlockState
 import java.awt.Color
 import java.util.function.Supplier
 import kotlin.math.abs
@@ -34,8 +28,7 @@ class ScaffoldBlocksInstance(
     private val countAnim = Animation(Easing.DECELERATE, 560)
 
     private val iconRefreshTimer = TimerUtils()
-    private var iconSprite: TextureAtlasSprite? = null
-    private var iconTint: Color = Color.WHITE
+    private var iconStack: ItemStack = ItemStack.EMPTY
 
     private var lastUpdateNs: Long = System.nanoTime()
     private var spinAngleDeg: Float = 0f
@@ -71,13 +64,13 @@ class ScaffoldBlocksInstance(
         lastUpdateNs = nowNs
         spinAngleDeg = (spinAngleDeg + SPIN_DEGREES_PER_SECOND * deltaSeconds) % 360f
 
-        if (iconSprite == null || iconRefreshTimer.every(350L)) {
-            updateIconTexture(iconSupplier.get())
+        if (iconStack.isEmpty || iconRefreshTimer.every(350L)) {
+            iconStack = iconSupplier.get().copy()
         }
     }
 
     override fun draw(scope: UiScope, width: Float, height: Float) {
-        drawBlockTexture(scope, height)
+        drawBlockIcon(scope, height)
 
         val ringRadius = (RING_SIZE - RING_STROKE) / 2f
         val centerX = width - PADDING - RING_SIZE / 2f
@@ -99,32 +92,8 @@ class ScaffoldBlocksInstance(
         drawRollingCount(scope, centerX, centerY)
     }
 
-    private fun updateIconTexture(stack: ItemStack) {
-        iconSprite = null
-        iconTint = Color.WHITE
-        if (stack.isEmpty) return
-        val blockItem = stack.item as? BlockItem ?: return
-
-        val state: BlockState = blockItem.block.defaultBlockState()
-        iconSprite = mc.modelManager.blockStateModelSet.getParticleMaterial(state).sprite()
-
-        val tintSource: BlockTintSource = mc.blockColors.getTintSource(state, 0) ?: return
-        runSafe {
-            val tint = tintSource.colorAsTerrainParticle(state, level, player.blockPosition())
-            iconTint = Color(tint, true)
-        }
-    }
-
-    private fun drawBlockTexture(scope: UiScope, height: Float) {
-        val sprite = iconSprite ?: return
-
-        val iconY = (height - ICON_SIZE) / 2f
-        scope.RoundedTexture(
-            sprite.atlasLocation(),
-            PADDING, iconY, ICON_SIZE, ICON_SIZE, ICON_RADIUS,
-            sprite.u0, sprite.v0, sprite.u1, sprite.v1,
-            fade(iconTint)
-        )
+    private fun drawBlockIcon(scope: UiScope, height: Float) {
+        scope.Item(iconStack, PADDING, (height - ICON_SIZE) / 2f, ICON_SIZE, fade(Color.WHITE))
     }
 
     private fun drawRollingCount(scope: UiScope, centerX: Float, centerY: Float) {
@@ -236,7 +205,6 @@ class ScaffoldBlocksInstance(
 
         private const val PADDING = 6f
         private const val ICON_SIZE = 26f
-        private const val ICON_RADIUS = ICON_SIZE * 0.4f
         private const val GAP = 6f
         private const val RING_SIZE = 26f
         private const val RING_STROKE = 2.5f

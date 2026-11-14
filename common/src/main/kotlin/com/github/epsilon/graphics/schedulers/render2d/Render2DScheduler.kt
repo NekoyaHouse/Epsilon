@@ -9,6 +9,9 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.managers.RendererManager
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.Block
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import java.awt.Color
@@ -28,6 +31,7 @@ class Render2DScheduler : IRenderer {
         }
     private val layerHandles = HashMap<Int, Canvas>()
     private val measureTextRenderer = TextRenderer.create(256 * 1024L)
+    private var itemAtlas: CanvasItemAtlas? = null
     private val pending = OrderedSubmissionQueue<Queued>({ it.layer }, { it.sequence })
     private val transient = ArrayList<Render2DCommand>()
     private val retained = LinkedHashMap<RecordKey, DisplayList>(64, 0.75f, true)
@@ -139,7 +143,8 @@ class Render2DScheduler : IRenderer {
         list.lastFrame = frame
         for (batch in list.batches) {
             val bounds = batch.bounds
-            if (clip != null) {
+            // 物品可能超出 16x16 槽位，实际模型边界在提交前解析，不能按槽位提前剔除。
+            if (clip != null && batch.items.isEmpty()) {
                 val transform = properties.transform
                 val xs = floatArrayOf(
                     transform.mapX(bounds.x, bounds.y),
@@ -206,8 +211,24 @@ class Render2DScheduler : IRenderer {
         val selected = pending.consume(layer)
         if (selected.isEmpty()) return
         val start = System.nanoTime()
+        val dynamic = ArrayList<CompiledBatch>()
         try {
-            executor.execute(selected.map { queued ->
+            val items = selected.flatMap { it.batch.items }
+            val itemCommands = if (items.isEmpty()) emptyMap() else {
+                val atlas = itemAtlas ?: CanvasItemAtlas(measureTextRenderer).also { itemAtlas = it }
+                atlas.prepare(items)
+            }
+            val expanded = selected.flatMap { queued ->
+                if (queued.batch.items.isEmpty()) listOf(queued)
+                else {
+                    val commands = queued.batch.items.flatMap { itemCommands.getValue(it) }
+                    compile(commands, temporary = true).map { batch ->
+                        dynamic.add(batch)
+                        queued.copy(batch = batch)
+                    }
+                }
+            }
+            executor.execute(expanded.map { queued ->
                 val clip = intersect(queued.batch.scissor, queued.clip)
                 Render2DExecutor.Draw(
                     pipelineFor(queued.batch.kind), queued.properties,
@@ -215,6 +236,7 @@ class Render2DScheduler : IRenderer {
                     { pass -> queued.batch.renderers.applyScissor(clip); queued.batch.renderers.draw(pass) })
             })
         } finally {
+            dynamic.forEach { it.renderers.close() }
             selected.filter { it.batch.temporary }.forEach { it.batch.renderers.close() }
             releaseDeferred()
             arena.seal()
@@ -242,6 +264,7 @@ class Render2DScheduler : IRenderer {
     }
 
     private fun Render2DCommand.local(ox: Float, oy: Float): Render2DCommand = when (this) {
+        is Render2DCommand.Item -> copy(bounds = bounds.copy(x = bounds.x - ox, y = bounds.y - oy), scissor = null)
         is Render2DCommand.Shadow -> copy(
             bounds = Render2DBounds.of(
                 bounds.x - ox,
@@ -383,7 +406,10 @@ class Render2DScheduler : IRenderer {
                     stats.geometryBuilds++
                     stats.geometryNanos += System.nanoTime() - buildStart
                     val bounds = group.commands.map { it.orderingBounds() }.reduce { a, b -> a.include(b) }
-                    result.add(CompiledBatch(first.kind(), first.scissor, first.sequence, bundle, temporary, bounds))
+                    result.add(CompiledBatch(
+                        first.kind(), first.scissor, first.sequence, bundle, temporary, bounds,
+                        group.commands.filterIsInstance<Render2DCommand.Item>()
+                    ))
                 } catch (failure: Throwable) {
                     bundle.close(); throw failure
                 }
@@ -457,7 +483,8 @@ class Render2DScheduler : IRenderer {
 
     private data class CompiledBatch(
         val kind: Render2DCommandKind, val scissor: Render2DScissor?, val sequence: Long,
-        val renderers: RendererBundle, val temporary: Boolean, val bounds: Render2DBounds
+        val renderers: RendererBundle, val temporary: Boolean, val bounds: Render2DBounds,
+        val items: List<Render2DCommand.Item> = emptyList(),
     )
 
     private data class Queued(
@@ -469,6 +496,8 @@ class Render2DScheduler : IRenderer {
         if (closed) return
         clear()
         resetCache()
+        itemAtlas?.close()
+        itemAtlas = null
         measureTextRenderer.close()
         executor.close()
         arena.close()
@@ -485,6 +514,8 @@ class Render2DScheduler : IRenderer {
         Render2DCommandKind.TRIANGLE -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.ARC -> LuminRenderPipelines.ARC
         Render2DCommandKind.TEXTURE -> LuminRenderPipelines.TEXTURE
+        Render2DCommandKind.PREMULTIPLIED_TEXTURE -> LuminRenderPipelines.ITEM_TEXTURE
+        Render2DCommandKind.ITEM -> error("Item commands must be resolved before drawing")
         Render2DCommandKind.BLUR_TEXT -> LuminRenderPipelines.TTF_FONT_BLUR
         Render2DCommandKind.GLITCH_TEXT -> LuminRenderPipelines.TTF_FONT_GLITCH
         Render2DCommandKind.TEXT -> LuminRenderPipelines.TTF_FONT
@@ -492,6 +523,7 @@ class Render2DScheduler : IRenderer {
 
     private fun emit(command: Render2DCommand, renderers: RendererBundle) {
         when (command) {
+            is Render2DCommand.Item -> Unit // 模型及动画在 flush 时准备，不写入静态 display list。
             is Render2DCommand.Shadow -> renderers.shadowRenderer().addShadow(
                 command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
                 command.radiusTopLeft, command.radiusTopRight, command.radiusBottomRight, command.radiusBottomLeft,
@@ -708,6 +740,23 @@ class Render2DScheduler : IRenderer {
 
         fun clearScissor() {
             currentScissor = null
+        }
+
+        /** 物品是 16x16 GUI 模型；size 使用 Canvas 坐标，提交时采样原版模型与动画。 */
+        fun addItem(
+            stack: ItemStack, x: Float, y: Float, size: Float = 16f, color: Color = Color.WHITE,
+            owner: LivingEntity? = null, seed: Int = 0, decorations: Boolean = false, countText: String? = null,
+        ) {
+            if (stack.isEmpty || !size.isFinite() || size <= 0f || color.alpha == 0) return
+            scheduler.add(Render2DCommand.Item(
+                layerIndex, scheduler.nextSequence(), Render2DBounds.of(x, y, size, size), currentScissor,
+                stack.copy(), color, owner, seed, decorations, countText
+            ))
+        }
+
+        /** 方块的背包模型；无物品形态的方块不绘制。 */
+        fun addBlock(block: Block, x: Float, y: Float, size: Float = 16f, color: Color = Color.WHITE) {
+            addItem(block.asItem().defaultInstance, x, y, size, color)
         }
 
         fun addShadow(x: Float, y: Float, width: Float, height: Float, radius: Float, blurRadius: Float, color: Color) {
@@ -1190,6 +1239,8 @@ class Render2DScheduler : IRenderer {
                 Render2DCommandKind.TRIANGLE -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.ARC -> RendererBundle(kind, ArcRenderer.create())
                 Render2DCommandKind.TEXTURE -> RendererBundle(kind, TextureRenderer.create())
+                Render2DCommandKind.PREMULTIPLIED_TEXTURE -> RendererBundle(kind, TextureRenderer.create())
+                Render2DCommandKind.ITEM -> RendererBundle(kind, TextureRenderer.create())
                 Render2DCommandKind.BLUR_TEXT -> RendererBundle(kind, TextRenderer.createFontBlur())
                 Render2DCommandKind.GLITCH_TEXT -> RendererBundle(kind, TextRenderer.createGlitch())
                 Render2DCommandKind.TEXT -> RendererBundle(kind, TextRenderer.create())

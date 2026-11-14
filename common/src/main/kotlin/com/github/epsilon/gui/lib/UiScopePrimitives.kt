@@ -5,6 +5,9 @@ import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import net.minecraft.resources.Identifier
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.Block
 import java.awt.Color
 
 /*
@@ -262,6 +265,19 @@ fun UiScope.MarqueeText(
 // ---------------------------------------------------------------------------
 // 纹理
 // ---------------------------------------------------------------------------
+
+/** 原版 GUI 物品模型，与其他 Canvas 图元共享变换、裁剪、透明度和提交顺序。 */
+fun UiScope.Item(
+    stack: ItemStack, x: Float, y: Float, size: Float = 16f, color: Color = Color.WHITE,
+    owner: LivingEntity? = null, seed: Int = 0, decorations: Boolean = false, countText: String? = null,
+) {
+    tree.item(stack, x, y, size, color, owner, seed, decorations, countText)
+}
+
+/** 方块物品预览，使用资源包定义的背包模型。 */
+fun UiScope.Block(block: Block, x: Float, y: Float, size: Float = 16f, color: Color = Color.WHITE) {
+    tree.block(block, x, y, size, color)
+}
 
 fun UiScope.Texture(
     texture: Render2DTexture, x: Float, y: Float, width: Float, height: Float,

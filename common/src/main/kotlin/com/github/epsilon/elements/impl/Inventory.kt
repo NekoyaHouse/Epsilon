@@ -5,11 +5,8 @@ import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.RoundRect
 import com.github.epsilon.gui.lib.Shadow
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.kernel.jvm.NonNullContext
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.gui.lib.Item
 import net.minecraft.client.DeltaTracker
-import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.world.item.ItemStack
 import java.awt.Color
 
 /**
@@ -71,44 +68,13 @@ object Inventory : HudModule("Inventory HUD", 0f, 0f, 180f, 80f) {
                 val slotX = padding + col * (slotSize + gap)
                 val slotY = padding + row * (slotSize + gap)
                 RoundRect(slotX, slotY, slotSize, slotSize, slotRadius, slotColor)
+                val stack = mc.player?.inventory?.getItem(9 + row * 9 + col) ?: continue
+                Item(
+                    stack, slotX + scale, slotY + scale, 16f * scale,
+                    decorations = showCount && stack.count > 1
+                )
             }
         }
-    }
-
-    override fun renderOverlay(graphics: GuiGraphicsExtractor, deltaTracker: DeltaTracker) {
-        runSafe { renderItems(graphics) }
-    }
-
-    context(nn: NonNullContext)
-    private fun renderItems(graphics: GuiGraphicsExtractor) {
-        val scale = this.scale.toFloat()
-        val slotSize = SLOT_SIZE * scale
-        val gap = SLOT_GAP * scale
-        val padding = PADDING * scale
-
-        for (row in 0 until 3) {
-            for (col in 0 until 9) {
-                val slotIndex = 9 + row * 9 + col
-                val stack = nn.player.inventory.getItem(slotIndex)
-                if (!stack.isEmpty) {
-                    // 物品 overlay 走 GuiGraphics，绝对坐标（与 HUD 元素持久化位置一致）
-                    val slotX = x + padding + col * (slotSize + gap)
-                    val slotY = y + padding + row * (slotSize + gap)
-                    drawItem(graphics, stack, slotX, slotY, scale)
-                }
-            }
-        }
-    }
-
-    private fun drawItem(graphics: GuiGraphicsExtractor, stack: ItemStack, slotX: Float, slotY: Float, scale: Float) {
-        graphics.pose().pushMatrix()
-        graphics.pose().translate(slotX + scale, slotY + scale)
-        graphics.pose().scale(scale, scale)
-        graphics.item(stack, 0, 0)
-        if (showCount && stack.count > 1) {
-            graphics.itemDecorations(mc.font, stack, 0, 0, stack.count.toString())
-        }
-        graphics.pose().popMatrix()
     }
 
 }

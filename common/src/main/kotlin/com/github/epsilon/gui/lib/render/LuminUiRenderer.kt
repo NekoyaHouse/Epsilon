@@ -115,6 +115,13 @@ object LuminUiRenderer {
                 layer.addText(node.text, node.x, node.y, node.scale, node.color, node.fontLoader)
             }
 
+            is UiTree.ItemNode -> {
+                layer.addItem(
+                    node.stack, node.x, node.y, node.size, node.color, node.owner, node.seed,
+                    node.decorations, node.countText
+                )
+            }
+
             is UiTree.TextureNode -> {
                 layer.addRoundedTexture(
                     node.texture, node.x, node.y, node.width, node.height,

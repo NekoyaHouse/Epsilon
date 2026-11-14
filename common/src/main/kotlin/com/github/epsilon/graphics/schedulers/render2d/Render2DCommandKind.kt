@@ -8,6 +8,8 @@ enum class Render2DCommandKind {
     TRIANGLE,
     ARC,
     TEXTURE,
+    PREMULTIPLIED_TEXTURE,
+    ITEM,
     BLUR_TEXT,
     GLITCH_TEXT,
     TEXT
