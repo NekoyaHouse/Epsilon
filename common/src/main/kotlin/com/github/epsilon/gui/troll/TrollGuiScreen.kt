@@ -2,6 +2,7 @@ package com.github.epsilon.gui.troll
 
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTransform
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
@@ -47,7 +48,7 @@ import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
 
-    private val textMetrics: Supplier<TextRenderer> = Suppliers.memoize(Supplier { TextRenderer.create() })
+    private val textMetrics: Supplier<UiTextMetrics> = Suppliers.memoize(Supplier { TextRenderer.create().asUiTextMetrics() })
     private val scene: Supplier<UiScene> = Suppliers.memoize(Supplier { UiScene(EpsilonUiTheme) })
     private val windows: MutableList<TrollWindow> = ArrayList()
     private val popupHost: PanelPopupHost = PanelPopupHost { scene.get().input }
@@ -56,10 +57,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     private val configToggleHover: Animation = Animation(Easing.EASE_OUT_CUBIC, 120L)
     private var friendWindow: TrollFriendWindow? = null
     private var configWindow: TrollConfigWindow? = null
-    private var friendWindowOpen: Boolean by mutableStateOf<Boolean>(false)
-    private var configWindowOpen: Boolean by mutableStateOf<Boolean>(false)
+    private var friendWindowOpen: Boolean by mutableStateOf(false)
+    private var configWindowOpen: Boolean by mutableStateOf(false)
     private var guiAnimationStarted: Boolean = false
-    private var searchString: String by mutableStateOf<String>("")
+    private var searchString: String by mutableStateOf("")
     private val searchFade = Animation(0.0f, Easing.EASE_IN_CUBIC, SEARCH_TEXT_FADE_MS)
     private var friendToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
     private var configToggleBounds: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
@@ -245,12 +246,11 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             graphics.blurBeforeThisStratum()
             pendingBackground = frame.batch(UiLayer.BACKGROUND)
             if (GuiSetting.background) {
-                val backgroundAlpha = (144.0f * openProgress).roundToInt()
-                pendingBackground!!.render(
-                    frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), "troll-pass-1") { scope ->
-                        scope.rect(0.0f, 0.0f, pendingFrameWidth, pendingFrameHeight, Color(0, 0, 0, backgroundAlpha))
-                    }
-                )
+                pendingBackground!!.LuminUIScene(
+                    UiRect(0f, 0f, pendingFrameWidth, pendingFrameHeight), key = "background"
+                ) {
+                    Fill(Color(0, 0, 0, (144f * guiOpenAnimation.value).roundToInt()))
+                }
             }
             val modal = settingsWindow != null || colorPicker != null || popupHost.activePopup != null
             val hovered = if (modal) null else hoveredWindow(mx.toDouble(), my.toDouble())
@@ -314,16 +314,14 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         }
     }
 
-    private fun queueWindow(frame: UiScene, layer: UiLayer, relativeLayer: Int, bounds: UiRect, tree: UiTree) {
-        queueWindow(frame, layer, relativeLayer, bounds, tree, null, null, 0)
-    }
-
+    /** 每个离屏/模糊 pass 提交一个可重组的 DSL 场景，批次继续由渲染阶段依次消费。 */
     private fun queueWindow(
-        frame: UiScene, layer: UiLayer, relativeLayer: Int, bounds: UiRect, tree: UiTree,
-        blurRects: FloatArray?, blurRadii: FloatArray?, blurSegmentCount: Int, blur: Boolean = true,
+        frame: UiScene, layer: UiLayer, relativeLayer: Int, bounds: UiRect, key: Any,
+        blurRects: FloatArray? = null, blurRadii: FloatArray? = null, blurSegmentCount: Int = 0,
+        blur: Boolean = true, content: UiScope.() -> Unit,
     ) {
         val batch = frame.batch(layer, relativeLayer)
-        batch.render(tree)
+        batch.LuminUIScene(UiRect(0f, 0f, screenWidth(), screenHeight()), key = key, block = content)
         pendingWindows.add(WindowPass(bounds, batch, false, blurRects, blurRadii, blurSegmentCount, blur))
     }
 
@@ -334,24 +332,16 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     ) {
         windowViews.getOrPut(window) { LuminView() }.render(mouseX, mouseY) {
             val windowProgress = window.getOpenProgress()
-            val fullHeight = window.bounds.height
-            val revealHeight = window.headerHeight + maxOf(0.0f, fullHeight - window.headerHeight) * windowProgress
+            val revealHeight = window.headerHeight + maxOf(0f, window.bounds.height - window.headerHeight) * windowProgress
             if (revealHeight <= 0.01f) return@render
-
-            val clip = UiRect(window.bounds.x, window.bounds.y, window.bounds.width, revealHeight)
-            val passBounds =
-                UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
-            val tree = frame.LuminUITree(
-                UiRect(0.0f, 0.0f, screenWidth(), screenHeight()),
-                window,
-                inputLayer = layer.baseLayer() + relativeLayer
-            ) { scope ->
+            val passBounds = UiRect(window.bounds.x, window.bounds.y + guiOpenOffsetY, window.bounds.width, revealHeight)
+            queueWindow(frame, layer, relativeLayer, passBounds, window) {
                 if (window === settingsWindow || window === colorPicker) {
-                    scope.asUiScope(textMetrics.get()).Interaction(key = window to "dismiss") {
+                    Interaction(key = window to "dismiss") {
                         for (button in InputConstants.MOUSE_BUTTON_LEFT..InputConstants.MOUSE_BUTTON_8) onClick(button) {
                             if (window === colorPicker) {
-                                colorPicker?.cancel(); colorPicker = null
-                                windowViews.remove(window)?.close()
+                                colorPicker?.cancel()
+                                closeColorPicker()
                             } else closeSettings()
                             true
                         }
@@ -361,43 +351,23 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
                 LuminRuntime.currentComposition!!.retain(window.scroll) {
                     AutoCloseable { window.scroll.close() }
                 }
-                scope.pushAbsolute(0.0f, guiOpenOffsetY) { translated ->
-                    translated.scissor(clip) { content ->
-                        window.bindInput(content, textMetrics.get())
-                        window.draw(content, textMetrics.get(), mouseX, mouseY)
+                Transform({ Render2DTransform.translation(0f, guiOpenOffsetY) }) {
+                    Clip({
+                        val bounds = window.bounds
+                        UiRect(bounds.x, bounds.y, bounds.width,
+                            window.headerHeight + maxOf(0f, bounds.height - window.headerHeight) * window.getOpenProgress())
+                    }) {
+                        LuminUIGroup("content") {
+                            window.drawInScope(this, mouseX, mouseY)
+                        }
                     }
                 }
             }
-            queueWindow(frame, layer, relativeLayer, passBounds, tree)
         }
     }
 
     private fun renderToggleButtons(frame: UiScene, mouseX: Int, mouseY: Int) {
-        if (friendToggleBounds.width <= 0.0f || configToggleBounds.width <= 0.0f) return
-        val tree = frame.LuminUITree(
-            UiRect(0.0f, 0.0f, screenWidth(), screenHeight()),
-            "troll-pass-3",
-            inputLayer = UiLayer.FLOATING.baseLayer() - 90
-        ) { scope ->
-            drawToggleButton(
-                scope,
-                friendToggleBounds,
-                IconChars.PEOPLE,
-                friendWindowOpen,
-                mouseX,
-                mouseY,
-                friendToggleHover
-            )
-            drawToggleButton(
-                scope,
-                configToggleBounds,
-                IconChars.SETTINGS,
-                configWindowOpen,
-                mouseX,
-                mouseY,
-                configToggleHover
-            )
-        }
+        if (friendToggleBounds.width <= 0f || configToggleBounds.width <= 0f) return
         val left = minOf(friendToggleBounds.x, configToggleBounds.x)
         val top = minOf(friendToggleBounds.y, configToggleBounds.y)
         val right = maxOf(friendToggleBounds.right(), configToggleBounds.right())
@@ -406,57 +376,44 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             friendToggleBounds.x, friendToggleBounds.y, friendToggleBounds.width, friendToggleBounds.height,
             configToggleBounds.x, configToggleBounds.y, configToggleBounds.width, configToggleBounds.height
         )
-        val blurRadii = floatArrayOf(
-            friendToggleBounds.width * 0.5f,
-            configToggleBounds.width * 0.5f
-        )
+        val blurRadii = floatArrayOf(friendToggleBounds.width * 0.5f, configToggleBounds.width * 0.5f)
         queueWindow(
-            frame,
-            UiLayer.FLOATING,
-            -90,
-            UiRect(left, top, right - left, bottom - top),
-            tree,
-            blurRects,
-            blurRadii,
-            2
-        )
-    }
-
-    private fun drawToggleButton(
-        scope: UiTree.Scope, bounds: UiRect, icon: String, active: Boolean,
-        mouseX: Int, mouseY: Int, hoverAnimation: Animation,
-    ) {
-        scope.asUiScope(textMetrics.get()).Interaction(key = icon, bounds = bounds) {
-            onClick {
-                if (icon == IconChars.PEOPLE) toggleFriendWindow() else toggleConfigWindow()
-                true
+            frame, UiLayer.FLOATING, -90, UiRect(left, top, right - left, bottom - top), "toggles",
+            blurRects, blurRadii, 2
+        ) {
+            LuminUIGroup("friend") {
+                ToggleButton(friendToggleBounds, IconChars.PEOPLE, friendWindowOpen, mouseX, mouseY, friendToggleHover)
+            }
+            LuminUIGroup("config") {
+                ToggleButton(configToggleBounds, IconChars.SETTINGS, configWindowOpen, mouseX, mouseY, configToggleHover)
             }
         }
+    }
 
-        val hover = scope.animate(hoverAnimation, bounds.contains(mouseX.toDouble(), mouseY.toDouble()))
-        val radius = bounds.width * 0.5f
-        val backgroundAlpha = if (active) (205 + 50 * hover).toInt() else (120 + 40 * hover).toInt()
-        val background = if (active) {
-            TrollTheme.alpha(TrollTheme.primary(), backgroundAlpha)
-        } else {
-            Color(0, 0, 0, backgroundAlpha)
-        }
-        scope.layer(TrollZ.Highlight) { z ->
-            z.roundRect(bounds.x, bounds.y, bounds.width, bounds.height, radius, background)
-        }
-        val metrics = textMetrics.get()
-        val iconScale = 0.92f
-        val iconWidth = metrics.getWidth(icon, iconScale, StaticFontLoader.ICONS)
-        val iconHeight = metrics.getHeight(iconScale, StaticFontLoader.ICONS)
-        scope.layer(TrollZ.Content) { z ->
-            z.textWithShadow(
-                icon,
-                bounds.centerX() - iconWidth * 0.5f,
-                bounds.centerY() - iconHeight * 0.5f,
-                iconScale,
-                if (active) TrollTheme.text() else TrollTheme.alpha(TrollTheme.text(), 220),
-                StaticFontLoader.ICONS
-            )
+    private fun UiScope.ToggleButton(
+        bounds: UiRect, icon: String, active: Boolean, mouseX: Int, mouseY: Int, hoverAnimation: Animation,
+    ) {
+        Positioned(bounds.x, bounds.y, bounds.width, bounds.height) {
+            Interaction(key = icon) {
+                onClick {
+                    if (icon == IconChars.PEOPLE) toggleFriendWindow() else toggleConfigWindow()
+                    true
+                }
+            }
+            val hover = animate(hoverAnimation, bounds.contains(mouseX.toDouble(), mouseY.toDouble()))
+            val backgroundAlpha = if (active) (205 + 50 * hover).toInt() else (120 + 40 * hover).toInt()
+            val background = if (active) TrollTheme.alpha(TrollTheme.primary(), backgroundAlpha)
+                else Color(0, 0, 0, backgroundAlpha)
+            Layer(TrollZ.Highlight) { RoundRect(0f, 0f, width, height, width * 0.5f, background) }
+            val iconScale = 0.92f
+            val iconWidth = metrics.textWidth(icon, iconScale, StaticFontLoader.ICONS)
+            val iconHeight = metrics.textHeight(iconScale, StaticFontLoader.ICONS)
+            Layer(TrollZ.Content) {
+                TextWithShadow(
+                    icon, (width - iconWidth) * 0.5f, (height - iconHeight) * 0.5f, iconScale,
+                    if (active) TrollTheme.text() else TrollTheme.alpha(TrollTheme.text(), 220), StaticFontLoader.ICONS
+                )
+            }
         }
     }
 
@@ -601,10 +558,18 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
 
         for (window in windows) window.blurInput()
         colorPicker?.cancel()
+        closeColorPicker()
         val created = TrollColorPicker(setting, x.toFloat(), y.toFloat())
         colorPicker = created
         created.startOpenAnimation()
         created.layout(textMetrics.get(), screenWidth(), screenHeight())
+    }
+
+    private fun closeColorPicker() {
+        val previous = colorPicker ?: return
+        colorPicker = null
+        windowViews.remove(previous)?.close()
+        previous.resetInput()
     }
 
     private fun closeSettings() {
@@ -618,8 +583,10 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         val mouse = LuminRenderSystem.toEpsilonMouseEvent(event)
         if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, doubleClick)
+        val modal = settingsWindow != null || colorPicker != null
         val handled = scene.get().input.mouseClicked(mouse, doubleClick)
-        if (settingsWindow == null && colorPicker == null) {
+        if (colorPicker?.isClosed() == true) closeColorPicker()
+        if (!modal && settingsWindow == null && colorPicker == null) {
             hoveredWindow(mouse.x(), mouse.y())?.let { windows.remove(it); windows.add(it) }
         }
         return handled
@@ -664,7 +631,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
             } else if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
                 colorPicker.confirm()
             }
-            if (colorPicker.isClosed()) this.colorPicker = null
+            if (colorPicker.isClosed()) closeColorPicker()
             return true
         }
         if (scene.get().input.keyPressed(event)) return true
@@ -715,38 +682,19 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
 
     private fun renderSearchText(frame: UiScene) {
         if (searchString.isBlank()) return
-        val alpha = (255.0f * searchFade.value).roundToInt()
-        if (alpha <= 0) return
-        val metrics = textMetrics.get()
-        val text = TrollTheme.trim(
-            searchString,
-            metrics,
-            SEARCH_TEXT_SCALE,
-            screenWidth() - SEARCH_TEXT_MARGIN * 2.0f
-        )
-        if (text.isEmpty()) return
-        val width = metrics.getWidth(text, SEARCH_TEXT_SCALE)
-        val height = metrics.getHeight(SEARCH_TEXT_SCALE)
-        val tree = frame.LuminUITree(UiRect(0.0f, 0.0f, screenWidth(), screenHeight()), "troll-pass-4") { scope ->
-            scope.textWithShadow(
-                text,
-                (screenWidth() - width) * 0.5f,
-                (screenHeight() - height) * 0.5f,
-                SEARCH_TEXT_SCALE,
-                TrollTheme.alpha(TrollTheme.text(), alpha)
-            )
-        }
         queueWindow(
-            frame,
-            UiLayer.OVERLAY,
-            -1,
-            UiRect(0.0f, 0.0f, screenWidth(), screenHeight()),
-            tree,
-            null,
-            null,
-            0,
-            false
-        )
+            frame, UiLayer.OVERLAY, -1, UiRect(0f, 0f, screenWidth(), screenHeight()), "search", blur = false
+        ) {
+            val alpha = (255f * searchFade.value).roundToInt()
+            if (alpha > 0) {
+                val text = TrollTheme.trim(searchString, metrics, SEARCH_TEXT_SCALE, width - SEARCH_TEXT_MARGIN * 2f)
+                TextWithShadow(
+                    text, (width - metrics.textWidth(text, SEARCH_TEXT_SCALE)) * 0.5f,
+                    (height - metrics.textHeight(SEARCH_TEXT_SCALE)) * 0.5f,
+                    SEARCH_TEXT_SCALE, TrollTheme.alpha(TrollTheme.text(), alpha)
+                )
+            }
+        }
     }
 
     override fun preeditUpdated(event: PreeditEvent?): Boolean {
@@ -780,7 +728,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         endPendingFrame()
         popupHost.close()
         colorPicker?.cancel()
-        colorPicker = null
+        closeColorPicker()
         closeSettings()
         clearSearch()
         for (window in windows) window.resetInput()

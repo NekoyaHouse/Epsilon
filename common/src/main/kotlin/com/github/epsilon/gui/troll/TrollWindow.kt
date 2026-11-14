@@ -1,11 +1,7 @@
 package com.github.epsilon.gui.troll
 
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.InputRegion
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
@@ -19,14 +15,15 @@ import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 abstract class TrollWindow protected constructor() {
 
     val scroll: TrollScroll = TrollScroll()
-    var bounds: UiRect by mutableStateOf<UiRect>(UiRect(0.0f, 0.0f, 180.0f, 300.0f))
-    var viewport: UiRect by mutableStateOf<UiRect>(bounds)
-    var headerHeight: Float by mutableStateOf<Float>(0.0f)
-    protected var scrollPosition: Float by mutableStateOf<Float>(0.0f)
+    var bounds: UiRect by mutableStateOf(UiRect(0.0f, 0.0f, 180.0f, 300.0f))
+    /** 相对窗口左上角的内容视口；屏幕位置仅保存在 [bounds]。 */
+    var viewport: UiRect by mutableStateOf(bounds)
+    var headerHeight: Float by mutableStateOf(0.0f)
+    protected var scrollPosition: Float by mutableStateOf(0.0f)
     private val openAnimation: Animation = Animation(Easing.EASE_OUT_QUART, 300L)
     private var manualWidth: Float = -1.0f
     private var manualHeight: Float = -1.0f
-    private var dragging: Boolean by mutableStateOf<Boolean>(false)
+    private var dragging: Boolean by mutableStateOf(false)
     private var resizing: Boolean = false
     private var resizeEdge: ResizeEdge = ResizeEdge.NONE
     private var resizeStartBounds: UiRect = bounds
@@ -39,25 +36,29 @@ abstract class TrollWindow protected constructor() {
         openAnimation.startValue = 0.0f
     }
 
-    abstract fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float)
+    abstract fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float)
 
-    abstract fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int)
+    /** 绘制使用局部坐标，鼠标参数保留宿主屏幕坐标（包括屏蔽 hover 的哨兵值）。 */
+    abstract fun UiScope.draw(mouseX: Int, mouseY: Int)
 
-    fun bindInput(scope: UiTree.Scope, metrics: TextRenderer) {
-        val ui = scope.asUiScope(TrollTheme.metrics(metrics))
-        val origin = ui.origin
-        fun eventInModel(event: MouseButtonEvent) =
-            MouseButtonEvent(event.x() - origin.x, event.y() - origin.y, event.buttonInfo())
-        ui.InputRegion(
-            key = this, bounds = bounds,
-            onPress = { event, _ ->
-                val pointer = eventInModel(event)
-                mouseClicked(pointer) || bounds.contains(pointer.x(), pointer.y())
-            },
-            onDrag = { event, _, _ -> mouseDragged(eventInModel(event)) },
-            onRelease = { event -> mouseReleased(eventInModel(event)); true },
+    /** 窗口内容与输入区域都使用窗口内的局部坐标。 */
+    fun drawInScope(scope: UiScope, mouseX: Int, mouseY: Int) {
+        scope.Positioned(bounds.x, bounds.y, bounds.width, bounds.height) {
+            bindInput()
+            draw(mouseX, mouseY)
+        }
+    }
+
+    private fun UiScope.bindInput() {
+        // 拖拽/缩放模型使用屏幕坐标；路由提供变换前坐标，排除开场动画的偏移。
+        InputRegion(
+            key = this@TrollWindow, screenCoordinates = false,
+            onPress = { event, _ -> mouseClicked(event) || bounds.contains(event.x(), event.y()) },
+            onDrag = { event, _, _ -> mouseDragged(event) },
+            onRelease = { event -> mouseReleased(event); true },
             onCancel = ::resetInput, onKey = ::keyPressed, onText = ::charTyped, onBlur = ::blurInput,
-            onScroll = { x, y, _, amount -> mouseScrolled(x - origin.x, y - origin.y, amount) })
+            onScroll = { x, y, _, amount -> mouseScrolled(x - origin.x, y - origin.y, amount) }
+        )
     }
 
     fun startOpenAnimation() {
@@ -249,8 +250,8 @@ abstract class TrollWindow protected constructor() {
 
     private fun updateViewport() {
         viewport = UiRect(
-            bounds.x + TrollTheme.xMargin(),
-            bounds.y + headerHeight,
+            TrollTheme.xMargin(),
+            headerHeight,
             maxOf(1.0f, bounds.width - TrollTheme.xMargin() * 2.0f),
             maxOf(0.0f, bounds.height - headerHeight)
         )

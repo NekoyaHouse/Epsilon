@@ -1,13 +1,13 @@
 package com.github.epsilon.gui.troll
 
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTextMetrics
-import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.modules.impl.GuiSetting
 import java.awt.Color
+
+/** 局部矩形转换到屏幕坐标后查询；鼠标参数不做整数减法，保留宿主 hover 探针的坐标基准。 */
+internal fun UiScope.isHovered(mouseX: Int, mouseY: Int, bounds: UiRect = size): Boolean =
+    bounds.translate(origin.x, origin.y).contains(mouseX.toDouble(), mouseY.toDouble())
 
 object TrollTheme {
 
@@ -30,12 +30,12 @@ object TrollTheme {
         return GuiSetting.yMargin.toFloat()
     }
 
-    fun rowHeight(metrics: TextRenderer): Float {
-        return metrics.getHeight(TEXT_SCALE) + 4.5f
+    fun rowHeight(metrics: UiTextMetrics): Float {
+        return metrics.textHeight(TEXT_SCALE) + 4.5f
     }
 
-    fun headerHeight(metrics: TextRenderer): Float {
-        return metrics.getHeight(TEXT_SCALE) + 9.0f
+    fun headerHeight(metrics: UiTextMetrics): Float {
+        return metrics.textHeight(TEXT_SCALE) + 9.0f
     }
 
     fun alpha(color: Color, alpha: Int): Color {
@@ -47,54 +47,33 @@ object TrollTheme {
         )
     }
 
-    fun window(scope: UiTree.Scope, bounds: UiRect, headerHeight: Float, title: String, metrics: TextRenderer) {
-        val titleBar = GuiSetting.titleBar
-        val background = GuiSetting.backgroundColor
-        scope.rect(bounds.x, bounds.y, bounds.width, bounds.height, background)
-        if (titleBar) {
-            scope.rect(bounds.x, bounds.y, bounds.width, headerHeight, primary())
+    fun UiScope.Window(headerHeight: Float, title: String) {
+        Fill(GuiSetting.backgroundColor)
+        if (GuiSetting.titleBar) {
+            Rect(0f, 0f, width, headerHeight, primary())
         }
-        scope.layer(TrollZ.Text) { z ->
-            z.textWithShadow(
-                trim(title, metrics, TEXT_SCALE, bounds.width - 9.0f),
-                bounds.x + 4.5f,
-                bounds.y + 4.5f,
-                TEXT_SCALE,
-                text()
-            )
+        Layer(TrollZ.Text) {
+            TextWithShadow(trim(title, metrics, TEXT_SCALE, width - 9f), 4.5f, 4.5f, TEXT_SCALE, text())
         }
         if (GuiSetting.windowOutline) {
-            scope.layer(TrollZ.Content) { z ->
-                z.rectOutline(bounds.x, bounds.y, bounds.width, bounds.height, 0.5f, alpha(primary(), 255))
+            Layer(TrollZ.Content) {
+                RectOutline(0f, 0f, width, height, 0.5f, alpha(primary(), 255))
             }
         }
     }
 
-    fun trim(value: String?, metrics: TextRenderer, scale: Float, width: Float): String {
+    fun trim(value: String?, metrics: UiTextMetrics, scale: Float, width: Float): String {
         if (value == null || width <= 0.0f) return ""
-        if (metrics.getWidth(value, scale) <= width) return value
+        if (metrics.textWidth(value, scale) <= width) return value
         val suffix = "..."
-        if (metrics.getWidth(suffix, scale) > width) return ""
+        if (metrics.textWidth(suffix, scale) > width) return ""
         var end = value.length
         while (end > 0) {
             end = value.offsetByCodePoints(end, -1)
             val result = value.substring(0, end) + suffix
-            if (metrics.getWidth(result, scale) <= width) return result
+            if (metrics.textWidth(result, scale) <= width) return result
         }
         return suffix
-    }
-
-    fun metrics(renderer: TextRenderer): UiTextMetrics {
-        return RendererMetrics(renderer)
-    }
-
-    private data class RendererMetrics(val renderer: TextRenderer) : UiTextMetrics {
-        override fun textWidth(text: String, scale: Float) = renderer.getWidth(text, scale)
-        override fun textHeight(scale: Float) = renderer.getHeight(scale)
-        override fun textWidth(text: String, scale: Float, fontLoader: TtfFontLoader) =
-            renderer.getWidth(text, scale, fontLoader)
-
-        override fun textHeight(scale: Float, fontLoader: TtfFontLoader) = renderer.getHeight(scale, fontLoader)
     }
 }
 
@@ -106,7 +85,7 @@ object TrollTheme {
  *
  * 由于历史代码是按「该元素当时需要压过谁」随手取值的，个别位置的语义并不直观：
  * - 部分窗口的**文字**位于第 2 层（[Highlight]），与悬停高亮同层；
- * - [TrollTheme.window] 的描边位于第 4 层（[Content]），而设置窗口的卡片描边在第 5 层（[Overlay]）；
+ * - [TrollTheme.Window] 的描边位于第 4 层（[Content]），而设置窗口的卡片描边在第 5 层（[Overlay]）；
  * - 删除/移除按钮的底色位于第 3 层（[Text]）。
  *
  * 若后续要让命名与直觉一致，需要单独评估并承担遮挡顺序变化的风险，不应随本次重构一起改。
@@ -122,7 +101,7 @@ object TrollZ {
     /** 3：文字、部分按钮底色。 */
     val Text: LayerOffset = LayerOffset(3)
 
-    /** 4：光标、色块、以及 [TrollTheme.window] 的描边。 */
+    /** 4：光标、色块、以及 [TrollTheme.Window] 的描边。 */
     val Content: LayerOffset = LayerOffset(4)
 
     /** 5：外描边。 */

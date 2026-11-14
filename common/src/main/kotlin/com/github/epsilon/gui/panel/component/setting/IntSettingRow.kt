@@ -26,9 +26,9 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
     internal var textMetrics: UiTextMetrics? = null
     private var dragging by mutableStateOf(false)
     private var focusedState by mutableStateOf(false)
-    private var inputBuffer: String? by mutableStateOf<String?>(null)
+    private var inputBuffer: String? by mutableStateOf(null)
     internal var cursorIndex by mutableStateOf(0)
-    private var pendingValue: Int? by mutableStateOf<Int?>(null)
+    private var pendingValue: Int? by mutableStateOf(null)
 
     init {
         hoverAnimation.startValue = 0.0f

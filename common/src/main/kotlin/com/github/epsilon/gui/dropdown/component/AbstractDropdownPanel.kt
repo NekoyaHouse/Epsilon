@@ -41,8 +41,8 @@ abstract class AbstractDropdownPanel protected constructor(
     override var x: Float = 0.0f
     override var y: Float = 0.0f
     override var width: Float = DropdownTheme.PANEL_WIDTH
-    private var openedState: Boolean by mutableStateOf<Boolean>(false)
-    protected var dragging: Boolean by mutableStateOf<Boolean>(false)
+    private var openedState: Boolean by mutableStateOf(false)
+    protected var dragging: Boolean by mutableStateOf(false)
     protected var dragOffsetX: Float = 0.0f
     protected var dragOffsetY: Float = 0.0f
     private val scrollAnimation = Animation(0.0f, Easing.EASE_OUT_CUBIC, 160L)
@@ -51,7 +51,7 @@ abstract class AbstractDropdownPanel protected constructor(
         set(value) {
             scrollAnimation.snapTo(value)
         }
-    protected var targetScroll: Float by mutableStateOf<Float>(0.0f)
+    protected var targetScroll: Float by mutableStateOf(0.0f)
     protected var maxScroll: Float = 0.0f
     protected var maxPanelHeight: Float = 300.0f
 

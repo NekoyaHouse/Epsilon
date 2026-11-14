@@ -20,7 +20,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
 
     private val inputFilter: Predicate<String> = inputFilter ?: Predicate { true }
 
-    var isFocused: Boolean by mutableStateOf<Boolean>(false)
+    var isFocused: Boolean by mutableStateOf(false)
         private set
 
     private var textState by mutableStateOf("")
@@ -31,7 +31,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
             cursor = cursor.coerceIn(0, textState.length)
         }
 
-    private var cursor: Int by mutableStateOf<Int>(0)
+    private var cursor: Int by mutableStateOf(0)
     private var cursorMidpoints: FloatArray = FloatArray(0)
 
     private val safeCursor: Int

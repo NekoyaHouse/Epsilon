@@ -11,6 +11,7 @@ import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.gui.lib.scene.LayerOffset
 import com.github.epsilon.gui.lib.state.LuminRuntime
 import com.github.epsilon.gui.lib.state.LuminView
+import com.github.epsilon.kernel.state.MutableState
 import com.github.epsilon.kernel.state.mutableStateOf
 import java.awt.Color
 import java.util.*
@@ -32,7 +33,7 @@ class UiContentBuffer(theme: UiTheme) : AutoCloseable {
     private val marqueeDraws = ArrayList<MarqueeTextDraw>()
 
     private val scrollBarView = LuminView()
-    private val scrollFrame = mutableStateOf<ScrollFrame?>(null)
+    private val scrollFrame: MutableState<ScrollFrame?> = mutableStateOf(null)
 
     private data class ScrollFrame(
         val viewport: UiRect,

@@ -37,10 +37,10 @@ class ColorPickerPopup(
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val indicatorAnimations = Array(4) { LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 120L) }
     private var draggingChannel: Channel? by mutableStateOf(null)
-    private var focusedChannel: Channel? by mutableStateOf<Channel?>(null)
-    private var inputBuffer: String? by mutableStateOf<String?>(null)
+    private var focusedChannel: Channel? by mutableStateOf(null)
+    private var inputBuffer: String? by mutableStateOf(null)
     private var cursorIndex by mutableStateOf(0)
-    private var pendingValue: Color? by mutableStateOf<Color?>(null)
+    private var pendingValue: Color? by mutableStateOf(null)
 
     override fun getBounds(): UiRect {
         return bounds

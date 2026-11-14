@@ -22,7 +22,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
 
     private val expandAnim: Animation = Animation(Easing.DECELERATE, DropdownTheme.ANIM_EXPAND)
     private val hoverAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER)
-    private var expanded: Boolean by mutableStateOf<Boolean>(false)
+    private var expanded: Boolean by mutableStateOf(false)
 
     override fun getHeight(): Float {
         expandAnim.run(if (shouldExpand()) 1.0f else 0.0f)

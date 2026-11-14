@@ -1,11 +1,7 @@
 package com.github.epsilon.gui.troll
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.gui.lib.LuminUIItem
-import com.github.epsilon.gui.lib.UiRect
-import com.github.epsilon.gui.lib.UiTree
-import com.github.epsilon.gui.lib.asUiScope
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
@@ -18,8 +14,8 @@ import java.util.*
 class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
 
     private val rows: MutableMap<Module, TrollSettingRow> = IdentityHashMap()
-    private var visibleModules: List<Module> by mutableStateOf<List<Module>>(emptyList())
-    private var filterStore: String by mutableStateOf<String>("")
+    private var visibleModules: List<Module> by mutableStateOf(emptyList())
+    private var filterStore: String by mutableStateOf("")
 
     private fun title(): String {
         return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.name
@@ -31,7 +27,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         scroll.reset()
     }
 
-    override fun layout(metrics: TextRenderer, screenWidth: Float, screenHeight: Float) {
+    override fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float) {
         var order: Comparator<Module> =
             Comparator.comparing<Module, String>({ it.translatedName }, String.CASE_INSENSITIVE_ORDER)
         if (ClientSetting.moduleSort == ClientSetting.ModuleSort.EnabledFirst) {
@@ -46,7 +42,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         } else {
             allModules.filter { module -> matchesSearch(module) }
         }
-        var width = maxOf(120.0f, metrics.getWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
+        var width = maxOf(120.0f, metrics.textWidth(title(), TrollTheme.TEXT_SCALE) + 30.0f)
         for (module in allModules) {
             val row = rows.getOrPut(module) {
                 val created = TrollSettingRow(module, TrollSettingRow.ModuleAction.TOGGLE)
@@ -74,12 +70,11 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
         return true
     }
 
-    override fun draw(scope: UiTree.Scope, metrics: TextRenderer, mouseX: Int, mouseY: Int) {
-        TrollTheme.window(scope, bounds, headerHeight, title(), metrics)
-        scope.scissor(viewport) { content ->
+    override fun UiScope.draw(mouseX: Int, mouseY: Int) {
+        TrollTheme.run { Window(headerHeight, title()) }
+        Clip(viewport.x, viewport.y, viewport.width, viewport.height) {
             for (module in visibleModules) {
-                content.asUiScope(metrics)
-                    .LuminUIItem(rows.getValue(module)) { rows.getValue(module).draw(tree, metrics, mouseX, mouseY) }
+                LuminUIItem(rows.getValue(module)) { rows.getValue(module).drawInScope(this, mouseX, mouseY) }
             }
         }
     }

@@ -29,7 +29,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
     private var pickingSB by mutableStateOf(false)
     private var pickingHue by mutableStateOf(false)
     private var pickingChannel: Channel? by mutableStateOf(null)
-    private var pendingValue: Color? by mutableStateOf<Color?>(null)
+    private var pendingValue: Color? by mutableStateOf(null)
 
     override fun getHeight(): Float {
         openAnim.run(if (opened) 1.0f else 0.0f)
