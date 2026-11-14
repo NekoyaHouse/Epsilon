@@ -109,7 +109,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
                 onCancel = { scrollBarDrag.reset() })
 
             Text(
-                state.getSelectedCategory().name, MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
+                state.getSelectedCategory().getName(), MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f,
                 MD3Theme.TEXT_PRIMARY
             )
             Text(

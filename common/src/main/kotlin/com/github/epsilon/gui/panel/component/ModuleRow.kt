@@ -136,7 +136,7 @@ fun UiScope.ModuleRow(
     }
 
     Text(moduleView.displayName, PanelElements.ROW_LABEL_INSET, titleY, titleScale, titleColor)
-    Text(moduleView.module.category!!.name, PanelElements.ROW_LABEL_INSET, subY, subScale, subColor)
+    Text(moduleView.module.category!!.getName(), PanelElements.ROW_LABEL_INSET, subY, subScale, subColor)
 
     // 开关必须压在行表面之上：layer 由作用域携带，图元本身不再接收 layer 参数
     Layer(LayerOffset.Edge) {

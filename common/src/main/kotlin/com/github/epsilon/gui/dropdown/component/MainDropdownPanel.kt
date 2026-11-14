@@ -32,28 +32,28 @@ class MainDropdownPanel(
         isVisible = true
         isOpened = true
         add(
-            LabelSupplier { Category.COMBAT.name },
+            LabelSupplier { Category.COMBAT.getName() },
             Category.COMBAT.icon,
             "category:combat",
             togglePanel,
             panelVisibleResolver
         )
         add(
-            LabelSupplier { Category.PLAYER.name },
+            LabelSupplier { Category.PLAYER.getName() },
             Category.PLAYER.icon,
             "category:player",
             togglePanel,
             panelVisibleResolver
         )
         add(
-            LabelSupplier { Category.MOVEMENT.name },
+            LabelSupplier { Category.MOVEMENT.getName() },
             Category.MOVEMENT.icon,
             "category:movement",
             togglePanel,
             panelVisibleResolver
         )
         add(
-            LabelSupplier { Category.RENDER.name },
+            LabelSupplier { Category.RENDER.getName() },
             Category.RENDER.icon,
             "category:render",
             togglePanel,

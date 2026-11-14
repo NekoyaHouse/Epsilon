@@ -18,7 +18,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
     private var filterStore: String by mutableStateOf("")
 
     private fun title(): String {
-        return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.name
+        return if (category == null) EpsilonTranslations.TrollGui.CLIENT.getTranslatedName() else category.getName()
     }
 
     fun setSearchFilter(filter: String) {

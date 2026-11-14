@@ -309,7 +309,7 @@ class CategoryRailPanel(protected val state: PanelState) {
                 val textOffset = (1.0f - contentProgress) * 5.0f
                 val animatedLabel = MD3Theme.withAlpha(labelColor, (255 * contentProgress).toInt())
                 val animatedCount = MD3Theme.withAlpha(countColor, (220 * contentProgress).toInt())
-                Text(category.name, 30.0f + textOffset, labelY, itemLabelScale, animatedLabel)
+                Text(category.getName(), 30.0f + textOffset, labelY, itemLabelScale, animatedLabel)
                 val countWidth = metrics.textWidth(count.toString(), itemCountScale)
                 Text(
                     count.toString(), itemRect.width - 12.0f - countWidth, countY, itemCountScale, animatedCount

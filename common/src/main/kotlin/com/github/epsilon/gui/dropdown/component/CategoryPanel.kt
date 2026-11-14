@@ -25,7 +25,7 @@ class CategoryPanel : AbstractDropdownPanel {
     private var queryStore: String by mutableStateOf("")
 
     constructor(category: Category, panelIndex: Int) :
-            super("category:$category", TitleSupplier { category.name }, category.icon, panelIndex) {
+            super("category:$category", TitleSupplier { category.getName() }, category.icon, panelIndex) {
         this.category = category
         val modules = ModuleManager.getModules().stream()
             .filter { m -> m.category == category }
@@ -90,7 +90,8 @@ class CategoryPanel : AbstractDropdownPanel {
     private val visibleState = derivedStateOf {
         moduleButtons.sortedWith(getComparator(ClientSetting.moduleSort)).filter { button ->
             val module = button.module
-            queryStore.isBlank() || (module.translatedName + "\n" + module.name + "\n" + module.category?.name)
+            queryStore.isBlank() || (module.translatedName + "\n" + module.name + "\n" +
+                    module.category?.getName() + "\n" + module.category?.name)
                 .lowercase(Locale.ROOT).contains(queryStore)
         }
     }
