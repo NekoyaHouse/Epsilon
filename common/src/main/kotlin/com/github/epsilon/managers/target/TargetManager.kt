@@ -10,7 +10,6 @@ import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.kernel.jvm.runSafeOrFalse
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.modules.impl.ClientSetting
-import com.github.epsilon.modules.impl.combat.AntiBot
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -94,12 +93,11 @@ object TargetManager : AlwaysListening {
         if (shared === player) return false
         if (!shared.isAlive || shared.isDeadOrDying) return false
         if (shared.level() !== level) return false
-        return !AntiBot.isBot(shared)
+        return true
     }
 
     private fun NonNullContext.isValidTarget(entity: LivingEntity, request: TargetRequest): Boolean {
         if (!entity.isAlive || entity.isDeadOrDying) return false
-        if (AntiBot.isBot(entity)) return false
         if (isSameTeam(entity) &&
             !(request.allowFriends && entity is Player && FriendManager.isFriend(entity))
         ) {

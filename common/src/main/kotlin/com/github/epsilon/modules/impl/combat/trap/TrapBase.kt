@@ -256,6 +256,7 @@ abstract class TrapBase(
         clearRotation()
     }
 
+    context(nn: NonNullContext)
     private fun requestRotation(rotation: Rotation) {
         rotationRequest = rotation
         RotationManager.setRotations(rotation, rotationSpeed.toDouble())

@@ -53,8 +53,6 @@ object ModuleManager : AlwaysListening {
 
         // Combat
         addModule(AimBot)
-        addModule(AntiBot)
-        addModule(Backtrack)
         addModule(AutoClicker)
         addModule(AutoDtap)
         addModule(AutoMend)

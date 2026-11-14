@@ -3,11 +3,13 @@ package com.github.epsilon.managers
 import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
 import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
+import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.movement.MovementFix
 import com.github.epsilon.modules.impl.render.FreeCamera
@@ -73,8 +75,7 @@ object RotationManager : AlwaysListening {
             }
         }
 
-        handler<PlayerTickEvent.Pre>(priority = -1000, alwaysListening = true) {
-            val player = mc.player!!
+        safeEventHandler<PlayerTickEvent.Pre>(priority = -1000, alwaysListening = true) {
             if (!active || targetRotations == null) {
                 val current = Rotation(player.yRot, player.xRot)
                 rotations = current
@@ -147,8 +148,8 @@ object RotationManager : AlwaysListening {
             }
         }
 
-        handler<KeyboardInputEvent>(EventPriority.HIGH, alwaysListening = true) { event ->
-            if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+        safeEventHandler<KeyboardInputEvent>(EventPriority.HIGH, alwaysListening = true) { event ->
+            if (MovementFix.isEnabled && hasActiveRotation() && !player.isFallFlying) {
                 MovementFix.fixMovement(event, rotations.yaw)
             }
         }
@@ -160,14 +161,14 @@ object RotationManager : AlwaysListening {
             }
         }
 
-        handler<StrafeEvent>(alwaysListening = true) { event ->
-            if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+        safeEventHandler<StrafeEvent>(alwaysListening = true) { event ->
+            if (MovementFix.isEnabled && hasActiveRotation() && !player.isFallFlying) {
                 event.yaw = rotations.yaw
             }
         }
 
-        handler<JumpEvent>(alwaysListening = true) { event ->
-            if (MovementFix.isEnabled && hasActiveRotation() && !mc.player!!.isFallFlying) {
+        safeEventHandler<JumpEvent>(alwaysListening = true) { event ->
+            if (MovementFix.isEnabled && hasActiveRotation() && !player.isFallFlying) {
                 event.yaw = rotations.yaw
             }
         }
@@ -221,18 +222,22 @@ object RotationManager : AlwaysListening {
         }
     }
 
+    context(nn: NonNullContext)
     fun setRotations(rotations: Rotation?, rotationSpeed: Double) {
         setRotations(rotations, rotationSpeed, null, RotationPriority.Medium)
     }
 
+    context(nn: NonNullContext)
     fun setRotations(rotations: Rotation?, rotationSpeed: Double, priority: RotationPriority) {
         setRotations(rotations, rotationSpeed, null, priority)
     }
 
+    context(nn: NonNullContext)
     fun setRotations(rotations: Rotation?, rotationSpeed: Double, raytrace: Function<Rotation, Boolean>?) {
         setRotations(rotations, rotationSpeed, raytrace, RotationPriority.Medium)
     }
 
+    context(nn: NonNullContext)
     fun setRotations(
         rotations: Rotation?,
         rotationSpeed: Double,
@@ -285,6 +290,7 @@ object RotationManager : AlwaysListening {
         useItemRotation = null
     }
 
+    context(nn: NonNullContext)
     private fun smooth() {
         if (!smoothed) {
             var targetYaw = targetRotations!!.yaw
@@ -300,7 +306,7 @@ object RotationManager : AlwaysListening {
                 randomAngle += (
                         (20 + (Random.nextDouble() - 0.5).toFloat() *
                                 (Random.nextDouble() * Random.nextDouble() * Random.nextDouble() * 360).toFloat()) *
-                                (if (mc.player!!.tickCount / 10 % 2 == 0) -1 else 1)
+                                (if (nn.player.tickCount / 10 % 2 == 0) -1 else 1)
                         ).toFloat()
 
                 offset.set(
@@ -380,17 +386,19 @@ object RotationManager : AlwaysListening {
         player.yRot = fixedYaw
     }
 
+    context(nn: NonNullContext)
     fun getYaw(): Float {
         return getRotation().yaw
     }
 
+    context(nn: NonNullContext)
     fun getPitch(): Float {
         return getRotation().pitch
     }
 
+    context(nn: NonNullContext)
     fun getRotation(): Rotation {
-        val player = mc.player!!
-        return if (active) rotations else Rotation(player.yRot, player.xRot)
+        return if (active) rotations else Rotation(nn.player.yRot, nn.player.xRot)
     }
 
     fun getLastRotation(): Rotation {

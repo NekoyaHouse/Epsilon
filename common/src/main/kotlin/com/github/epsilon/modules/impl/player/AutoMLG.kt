@@ -329,6 +329,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
         return falling
     }
 
+    context(nn: NonNullContext)
     private fun isFacing(target: Rotation, yawTolerance: Float, pitchTolerance: Float): Boolean {
         val current = RotationManager.getRotation()
         val yawDiff = abs(Mth.wrapDegrees(current.yaw - target.yaw))

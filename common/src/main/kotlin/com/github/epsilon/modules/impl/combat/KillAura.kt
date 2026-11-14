@@ -332,7 +332,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             }
 
             val attackEntity = getAttackEntity()
-            if (hitSelect && attackEntity is Player && !AntiBot.isBot(attackEntity) && !TargetManager.isSameTeam(
+            if (hitSelect && attackEntity is Player && !TargetManager.isSameTeam(
                     attackEntity
                 ) && velocity.attackQueue <= 0
             ) {

@@ -12,6 +12,7 @@ object MovementUtils {
      *
      * @param speed 移动速度
      */
+    context(nn: NonNullContext)
     fun forwardWithoutStrafe(speed: Double): DoubleArray {
         val yaw = RotationManager.getYaw()
 
