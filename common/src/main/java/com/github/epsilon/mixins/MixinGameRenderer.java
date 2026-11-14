@@ -1,7 +1,7 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.graphics.shaders.HandOpacityShader;
+import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.modules.impl.render.CameraClip;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.Shaders;

@@ -121,7 +121,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private enum class RenderMode {
         Off,
         Box,
-        Fade
+        Techno
     }
 
     private enum class BoxMode {
@@ -212,10 +212,18 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private val safetyOverride by boolSetting("Safety Override", false).group(sgDamage)
     private val blockDestruction by boolSetting("Block Destruction", true).group(sgDamage)
     private val motionPredict by boolSetting("Motion Predict", true, onChanged = { cancelPlacement() }).group(sgDamage)
-    private val predictTicks by intSetting("Predict Ticks", 8, 0..20, 1, { motionPredict },
-        onChanged = { cancelPlacement() }).group(sgDamage)
+    private val predictTicks by intSetting(
+        "Predict Ticks", 8, 0..20, 1, { motionPredict },
+        onChanged = { cancelPlacement() }
+    ).group(sgDamage)
     private val selfExtrapolate by boolSetting("Self Extrapolate", true).group(sgDamage)
-    private val extrapolationTicks by intSetting("Extrapolation Ticks", 5, 0..10, 1, { selfExtrapolate }).group(sgDamage)
+    private val extrapolationTicks by intSetting(
+        "Extrapolation Ticks",
+        5,
+        0..10,
+        1,
+        { selfExtrapolate }
+    ).group(sgDamage)
 
     private val enemyRange by doubleSetting("Enemy Range", 10.0, 1.0..13.0, 0.5).group(sgTarget)
     private val ignoreNakeds by boolSetting("Ignore Nakeds", false).group(sgTarget)
@@ -234,24 +242,35 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         sgSupport
     )
 
-    private val renderMode by enumSetting("Render", RenderMode.Box,
-        onChanged = { renderAnimation.clear() }).group(sgRender)
+    private val renderMode by enumSetting(
+        "Render", RenderMode.Techno,
+        onChanged = {
+            renderAnimation.clear()
+            technoAnimation.clear()
+            technoRenderer.clear()
+        }
+    ).group(sgRender)
     private val shape by enumSetting("Box Mode", BoxMode.Both, { renderMode != RenderMode.Off }).group(sgRender)
     private val sideColor by colorSetting(
-        "Side",
-        Color(255, 183, 197, 70),
+        "Side Color",
+        Color(38, 127, 168, 160),
         true,
         { renderMode != RenderMode.Off }).group(sgRender)
     private val lineColor by colorSetting(
-        "Line",
-        Color(255, 183, 197, 211),
+        "Line Color",
+        Color(142, 235, 255, 230),
         true,
-        { renderMode != RenderMode.Off }).group(sgRender)
-    private val fadeTime by intSetting("Fade Time", 250, 0..1000, 10, { renderMode == RenderMode.Fade }).group(sgRender)
-    private val movingLength by intSetting("Moving Length", 400, 0..1000, 50,
-        { renderMode != RenderMode.Off }).group(sgRender)
-    private val fadeLength by intSetting("Fade Length", 200, 0..1000, 50,
-        { renderMode != RenderMode.Off }).group(sgRender)
+        { renderMode != RenderMode.Off }
+    ).group(sgRender)
+    private val fadingTime by intSetting("Fading Time", 0, 0..1000, 10).group(sgRender)
+    private val movingLength by intSetting(
+        "Moving Length", 400, 0..1000, 50,
+        { renderMode != RenderMode.Off }
+    ).group(sgRender)
+    private val fadeLength by intSetting(
+        "Fade Length", 200, 0..1000, 50,
+        { renderMode != RenderMode.Off }
+    ).group(sgRender)
     private val renderDamage by boolSetting("Render Damage", false, { renderMode != RenderMode.Off }).group(sgRender)
     private val targetDamage by boolSetting("Target Damage", true, { renderDamage }).group(sgRender)
     private val selfDamage by boolSetting("Self Damage", false, { renderDamage }).group(sgRender)
@@ -271,10 +290,13 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private var renderedAt = 0L
     private var renderTargetActive = false
     private val renderAnimation = CrystalRenderAnimation()
+    private val technoAnimation = CrystalTechnoAnimation()
+    private val technoRenderer = CrystalTechnoRenderer()
     private var originalSlot = -1
     private var normalSlot = -1
 
-    private data class InventorySwap(val slot: Int, val hotbar: Int, val displaced: ItemStack, val selected: ItemStack)
+    override fun getInfo(): String? = rendered?.takeIf { now() - renderedAt < 1000L }
+        ?.let { String.format(Locale.ROOT, "%.1f, %dms", it.damage, timing.averageBreakMillis) }
 
     private val normalInventorySwaps = ArrayList<InventorySwap>()
 
@@ -288,12 +310,9 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             clearState()
         }
 
-        handler<GameLeftEvent> {
-            clearState()
-        }
-
-        safeEventHandler<ClientTickEvent.Pre> {
-            timing.tick()
+        safeEventHandler<ClientTickEvent.Pre>(alwaysListening = true) {
+            if (isEnabled) timing.tick()
+            if (renderMode == RenderMode.Techno) technoRenderer.tick()
         }
 
         safeEventHandler<ClientEntityEvent.TickPre>(EventPriority.HIGH) { event ->
@@ -362,12 +381,20 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             if (surroundFucker) onMiningAttempt(it.pos)
         }
 
-        safeEventHandler<Render3DEvent> {
+        safeEventHandler<Render3DEvent>(alwaysListening = true) {
             val frame = renderFrame() ?: return@safeEventHandler
-            if (shape != BoxMode.Lines) Render3DScheduler.addFilledBox(frame.box, faded(sideColor, frame.scale))
-            if (shape != BoxMode.Fill) Render3DScheduler.addOutlineBox(frame.box, faded(lineColor, frame.scale))
+            if (renderMode == RenderMode.Techno) {
+                technoRenderer.render(
+                    it.poseStack, frame, player.tickCount, mc.deltaTracker.getGameTimeDeltaPartialTick(true),
+                    sideColor, lineColor, shape != BoxMode.Lines, shape != BoxMode.Fill
+                )
+            } else {
+                if (shape != BoxMode.Lines) Render3DScheduler.addFilledBox(frame.box, faded(sideColor, frame.scale))
+                if (shape != BoxMode.Fill) Render3DScheduler.addOutlineBox(frame.box, faded(lineColor, frame.scale))
+            }
         }
-        safeEventHandler<Render2DEvent.Level> { event ->
+        
+        safeEventHandler<Render2DEvent.Level>(alwaysListening = true) { event ->
             val candidate = rendered ?: return@safeEventHandler
             val frame = renderFrame() ?: return@safeEventHandler
             if (!renderDamage) return@safeEventHandler
@@ -376,7 +403,10 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 if (selfDamage) add(String.format(Locale.ROOT, "%.1f", candidate.selfDamage))
             }
             if (labels.isEmpty()) return@safeEventHandler
-            val screen = WorldToScreen.calcWorld2Screen(frame.center)
+            val center = if (renderMode == RenderMode.Techno) {
+                frame.center.add(0.0, (1.0 - frame.height) * 0.5, 0.0)
+            } else frame.center
+            val screen = WorldToScreen.calcWorld2Screen(center)
                 ?: return@safeEventHandler
             val metrics = event.textMetrics
             val font = StaticFontLoader.defaultFont()
@@ -387,7 +417,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                 screen.x - metrics.getWidth(label, scale, font) * 0.5f,
                 screen.y - metrics.getHeight(scale, font) * 0.5f,
                 scale,
-                faded(Color.WHITE, frame.scale),
+                faded(Color.WHITE, if (renderMode == RenderMode.Techno) frame.scale * frame.height else frame.scale),
                 font
             )
         }
@@ -644,6 +674,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             sendPlace(hit, hand)
             placeSwing.interactSwing(hand)
             timing.recordPlace(pos.asLong())
+            if (renderMode == RenderMode.Techno) technoRenderer.onPlace()
             true
         }
     }
@@ -1046,10 +1077,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         yawComplete = false
         serverYaw = null
         breakCandidate = null
-        rendered = null
-        renderedAt = 0L
         renderTargetActive = false
-        renderAnimation.clear()
         timing.clear()
         totems.clear()
         normalInventorySwaps.clear()
@@ -1073,9 +1101,11 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private fun renderFrame(): CrystalRenderAnimation.Frame? {
         if (renderMode == RenderMode.Off) return null
         val time = now()
-        val keepLast = renderMode == RenderMode.Fade && time - renderedAt < fadeTime
-        val target = rendered?.takeIf { renderTargetActive || keepLast }?.let { Vec3.atCenterOf(it.pos) }
-        return renderAnimation.sample(target, time, movingLength, fadeLength)
+        val keepLast = time - renderedAt < fadingTime
+        val target = rendered?.takeIf { isEnabled && (renderTargetActive || keepLast) }?.let { Vec3.atCenterOf(it.pos) }
+        return if (renderMode == RenderMode.Techno) {
+            technoAnimation.sample(target, time, movingLength, fadeLength, technoRenderer.hasPulses)
+        } else renderAnimation.sample(target, time, movingLength, fadeLength)
     }
 
     private fun scanPositions(origin: Vec3, radius: Int): Sequence<BlockPos> = sequence {
@@ -1097,6 +1127,6 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
 
     private fun now(): Long = System.nanoTime() / 1_000_000L
 
-    override fun getInfo(): String? = rendered?.takeIf { now() - renderedAt < 1000L }
-        ?.let { String.format(Locale.ROOT, "%.1f, %dms", it.damage, timing.averageBreakMillis) }
+    private data class InventorySwap(val slot: Int, val hotbar: Int, val displaced: ItemStack, val selected: ItemStack)
+
 }

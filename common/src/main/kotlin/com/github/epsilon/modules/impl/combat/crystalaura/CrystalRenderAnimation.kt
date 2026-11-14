@@ -3,14 +3,15 @@ package com.github.epsilon.modules.impl.combat.crystalaura
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-/** 渲染线程按单调时钟采样；重定向从当前插值位置继续，重复目标不重启动画。 */
 internal class CrystalRenderAnimation {
-    data class Frame(val center: Vec3, val scale: Double) {
+    data class Frame(val center: Vec3, val scale: Double, val height: Double = scale) {
         val box: AABB
             get() {
                 val half = scale * 0.5
-                return AABB(center.x - half, center.y - half, center.z - half,
-                    center.x + half, center.y + half, center.z + half)
+                return AABB(
+                    center.x - half, center.y - half, center.z - half,
+                    center.x + half, center.y + half, center.z + half
+                )
             }
     }
 
