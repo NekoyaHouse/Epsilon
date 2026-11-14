@@ -1,17 +1,15 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.graphics.LuminRenderSystem
-import com.github.epsilon.graphics.renderers.RectRenderer
-import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.google.common.base.Suppliers
 import net.minecraft.client.Camera
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -21,7 +19,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import java.awt.Color
-import java.util.function.Supplier
 
 object ESP2D : Module("ESP 2D", Category.RENDER) {
 
@@ -64,15 +61,9 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
         { renderHealth }
     )
 
-    private val rectRendererSupplier: Supplier<RectRenderer> = Suppliers.memoize { RectRenderer.create() }
-
     init {
-        handler<Render2DEvent.Level> { onRender2D() }
-    }
-
-    private fun onRender2D() {
-        runSafe {
-            val rectRenderer = rectRendererSupplier.get()
+        safeEventHandler<Render2DEvent.Level> { event ->
+            val rectRenderer = event.canvas
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val screenWidth = LuminRenderSystem.getScaledWidth()
             val screenHeight = LuminRenderSystem.getScaledHeight()
@@ -107,8 +98,6 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
                     drawHealthBar(rectRenderer, entity, x, y, endY)
                 }
             }
-
-            rectRenderer.drawAndClear()
         }
     }
 
@@ -210,14 +199,14 @@ object ESP2D : Module("ESP 2D", Category.RENDER) {
         }
     }
 
-    private fun drawSolidBox(rectRenderer: RectRenderer, x: Float, y: Float, endX: Float, endY: Float, color: Color) {
+    private fun drawSolidBox(rectRenderer: Render2DScheduler.Canvas, x: Float, y: Float, endX: Float, endY: Float, color: Color) {
         rectRenderer.addRect(x - 0.5f, y, 0.5f, endY - y, color)
         rectRenderer.addRect(x, endY - 0.5f, endX - x, 0.5f, color)
         rectRenderer.addRect(x - 0.5f, y, endX - x + 0.5f, 0.5f, color)
         rectRenderer.addRect(endX - 0.5f, y, 0.5f, endY - y, color)
     }
 
-    private fun drawHealthBar(rectRenderer: RectRenderer, entity: LivingEntity, x: Float, y: Float, endY: Float) {
+    private fun drawHealthBar(rectRenderer: Render2DScheduler.Canvas, entity: LivingEntity, x: Float, y: Float, endY: Float) {
         val height = endY - y
         if (height <= 0.0f) return
 

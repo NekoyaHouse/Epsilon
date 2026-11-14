@@ -12,7 +12,6 @@ import com.github.epsilon.managers.HealthManager
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
-import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.util.Mth
@@ -288,6 +287,12 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
 
         Text(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor, animationScale))
         Text(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor, animationScale))
+        renderEquipmentItems(
+            target, scaledTextStartX,
+            Mth.lerp(animationScale, centerY, contentY + textHeight + 2.8f * panelScale),
+            EQUIPMENT_ITEM_SCALE * panelScale * animationScale, 1.5f * panelScale * animationScale,
+            withAlpha(Color.WHITE, animationScale)
+        )
     }
 
     /**
@@ -404,60 +409,13 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         }
     }
 
-    override fun renderOverlay(graphics: GuiGraphicsExtractor, deltaTracker: DeltaTracker) {
-        if (style == Style.Akrien) {
-            return
-        }
-
-        val panelScale = scale.toFloat()
-        val target = renderedTarget ?: return
-        if (visibilityProgress <= 0.01f) return
-
-        val textRenderer = textRendererSupplier.get()
-        val panelWidth = panelWidthSetting.toFloat() * panelScale
-        val panelHeight = panelHeightSetting.toFloat() * panelScale
-        val animationScale = Easing.EASE_OUT_SINE.function.apply(visibilityProgress.coerceIn(0.0f, 1.0f))
-        val pad = 5.0f * panelScale
-        val barHeight = healthBarHeight.toFloat() * panelScale
-        val innerHeight = maxOf(1.0f, panelHeight - pad * 2.0f)
-        val contentAreaHeight = maxOf(1.0f, innerHeight - pad - barHeight)
-        val headSize = minOf(contentAreaHeight, maxOf(26.0f * panelScale, panelHeight * 0.6f) * 1.05f)
-        val textScale = maxOf(0.45f, nameSize.toFloat() / 14.0f) * panelScale
-        val textHeight = textRenderer.getHeight(textScale)
-        val contentRowHeight = maxOf(headSize, textHeight)
-        val contentBlockHeight = contentRowHeight + pad + barHeight
-        val contentStartY = y + pad + maxOf(0.0f, (innerHeight - contentBlockHeight) / 2.0f)
-        val headY = contentStartY + (contentRowHeight - headSize) / 2.0f
-        val headX = x + pad
-        val textStartX = headX + headSize + pad
-        val contentY = headY + 2.0f * panelScale
-        val equipmentY = contentY + textHeight + 2.8f * panelScale
-        val equipmentScale = EQUIPMENT_ITEM_SCALE * panelScale
-        val equipmentGap = 1.5f * panelScale
-        val centerX = x + panelWidth / 2.0f
-        val centerY = y + panelHeight / 2.0f
-        val scaledEquipmentX = Mth.lerp(animationScale, centerX, textStartX)
-        val scaledEquipmentY = Mth.lerp(animationScale, centerY, equipmentY)
-        val scaledEquipmentScale = equipmentScale * animationScale
-        val scaledEquipmentGap = equipmentGap * animationScale
-
-        renderEquipmentItems(
-            graphics,
-            target,
-            scaledEquipmentX,
-            scaledEquipmentY,
-            scaledEquipmentScale,
-            scaledEquipmentGap
-        )
-    }
-
-    private fun renderEquipmentItems(
-        graphics: GuiGraphicsExtractor,
+    private fun UiScope.renderEquipmentItems(
         target: LivingEntity,
         startX: Float,
         y: Float,
         scale: Float,
         gap: Float,
+        color: Color,
     ) {
         val equipmentItems: MutableList<ItemStack> = ArrayList(5)
         appendEquipmentItem(equipmentItems, target.mainHandItem)
@@ -473,7 +431,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val itemSize = 16.0f * scale
         var itemX = startX
         for (i in equipmentItems.indices) {
-            drawItem(graphics, target, equipmentItems[i], itemX, y, scale, target.id + i)
+            Item(equipmentItems[i], itemX + scale, y + scale, itemSize, color, target, target.id + i)
             itemX += itemSize + gap
         }
     }
@@ -482,22 +440,6 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         if (!stack.isEmpty) {
             items.add(stack)
         }
-    }
-
-    private fun drawItem(
-        graphics: GuiGraphicsExtractor,
-        owner: LivingEntity,
-        stack: ItemStack,
-        x: Float,
-        y: Float,
-        scale: Float,
-        seed: Int
-    ) {
-        graphics.pose().pushMatrix()
-        graphics.pose().translate(x + scale, y + scale)
-        graphics.pose().scale(scale, scale)
-        graphics.item(owner, stack, 0, 0, seed)
-        graphics.pose().popMatrix()
     }
 
     private fun resolveTarget(): LivingEntity? {

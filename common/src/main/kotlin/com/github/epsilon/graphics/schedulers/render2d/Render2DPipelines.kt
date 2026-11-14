@@ -17,6 +17,7 @@ internal object Render2DPipelines {
         get() = listOf(
             LuminRenderPipelines.UI_SHAPE, LuminRenderPipelines.SHADOW, LuminRenderPipelines.SEGMENTED_SHADOW,
             LuminRenderPipelines.TRIANGLE, LuminRenderPipelines.ARC, LuminRenderPipelines.TEXTURE,
+            LuminRenderPipelines.ITEM_TEXTURE,
             LuminRenderPipelines.TTF_FONT,
             LuminRenderPipelines.TTF_FONT_BLUR, LuminRenderPipelines.TTF_FONT_GLITCH,
         )

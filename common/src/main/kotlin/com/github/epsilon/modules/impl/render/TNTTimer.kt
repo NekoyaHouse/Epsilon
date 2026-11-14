@@ -1,17 +1,14 @@
 package com.github.epsilon.modules.impl.render
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
-import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
-import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.google.common.base.Suppliers
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.pipeline.*
@@ -21,7 +18,6 @@ import net.minecraft.world.entity.item.PrimedTnt
 import org.joml.Matrix4f
 import java.awt.Color
 import java.util.*
-import java.util.function.Supplier
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -42,8 +38,6 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
     private val pulseAmplitude by doubleSetting("Pulse Amplitude", 0.12, 0.0..0.5, 0.01)
     private val pulseSpeedHz by doubleSetting("Pulse Speed (Hz)", 2.0, 0.2..8.0, 0.1)
 
-    private val scheduler: Supplier<Render2DScheduler> = Suppliers.memoize { Render2DScheduler() }
-
     private val FILLED_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipelines/tnt_timer_filled"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
@@ -61,15 +55,9 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         .build()
 
     init {
-        handler<Render2DEvent.Level> { onRender2D(it) }
-        handler<Render3DEvent> { onRender3D(it) }
-    }
-
-    private fun onRender2D(event: Render2DEvent.Level) {
-        runSafe {
-            val render = scheduler.get()
-            render.clear()
-            val layer = render.canvas(0)
+        safeEventHandler<Render2DEvent.Level> { event ->
+            val layer = event.canvas
+            val metrics = event.textMetrics
             val partial = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             for (entity in level.entitiesForRendering()) {
                 if (entity !is PrimedTnt) continue
@@ -78,7 +66,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
                 if (!screen.x.isFinite() || !screen.y.isFinite()) continue
                 val label = String.format(Locale.US, "%.1fs", maxOf(0, entity.fuse) / 20.0f)
                 val scale = maxOf(0.45f, WorldToScreen.calcScale(anchor) * 0.7f)
-                val width = render.textMetrics().getWidth(label, scale)
+                val width = metrics.getWidth(label, scale)
                 layer.addText(
                     label,
                     screen.x - width * 0.5f,
@@ -88,12 +76,8 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
                     StaticFontLoader.defaultFont()
                 )
             }
-            render.flushAndClear()
         }
-    }
-
-    private fun onRender3D(event: Render3DEvent) {
-        runSafe {
+        safeEventHandler<Render3DEvent> { event ->
             val stack = event.poseStack
             val camera = mc.gameRenderer.mainCamera().position()
             val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)

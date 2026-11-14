@@ -2,6 +2,8 @@ package com.github.epsilon.graphics.schedulers.render2d
 
 import com.github.epsilon.graphics.text.TextGlitchEffect
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
 import java.awt.Color
 
 sealed interface Render2DCommand {
@@ -169,6 +171,22 @@ sealed interface Render2DCommand {
 
     }
 
+    /** 只保存物品快照；模型、动画和图集 UV 在每次提交前重新解析。 */
+    data class Item(
+        override val layer: Int,
+        override val sequence: Long,
+        override val bounds: Render2DBounds,
+        override val scissor: Render2DScissor?,
+        val stack: ItemStack,
+        val color: Color,
+        val owner: LivingEntity?,
+        val seed: Int,
+        val decorations: Boolean,
+        val countText: String?,
+    ) : Render2DCommand {
+        override fun kind() = Render2DCommandKind.ITEM
+    }
+
     data class Texture(
         override val layer: Int,
         override val sequence: Long,
@@ -187,9 +205,11 @@ sealed interface Render2DCommand {
         val originX: Float,
         val originY: Float,
         val rotationDegrees: Float,
+        val premultipliedAlpha: Boolean = false,
     ) : Render2DCommand {
 
-        override fun kind(): Render2DCommandKind = Render2DCommandKind.TEXTURE
+        override fun kind(): Render2DCommandKind =
+            if (premultipliedAlpha) Render2DCommandKind.PREMULTIPLIED_TEXTURE else Render2DCommandKind.TEXTURE
 
     }
 

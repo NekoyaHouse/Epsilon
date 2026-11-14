@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.popup
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
-import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.render.UiContentBuffer
@@ -41,7 +40,6 @@ import java.awt.Color
 import java.util.*
 import java.util.function.Predicate
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 class RegistryListSelectPopup<T : Any> private constructor(
     private val bounds: UiRect,
@@ -62,7 +60,6 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private val openAnimation = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 160L)
     private val availableScrollBarDrag = ScrollBarDragState()
     private val selectedScrollBarDrag = ScrollBarDragState()
-    private val itemPreviews = ArrayList<ItemPreview>()
 
     private var inputFocused by mutableStateOf(false)
     private var query by mutableStateOf("")
@@ -75,7 +72,6 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private var maxSelectedScroll = 0.0f
     private var lastAvailableViewport: UiRect? = null
     private var lastSelectedViewport: UiRect? = null
-    private var lastOverlayViewport: UiRect? = null
 
     constructor(
         bounds: UiRect, setting: Setting<List<T>>, registry: Registry<T>,
@@ -163,10 +159,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
         val selectedViewport = UiRect(rightX, effectiveViewportY, columnViewportWidth, viewportHeight)
         lastAvailableViewport = availableViewport
         lastSelectedViewport = selectedViewport
-        lastOverlayViewport = UiRect(
-            availableViewport.x, availableViewport.y,
-            selectedViewport.right() - availableViewport.x, availableViewport.height
-        )
+
 
         maxAvailableScroll = maxOf(0.0f, availableContentHeight - availableViewport.height)
         maxSelectedScroll = maxOf(0.0f, selectedContentHeight - selectedViewport.height)
@@ -260,7 +253,6 @@ class RegistryListSelectPopup<T : Any> private constructor(
                 rightX - animatedBounds.x + 4.0f, headerTextY - animatedBounds.y, 0.50f, MD3Theme.TEXT_SECONDARY
             )
 
-            itemPreviews.clear()
             val localAvailableViewport = availableViewport.relativeTo(animatedBounds)
             Viewport(
                 availableBuffer, localAvailableViewport, availableScroll,
@@ -289,26 +281,6 @@ class RegistryListSelectPopup<T : Any> private constructor(
     override fun flush(renderBatch: UiRenderBatch) {
         availableBuffer.flushAndClear()
         selectedBuffer.flushAndClear()
-    }
-
-    override fun extractOverlay(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        if (iconProvider == null || itemPreviews.isEmpty()) return
-        guiGraphics.nextStratum()
-        val overlayViewport = lastOverlayViewport
-        if (overlayViewport != null) {
-            guiGraphics.enableScissor(
-                toMinecraftGuiXInt(overlayViewport.x),
-                toMinecraftGuiYInt(overlayViewport.y),
-                toMinecraftGuiXInt(overlayViewport.right()),
-                toMinecraftGuiYInt(overlayViewport.bottom())
-            )
-        }
-        for (preview in itemPreviews) {
-            drawItemPreview(guiGraphics, preview)
-        }
-        if (overlayViewport != null) {
-            guiGraphics.disableScissor()
-        }
     }
 
     private fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
@@ -441,12 +413,10 @@ class RegistryListSelectPopup<T : Any> private constructor(
             val rawName = displayNameFn(entry)
             val actionX = rowBounds.right() - 12.0f
             var textMaxWidth = rowBounds.width - 22.0f
+            val previewStack = if (hasIcons) iconProvider(entry) else ItemStack.EMPTY
             if (hasIcons) {
-                val previewStack = iconProvider(entry)
                 if (!previewStack.isEmpty) {
                     val previewX = actionX - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE
-                    val previewY = rowBounds.y + (rowBounds.height - ITEM_PREVIEW_SIZE) * 0.5f
-                    itemPreviews.add(ItemPreview(previewStack, previewX, previewY, ITEM_PREVIEW_SIZE))
                     textMaxWidth = previewX - rowBounds.x - 12.0f
                 }
             }
@@ -481,6 +451,12 @@ class RegistryListSelectPopup<T : Any> private constructor(
                         )
                         Text(display, 6.0f, textY, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER)
                         Text("-", rowBounds.width - 12.0f, textY, 0.54f, MD3Theme.ON_SECONDARY_CONTAINER)
+                    }
+                    if (!previewStack.isEmpty) {
+                        Item(
+                            previewStack, rowBounds.width - 12f - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE,
+                            (rowBounds.height - ITEM_PREVIEW_SIZE) * 0.5f, ITEM_PREVIEW_SIZE
+                        )
                     }
                 }
             }
@@ -590,46 +566,14 @@ class RegistryListSelectPopup<T : Any> private constructor(
         return boxY + (boxHeight - metrics.textHeight(scale)) * 0.5f
     }
 
-    private fun drawItemPreview(guiGraphics: GuiGraphicsExtractor, preview: ItemPreview) {
-        if (preview.stack.isEmpty) return
-        val scale = preview.size / 16.0f
-        val window = mc.window
-        val guiScale = (scale * LuminRenderSystem.getGuiScale() / window.guiScale).toFloat()
-        val guiX = toMinecraftGuiX(preview.x)
-        val guiY = toMinecraftGuiY(preview.y)
-        guiGraphics.pose().pushMatrix()
-        guiGraphics.pose().translate(guiX + guiScale, guiY + guiScale)
-        guiGraphics.pose().scale(guiScale, guiScale)
-        guiGraphics.item(preview.stack, 0, 0)
-        guiGraphics.pose().popMatrix()
-    }
-
-    private fun toMinecraftGuiX(epsilonX: Float): Float {
-        return LuminRenderSystem.toMinecraftGuiX(epsilonX.toDouble()).toFloat()
-    }
-
-    private fun toMinecraftGuiY(epsilonY: Float): Float {
-        return LuminRenderSystem.toMinecraftGuiY(epsilonY.toDouble()).toFloat()
-    }
-
-    private fun toMinecraftGuiXInt(epsilonX: Float): Int {
-        return (toMinecraftGuiX(epsilonX)).roundToInt()
-    }
-
-    private fun toMinecraftGuiYInt(epsilonY: Float): Int {
-        return (toMinecraftGuiY(epsilonY)).roundToInt()
-    }
-
     override fun close() {
         inputView.close()
 
         availableBuffer.close()
         selectedBuffer.close()
         textRenderer.close()
-        itemPreviews.clear()
     }
 
-    private data class ItemPreview(val stack: ItemStack, val x: Float, val y: Float, val size: Float)
 
     /** 列表内容、滚动位置、鼠标与主题参与 recompose 失效判定。 */
 

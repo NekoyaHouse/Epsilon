@@ -1,8 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.events.api.handler
+import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render3DEvent
-import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.SkeletonRenderer
 import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.target.TargetManager
@@ -21,11 +20,7 @@ object Skeleton : Module("Skeleton", Category.RENDER) {
     private val friendColor by colorSetting("Friend Color", Color(0x30FF00), true, { friends })
 
     init {
-        handler<Render3DEvent> { onRender3D(it) }
-    }
-
-    private fun onRender3D(event: Render3DEvent) {
-        runSafe {
+        safeEventHandler<Render3DEvent> {
             for (candidate in level.players()) {
                 if (!candidate.isAlive || candidate.isSpectator) continue
                 if (candidate.isInvisible && !invisibles) continue

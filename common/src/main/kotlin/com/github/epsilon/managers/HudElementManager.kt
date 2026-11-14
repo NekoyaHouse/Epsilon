@@ -57,7 +57,7 @@ object HudElementManager : AlwaysListening {
             if (element.isEnabled) {
                 element.updateLayout()
                 // 布局（measure）在 renderWithBatch 内部先执行，随后以最终矩形建立 UiScope 作用域绘制；
-                // 原版物品等 overlay 在 flush 后单独绘制。
+                // 物品与方块预览进入同一 Canvas；其余原版 overlay 在 flush 后单独绘制。
                 element.renderWithBatch(mc.deltaTracker, scene.batch(UiLayer.CONTENT))
             }
         }

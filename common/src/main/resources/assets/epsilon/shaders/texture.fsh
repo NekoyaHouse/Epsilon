@@ -39,13 +39,21 @@ void main() {
     float alpha = 1.0 - smoothstep(-delta, delta, dist);
 
     if (alpha < 0.001 || color.a < 0.01) discard;
+#ifdef EPSILON_PREMULTIPLIED_ALPHA
+    fragColor = vec4(color.rgb * f_Color.a * alpha, color.a * alpha);
+#else
     fragColor = vec4(color.rgb, color.a * alpha);
+#endif
 }
 
 #ifdef EPSILON_RETAINED
 #undef main
 void main() {
     epsilonOriginalMain();
+#ifdef EPSILON_PREMULTIPLIED_ALPHA
+    fragColor *= vec4(epsilonTint.rgb * epsilonTint.a, epsilonTint.a);
+#else
     fragColor *= epsilonTint;
+#endif
 }
 #endif

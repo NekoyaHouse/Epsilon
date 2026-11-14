@@ -38,6 +38,37 @@ safely. Standalone renderers keep their existing ring-buffer behavior.
 
 ---
 
+## Shared world labels
+
+`Render2DEvent.Level` owns one lazy shared `Render2DScheduler`. Crystal Aura, TNT Timer, Logout Spots,
+Name Tags and ESP 2D share its text metrics, geometry and draw backend. The event bus manages the render scope
+and flushes before returning to `MixinGuiRenderer` for vanilla level GUI rendering. Cleanup runs even when submission fails;
+the scheduler's GPU resources follow `RendererManager` shutdown.
+
+Within `safeEventHandler<Render2DEvent.Level> { event -> ... }`, use `event.textMetrics` to measure and `event.canvas`
+to submit. Each read of `event.canvas` reserves the next layer, preserving module and label order. Keep the returned
+canvas for related primitives; read it again for a later layer. These APIs are only valid during that event's dispatch.
+Modules must not clear or close the shared backend. Call `event.flush()` before
+blur, target changes, vanilla or standalone renderer draws. Name Tags uses this barrier before its background blur.
+HUD and screen UI keep their own render scopes.
+
+## Items and block previews on Canvas
+
+Use `canvas.addItem(stack, x, y, size = 16f)` or `canvas.addBlock(block, x, y, size = 16f)`.
+The UI DSL exposes the same operations as `Item(...)` and `Block(...)`. Positions and sizes use Canvas coordinates;
+items follow the same layers, affine transforms, tint and scissor as shapes and text. `owner` and `seed` preserve
+entity-dependent item models. `decorations = true` adds the vanilla durability/cooldown geometry and a Canvas-font
+count with a shadow; `countText` optionally overrides the count. Blocks use their inventory item model, including
+resource-pack overrides; blocks without an item form produce no icon. This is not an arbitrary world BlockState renderer.
+
+Commands snapshot the stack when recorded. Persistent UI must recompose when the stack/components/count change.
+Every flush resolves `ItemModelResolver` in GUI display context, then uses vanilla `GuiItemAtlas` or
+`OversizedItemRenderer` to prepare textures before opening the Canvas pass. Foil and animated models retain vanilla
+rendering behavior. Atlas UVs are never stored in retained geometry. The final quads use premultiplied alpha, including
+Canvas tint/fade. Resource reloads and GUI-scale changes invalidate item textures; the scheduler closes them at shutdown.
+Inventory HUD, Target HUD equipment, registry item/block previews and the island scaffold icon use this path instead
+of deferred `GuiGraphicsExtractor` item overlays.
+
 ## Retained UI and ordered 2D rendering
 
 `UiScene` owns the composition tree and a shared 2D backend. Composition nodes keep their own display lists and child
