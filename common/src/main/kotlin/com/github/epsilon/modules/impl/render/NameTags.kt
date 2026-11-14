@@ -16,17 +16,19 @@ import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
 import java.awt.Color
 import kotlin.math.roundToInt
 
 object NameTags : Module("Name Tags", Category.RENDER) {
 
     private val range by doubleSetting("Range", 128.0, 8.0..256.0, 1.0)
-    private val scale by doubleSetting("Scale", 0.75, 0.4..1.4, 0.05)
+    private val scale by doubleSetting("Scale", 0.35, 0.3..1.4, 0.05)
     private val limitMinScale by boolSetting("Limit Min Scale", false)
     private val minScale by doubleSetting(
-        "Min Scale", 0.5, 0.1..1.4, 0.05,
+        "Min Scale", 0.3, 0.1..1.4, 0.05,
         { limitMinScale }
     )
     private val heightOffset by doubleSetting("Height Offset", 0.5, 0.0..1.5, 0.05)
@@ -34,6 +36,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     private val friendStatus by boolSetting("Friend Status", true)
     private val teamStatus by boolSetting("Team Status", true)
     private val showHealth by boolSetting("Show Health", true)
+    private val showEquipment by boolSetting("Show Equipment", true)
     private val outline by boolSetting("Outline", true)
     private val nameColor by colorSetting("Name Color", Color(247, 249, 252, 245))
     private val friendColor by colorSetting(
@@ -78,6 +81,11 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         { dropShadow }
     )
 
+    private val equipmentSlots = arrayOf(
+        EquipmentSlot.MAINHAND, EquipmentSlot.HEAD, EquipmentSlot.CHEST,
+        EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.OFFHAND
+    )
+
     init {
         safeEventHandler<Render2DEvent.Level> { event ->
             val tags = collectTags(event.textMetrics)
@@ -119,8 +127,8 @@ object NameTags : Module("Name Tags", Category.RENDER) {
                 renderScale = maxOf(renderScale, minScale.toFloat())
             }
             val tag = createLayout(metrics, entity, projected.x, projected.y, renderScale)
-            if (tag.x + tag.width < 0.0f || tag.y + tag.height < 0.0f ||
-                tag.x > screenWidth || tag.y > screenHeight
+            if (tag.right < 0.0f || tag.y + tag.height < 0.0f ||
+                tag.left > screenWidth || tag.top > screenHeight
             ) {
                 continue
             }
@@ -204,8 +212,20 @@ object NameTags : Module("Name Tags", Category.RENDER) {
 
         return TagLayout(
             startX, startY, totalWidth, tagHeight, radius, renderScale,
-            nn.player.distanceToSqr(player), segments
+            nn.player.distanceToSqr(player), segments,
+            createEquipmentLayout(player, centerX, startY, renderScale)
         )
+    }
+
+    private fun createEquipmentLayout(player: Player, centerX: Float, tagY: Float, renderScale: Float): EquipmentLayout? {
+        if (!showEquipment) return null
+        val items = equipmentSlots.mapNotNull { slot -> player.getItemBySlot(slot).takeUnless { it.isEmpty } }
+        if (items.isEmpty()) return null
+
+        val size = 16.0f * renderScale
+        val gap = 2.0f * renderScale
+        val width = items.size * size + (items.size - 1) * gap
+        return EquipmentLayout(player, items, centerX - width * 0.5f, tagY - size - 3.0f * renderScale, width, size, gap)
     }
 
     private fun renderTag(layer: Render2DScheduler.Canvas, tag: TagLayout) {
@@ -236,6 +256,16 @@ object NameTags : Module("Name Tags", Category.RENDER) {
                 )
             }
             renderSegmentContent(layer, segment, tag.scale)
+        }
+
+        // 与该玩家的标签共用图层，保持远近标签的遮挡顺序。
+        tag.equipment?.let { equipment ->
+            for ((index, stack) in equipment.items.withIndex()) {
+                layer.addItem(
+                    stack, equipment.x + index * (equipment.size + equipment.gap), equipment.y, equipment.size,
+                    owner = equipment.player, seed = equipment.player.id + index, decorations = true
+                )
+            }
         }
     }
 
@@ -371,6 +401,22 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         val scale: Float,
         val distanceSquared: Double,
         val segments: List<SegmentLayout>,
+        val equipment: EquipmentLayout?,
+    ) {
+        // 装备行可能比名称宽；屏幕剔除必须同时覆盖两行。
+        val left: Float get() = minOf(x, equipment?.x ?: x)
+        val right: Float get() = maxOf(x + width, equipment?.let { it.x + it.width } ?: (x + width))
+        val top: Float get() = equipment?.y ?: y
+    }
+
+    private data class EquipmentLayout(
+        val player: Player,
+        val items: List<ItemStack>,
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val size: Float,
+        val gap: Float,
     )
 
 }

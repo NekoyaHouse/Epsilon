@@ -2207,7 +2207,8 @@
         "blur strength": "Blur Strength",
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color"
+        "shadow color": "Shadow Color",
+        "show equipment": "Show Equipment"
       },
       "no render": {
         "_value": "No Render",

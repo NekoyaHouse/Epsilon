@@ -2207,7 +2207,8 @@
         "blur strength": "模糊强度",
         "drop shadow": "阴影",
         "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色"
+        "shadow color": "阴影颜色",
+        "show equipment": "显示装备"
       },
       "no render": {
         "_value": "移除渲染",

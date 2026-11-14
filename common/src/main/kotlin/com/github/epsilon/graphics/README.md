@@ -68,6 +68,8 @@ rendering behavior. Atlas UVs are never stored in retained geometry. The final q
 Canvas tint/fade. Resource reloads and GUI-scale changes invalidate item textures; the scheduler closes them at
 shutdown. Inventory HUD, Target HUD equipment, registry item/block previews and the island scaffold icon use this path
 instead of deferred `GuiGraphicsExtractor` item overlays.
+Name Tags also uses Canvas for an optional equipment row above each name, ordered main hand, helmet, chestplate,
+leggings, boots and offhand; empty slots are omitted and the row follows the tag's scale and draw order.
 
 ## Retained UI and ordered 2D rendering
 
