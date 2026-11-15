@@ -186,7 +186,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private val shieldMode by enumSetting("Shield Mode", ShieldMode.Bypass).group(sgGeneral)
     private val surroundFucker by boolSetting("Surround Fucker", true).group(sgGeneral)
     private val antiSurround by boolSetting("Anti Surround", false).group(sgGeneral)
-    private val prePlacement by boolSetting("Pre Placement", true).group(sgGeneral)
+    private val prePlacement by boolSetting("Pre Placement", false).group(sgGeneral)
     private val cevBomber by boolSetting("Cev Bomber", false, { antiSurround }).group(sgGeneral)
     private val cevDamage by doubleSetting("Cev Damage", 8.0, 1.0..10.0, 0.1, { antiSurround && cevBomber }).group(
         sgGeneral

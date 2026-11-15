@@ -217,7 +217,12 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         )
     }
 
-    private fun createEquipmentLayout(player: Player, centerX: Float, tagY: Float, renderScale: Float): EquipmentLayout? {
+    private fun createEquipmentLayout(
+        player: Player,
+        centerX: Float,
+        tagY: Float,
+        renderScale: Float
+    ): EquipmentLayout? {
         if (!showEquipment) return null
         val items = equipmentSlots.mapNotNull { slot -> player.getItemBySlot(slot).takeUnless { it.isEmpty } }
         if (items.isEmpty()) return null
@@ -225,7 +230,15 @@ object NameTags : Module("Name Tags", Category.RENDER) {
         val size = 16.0f * renderScale
         val gap = 2.0f * renderScale
         val width = items.size * size + (items.size - 1) * gap
-        return EquipmentLayout(player, items, centerX - width * 0.5f, tagY - size - 3.0f * renderScale, width, size, gap)
+        return EquipmentLayout(
+            player,
+            items,
+            centerX - width * 0.5f,
+            tagY - size - 3.0f * renderScale,
+            width,
+            size,
+            gap
+        )
     }
 
     private fun renderTag(layer: Render2DScheduler.Canvas, tag: TagLayout) {

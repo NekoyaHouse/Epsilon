@@ -1,11 +1,11 @@
 package com.github.epsilon.kernel.gameplay.combat
 
 internal object CrystalDamageRules {
-    fun rawDamage(distance: Double, exposure: Double): Float {
-        if (!distance.isFinite() || !exposure.isFinite() || distance > 12.0) return 0.0f
-        val impact = (1.0 - distance.coerceAtLeast(0.0) / 12.0) * exposure.coerceIn(0.0, 1.0)
-        // ExplosionDamageCalculator 不再将结果截断为整数。
-        return ((impact * impact + impact) * 42.0 + 1.0).toFloat()
+    fun rawDamage(distance: Double, exposure: Double, explosionRadius: Double = 6.0): Float {
+        val diameter = explosionRadius * 2.0
+        if (!distance.isFinite() || !exposure.isFinite() || distance > diameter) return 0.0f
+        val impact = (1.0 - distance.coerceAtLeast(0.0) / diameter) * exposure.coerceIn(0.0, 1.0)
+        return ((impact * impact + impact) * 3.5 * diameter + 1.0).toFloat()
     }
 
     fun scaleForDifficulty(damage: Float, difficulty: Int): Float = when (difficulty) {

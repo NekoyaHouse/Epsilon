@@ -70,7 +70,10 @@ object NoRender : Module("No Render", Category.RENDER) {
     private val noMapContents by boolSetting("Map Contents", false).group(worldGroup)
     private val bannerRender by enumSetting("Banners", BannerRenderMode.Everything).group(worldGroup)
     private val noFireworkExplosions by boolSetting("Firework Explosions", false).group(worldGroup)
-    private val particles by particleTypeListSetting("Particles", listOf(ParticleTypes.EXPLOSION, ParticleTypes.FLAME)).group(worldGroup)
+    private val particles by particleTypeListSetting(
+        "Particles",
+        listOf(ParticleTypes.EXPLOSION, ParticleTypes.FLAME)
+    ).group(worldGroup)
     private val noBarrierInvis by boolSetting("Barrier Invisibility", false).group(worldGroup)
     private val noTextureRotations by boolSetting(
         "Texture Rotations",

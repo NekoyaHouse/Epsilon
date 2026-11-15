@@ -126,12 +126,14 @@ object CrystalDamage {
         return WorldSnapshot(boxes)
     }
 
+    /** explosionRadius 使用原版爆炸强度：末影水晶为 6，重生锚为 5。 */
     fun NonNullContext.damage(
         snapshot: Snapshot,
         center: Vec3,
         ignoreTerrain: Boolean = false,
         base: BlockPos? = null,
-        ignored: Set<BlockPos> = emptySet()
+        ignored: Set<BlockPos> = emptySet(),
+        explosionRadius: Double = 6.0
     ): Double =
         calculate(snapshot, center, { from, to, support, excluded ->
             trace(from, to) { pos ->
@@ -143,21 +145,26 @@ object CrystalDamage {
                     else -> state.getCollisionShape(level, pos)
                 }
             }
-        }, base, ignored)
+        }, base, ignored, explosionRadius)
 
+    /** 与 damage 使用相同爆炸强度；快照计算保持在调用线程内。 */
     fun calculate(
         snapshot: Snapshot,
         center: Vec3,
         visibility: Visibility,
         base: BlockPos? = null,
-        ignored: Set<BlockPos> = emptySet()
+        ignored: Set<BlockPos> = emptySet(),
+        explosionRadius: Double = 6.0
     ): Double {
         if (snapshot.immune) return 0.0
         val distance = snapshot.position.distanceTo(center)
-        if (distance > 12.0) return 0.0
+        if (distance > explosionRadius * 2.0) return 0.0
         val exposure = exposure(snapshot.box, center, visibility, base, ignored)
         val damage =
-            CrystalDamageRules.scaleForDifficulty(CrystalDamageRules.rawDamage(distance, exposure), snapshot.difficulty)
+            CrystalDamageRules.scaleForDifficulty(
+                CrystalDamageRules.rawDamage(distance, exposure, explosionRadius),
+                snapshot.difficulty
+            )
         return CrystalDamageRules.reduceDamage(
             damage,
             snapshot.armor,
