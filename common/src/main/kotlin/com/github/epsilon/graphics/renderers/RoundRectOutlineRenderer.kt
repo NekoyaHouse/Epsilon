@@ -151,9 +151,9 @@ class RoundRectOutlineRenderer private constructor(
         val y2 = centerY + size - size * 2f * t
         val x3 = centerX + size - size * t
         val y3 = centerY + size * t
-        val left = minOf(x1, x2, x3);
+        val left = minOf(x1, x2, x3)
         val right = maxOf(x1, x2, x3)
-        val top = minOf(y1, y2, y3);
+        val top = minOf(y1, y2, y3)
         val bottom = maxOf(y1, y2, y3)
         buffer.ensureCapacity(currentOffset + OUTLINE_BYTES)
         buffer.tryMap()

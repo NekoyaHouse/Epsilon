@@ -117,35 +117,29 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
     private fun reisaShutdownFinalTexture(): Identifier? = AssetManager.reisaTexture(REISA_SHUTDOWN_FINAL_SUFFIX)
 
     init {
-        entries.add(MenuEntry("Singleplayer", Runnable { minecraft.gui.setScreen(SelectWorldScreen(this)) }))
+        entries.add(MenuEntry("Singleplayer") { minecraft.gui.setScreen(SelectWorldScreen(this)) })
         entries.add(
-            MenuEntry(
-                "Multiplayer", Runnable {
-                    val minecraft = minecraft
-                    val screen: Screen = if (minecraft.options.skipMultiplayerWarning) {
-                        JoinMultiplayerScreen(this)
-                    } else {
-                        SafetyScreen(this)
-                    }
-                    minecraft.gui.setScreen(screen)
+            MenuEntry("Multiplayer") {
+                val minecraft = minecraft
+                val screen: Screen = if (minecraft.options.skipMultiplayerWarning) {
+                    JoinMultiplayerScreen(this)
+                } else {
+                    SafetyScreen(this)
                 }
-            )
+                minecraft.gui.setScreen(screen)
+            }
         )
-        entries.add(MenuEntry("Accounts", Runnable { minecraft.gui.setScreen(AccountsScreen) }))
-        entries.add(MenuEntry("GUI", Runnable { minecraft.gui.setScreen(ClientSetting.getGuiScreen()) }))
+        entries.add(MenuEntry("Accounts") { minecraft.gui.setScreen(AccountsScreen) })
+        entries.add(MenuEntry("GUI") { minecraft.gui.setScreen(ClientSetting.getGuiScreen()) })
         entries.add(
-            MenuEntry(
-                "Options", Runnable {
-                    minecraft.gui.setScreen(OptionsScreen(this, minecraft.options))
-                }
-            )
+            MenuEntry("Options") {
+                minecraft.gui.setScreen(OptionsScreen(this, minecraft.options))
+            }
         )
         entries.add(
-            MenuEntry(
-                "Quit", Runnable {
-                    if (!requestShutdown()) minecraft.stop()
-                }
-            )
+            MenuEntry("Quit") {
+                if (!requestShutdown()) minecraft.stop()
+            }
         )
     }
 
@@ -552,7 +546,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
                                 scale,
                                 now,
                                 -layoutX,
-                                -layoutY.toFloat(),
+                                -layoutY,
                                 width,
                                 height
                             )
@@ -1034,7 +1028,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         exitProgress: Float,
         scale: Float,
     ) {
-        val trailEnvelope = sin((exitProgress * PI).toDouble()).toFloat()
+        val trailEnvelope = sin((exitProgress * PI)).toFloat()
         if (trailEnvelope <= 0.001f) return
         val startX = imageX + imageWidth * 0.34f
         val maxWidth = maxOf(0.0f, LuminRenderSystem.getScaledWidth() - startX)
@@ -1208,7 +1202,7 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         moveProgress: Float,
         scale: Float,
     ) {
-        val trailEnvelope = sin((moveProgress * PI).toDouble()).toFloat()
+        val trailEnvelope = sin((moveProgress * PI)).toFloat()
         val trailAlpha = alpha * poseProgress * trailEnvelope
         if (trailAlpha <= 0.001f) return
 
@@ -1301,9 +1295,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
             val center = (u0 + u1) * 0.5f
             val sliceX = hingeX - imageWidth * (1.0f - u0) * unfold
             val sliceRight = hingeX - imageWidth * (1.0f - u1) * unfold
-            val curl = sin((center * PI).toDouble()).toFloat() * (1.0f - unfold) * 20.15f * scale
+            val curl = sin((center * PI)).toFloat() * (1.0f - unfold) * 20.15f * scale
             val shade = 1.0f - (1.0f - unfold) *
-                    (0.18f + 0.38f * sin((center * PI).toDouble()).toFloat())
+                    (0.18f + 0.38f * sin((center * PI)).toFloat())
             val sliceColor = applyAlpha(Color.WHITE, alpha * shade)
             scope.layer(ReisaZ.Pose) { layer ->
                 layer.texture(

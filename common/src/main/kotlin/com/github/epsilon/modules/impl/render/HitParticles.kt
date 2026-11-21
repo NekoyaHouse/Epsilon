@@ -156,14 +156,14 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
                 motionY = -motionY / 1.1f
                 motionX /= 1.1f
                 motionZ /= 1.1f
-            } else if (isSolidBlock((x - horizontalSpeed).toDouble(), y.toDouble(), (z - horizontalSpeed).toDouble()) ||
-                isSolidBlock((x + horizontalSpeed).toDouble(), y.toDouble(), (z + horizontalSpeed).toDouble()) ||
-                isSolidBlock((x + horizontalSpeed).toDouble(), y.toDouble(), (z - horizontalSpeed).toDouble()) ||
-                isSolidBlock((x - horizontalSpeed).toDouble(), y.toDouble(), (z + horizontalSpeed).toDouble()) ||
-                isSolidBlock((x + horizontalSpeed).toDouble(), y.toDouble(), z.toDouble()) ||
-                isSolidBlock((x - horizontalSpeed).toDouble(), y.toDouble(), z.toDouble()) ||
-                isSolidBlock(x.toDouble(), y.toDouble(), (z + horizontalSpeed).toDouble()) ||
-                isSolidBlock(x.toDouble(), y.toDouble(), (z - horizontalSpeed).toDouble())
+            } else if (isSolidBlock((x - horizontalSpeed), y.toDouble(), (z - horizontalSpeed)) ||
+                isSolidBlock((x + horizontalSpeed), y.toDouble(), (z + horizontalSpeed)) ||
+                isSolidBlock((x + horizontalSpeed), y.toDouble(), (z - horizontalSpeed)) ||
+                isSolidBlock((x - horizontalSpeed), y.toDouble(), (z + horizontalSpeed)) ||
+                isSolidBlock((x + horizontalSpeed), y.toDouble(), z.toDouble()) ||
+                isSolidBlock((x - horizontalSpeed), y.toDouble(), z.toDouble()) ||
+                isSolidBlock(x.toDouble(), y.toDouble(), (z + horizontalSpeed)) ||
+                isSolidBlock(x.toDouble(), y.toDouble(), (z - horizontalSpeed))
             ) {
                 motionX = -motionX
                 motionZ = -motionZ

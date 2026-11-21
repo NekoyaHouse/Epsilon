@@ -106,8 +106,6 @@ class TrollSettingsWindow(
                 }
 
                 is SettingLayoutPlanner.Section.GroupElement -> append(element.section(), currentDepth)
-                else -> {
-                }
             }
         }
         if (header != null && entries.size > firstChild) {
@@ -179,7 +177,7 @@ class TrollSettingsWindow(
     }
 
     private fun allRows(): List<TrollSettingRow> {
-        val result = ArrayList<TrollSettingRow>(rows.values)
+        val result = ArrayList(rows.values)
         result.add(bindRow)
         result.add(hiddenRow)
         return result

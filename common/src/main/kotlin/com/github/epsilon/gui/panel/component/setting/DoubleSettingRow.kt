@@ -205,7 +205,7 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
 
     private fun commitInput() {
         val buffer = inputBuffer
-        if (buffer == null || buffer.isBlank() || buffer == "-" || buffer == ".") {
+        if (buffer.isNullOrBlank() || buffer == "-" || buffer == ".") {
             commitPendingValue()
             inputBuffer = formatPlainValue()
             cursorIndex = inputBuffer!!.length
@@ -213,7 +213,7 @@ class DoubleSettingRow(private val doubleSetting: DoubleSetting) : SettingRow<Do
         }
         try {
             applyValueNow(buffer.toDouble())
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             // 非法输入保留原值。
         }
         inputBuffer = formatPlainValue()

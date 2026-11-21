@@ -56,8 +56,8 @@ object TrollGuiScreen : Screen(Component.literal("TrollGui")), ListSettingPopupS
     private const val SEARCH_TEXT_FADE_MS = 5000L
 
     private val textMetrics: Supplier<UiTextMetrics> =
-        Suppliers.memoize(Supplier { TextRenderer.create().asUiTextMetrics() })
-    private val scene: Supplier<UiScene> = Suppliers.memoize(Supplier { UiScene(EpsilonUiTheme) })
+        Suppliers.memoize { TextRenderer.create().asUiTextMetrics() }
+    private val scene: Supplier<UiScene> = Suppliers.memoize { UiScene(EpsilonUiTheme) }
     private val windows: MutableList<TrollWindow> = ArrayList()
     private val popupHost: PanelPopupHost = PanelPopupHost { scene.get().input }
     private val guiOpenAnimation: Animation = Animation(Easing.EASE_OUT_CUBIC, 400L)
@@ -164,8 +164,8 @@ object TrollGuiScreen : Screen(Component.literal("TrollGui")), ListSettingPopupS
         }
 
         val friendWindow = this.friendWindow
-        if (friendWindow != null) {
-            friendWindow.position(maxOf(0.0f, width - friendWindow.bounds.width - gap), gap)
+        friendWindow?.let {
+            it.position(maxOf(0.0f, width - it.bounds.width - gap), gap)
         }
         val configWindow = this.configWindow
         if (configWindow != null) {
@@ -440,7 +440,7 @@ object TrollGuiScreen : Screen(Component.literal("TrollGui")), ListSettingPopupS
     }
 
     fun renderPendingFrame(): Boolean {
-        val pendingScene = this.pendingScene ?: return false
+        if (pendingScene == null) return false
 
         val previousTarget = LuminRenderSystem.getActiveTarget()
         val previousProjection = RenderSystem.getProjectionMatrixBuffer()
@@ -772,7 +772,7 @@ object TrollGuiScreen : Screen(Component.literal("TrollGui")), ListSettingPopupS
         return false
     }
 
-    private data class WindowPass(
+    private class WindowPass(
         val bounds: UiRect,
         val batch: UiRenderBatch,
         val popup: Boolean,

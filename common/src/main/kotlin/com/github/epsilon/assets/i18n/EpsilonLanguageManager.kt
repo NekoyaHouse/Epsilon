@@ -137,7 +137,7 @@ object EpsilonLanguageManager {
             return ClientSetting.customLanguage
                 .trim()
                 .lowercase(Locale.ROOT)
-        } catch (ignored: Throwable) {
+        } catch (_: Throwable) {
             return ""
         }
     }

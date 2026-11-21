@@ -430,13 +430,13 @@ class ColorPickerPopup(
     private fun commitInput() {
         val focused = focusedChannel ?: return
         val buffer = inputBuffer
-        if (buffer == null || buffer.isBlank()) {
+        if (buffer.isNullOrBlank()) {
             return
         }
         var value: Int
         try {
             value = buffer.toInt().coerceIn(0, 255)
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             value = getChannelValue(focused)
         }
         val current = getVisibleColor()

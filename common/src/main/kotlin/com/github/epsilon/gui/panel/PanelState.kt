@@ -181,7 +181,7 @@ class PanelState {
 
     private fun normalizedName(module: Module): String {
         val translated = module.translatedName
-        if (translated != null && !translated.isBlank()) return translated
+        if (translated != null && translated.isNotBlank()) return translated
         return module.name
     }
 

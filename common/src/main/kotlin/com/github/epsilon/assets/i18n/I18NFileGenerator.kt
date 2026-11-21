@@ -130,7 +130,7 @@ object I18NFileGenerator {
     }
 
     private fun normalizeOwner(ownerId: String?): String? {
-        if (ownerId == null || ownerId.isBlank()) {
+        if (ownerId.isNullOrBlank()) {
             return null
         }
         return ownerId.trim()

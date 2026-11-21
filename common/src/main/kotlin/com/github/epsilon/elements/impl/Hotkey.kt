@@ -15,7 +15,6 @@ import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
 import java.util.function.Supplier
-import com.google.common.base.Supplier as GuavaSupplier
 
 private const val ROW_HEIGHT = 16.0f
 
@@ -46,7 +45,7 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
 
     private val moduleAnimations: MutableMap<Module, ToggleAnimation> = HashMap()
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
+        Suppliers.memoize { TextRenderer.create() }
 
     /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
     private var layoutEntries: List<Entry> = emptyList()
@@ -99,7 +98,7 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
             maxRowWidth = maxOf(maxRowWidth, ICON_SIZE + ICON_TEXT_GAP + entry.textWidth + TEXT_PADDING * 2.0f)
             contentHeight += (ROW_HEIGHT + ROW_GAP) * entry.animation
         }
-        if (!entries.isEmpty()) {
+        if (entries.isNotEmpty()) {
             contentHeight -= ROW_GAP * entries.last().animation
         }
         layoutEntries = entries
@@ -199,7 +198,7 @@ object Hotkey : HudModule("Hotkey", 96.0f, ROW_HEIGHT) {
     }
 
     private fun normalizeInfo(info: String?): String {
-        return if (info == null || info.isBlank()) "" else info
+        return if (info.isNullOrBlank()) "" else info
     }
 
     private fun withAlpha(color: Color, multiplier: Float): Color {

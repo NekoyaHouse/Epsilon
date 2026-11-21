@@ -153,7 +153,7 @@ class ReisaDropdownCompanion {
         val transparent = withAlpha(Color.WHITE, 0.0f)
         with(scope) {
             Layer(ReisaDropdownZ.Prewarm) {
-                for (action in Action.values()) {
+                for (action in Action.entries) {
                     val texture = action.texture() ?: continue
                     Texture(
                         texture, -1.0f, -1.0f, 1.0f, 1.0f,

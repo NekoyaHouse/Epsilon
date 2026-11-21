@@ -197,7 +197,7 @@ class MusicInstance(
             image = decodeThumbnail(thumbnail)
             val existingTexture = coverTexture
             if (existingTexture == null) {
-                newTexture = DynamicTexture(Supplier { "Epsilon SMTC album art" }, image)
+                newTexture = DynamicTexture({ "Epsilon SMTC album art" }, image)
                 image = null
                 mc.textureManager.register(COVER_TEXTURE, newTexture)
                 coverTexture = newTexture
@@ -296,11 +296,11 @@ class MusicInstance(
         private const val COVER_TEXTURE_SIZE = 256
 
         private fun title(snapshot: SmtcSnapshot): String {
-            return if (snapshot.title.isBlank()) "Unknown track" else snapshot.title
+            return snapshot.title.ifBlank { "Unknown track" }
         }
 
         private fun artist(snapshot: SmtcSnapshot): String {
-            return if (snapshot.artist.isBlank()) "Unknown artist" else snapshot.artist
+            return snapshot.artist.ifBlank { "Unknown artist" }
         }
 
         private fun metadata(snapshot: SmtcSnapshot): String {
@@ -311,7 +311,7 @@ class MusicInstance(
         }
 
         private fun sourceName(sourceAppId: String?): String {
-            if (sourceAppId == null || sourceAppId.isBlank()) return "Windows media"
+            if (sourceAppId.isNullOrBlank()) return "Windows media"
 
             var value = sourceAppId
             val appSeparator = value.lastIndexOf('!')
@@ -321,7 +321,7 @@ class MusicInstance(
             if (value.lowercase(Locale.ROOT).endsWith(".exe")) {
                 value = value.substring(0, value.length - 4)
             }
-            return if (value.isBlank()) "Windows media" else value
+            return value.ifBlank { "Windows media" }
         }
 
     }

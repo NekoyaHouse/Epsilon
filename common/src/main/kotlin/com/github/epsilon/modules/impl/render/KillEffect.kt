@@ -33,9 +33,9 @@ object KillEffect : Module("Kill Effect", Category.RENDER) {
     private val blood by boolSetting("Blood", true)
 
     private val pendingTargets: MutableSet<LivingEntity> =
-        Collections.newSetFromMap(IdentityHashMap<LivingEntity, Boolean>())
+        Collections.newSetFromMap(IdentityHashMap())
     private val effectSquids: MutableSet<Entity> =
-        Collections.newSetFromMap(IdentityHashMap<Entity, Boolean>())
+        Collections.newSetFromMap(IdentityHashMap())
     private val squidEffects: MutableList<SquidEffect> = ArrayList()
     private var localEntityIdCounter = -8
 

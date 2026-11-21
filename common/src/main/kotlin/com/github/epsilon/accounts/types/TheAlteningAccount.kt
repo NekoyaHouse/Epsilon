@@ -22,7 +22,7 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
     override fun fetchInfo(): Boolean {
         try {
             val res = authenticate()
-            if (res == null || res.accessToken == null || res.selectedProfile == null) {
+            if (res?.accessToken == null || res.selectedProfile == null) {
                 Constants.LOGGER.error("Invalid TheAltening credentials.")
                 return false
             }
@@ -62,7 +62,7 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
     }
 
     private fun authenticate(): AuthResponse? {
-        return Http.post(API_HOST + "/authenticate")
+        return Http.post("$API_HOST/authenticate")
             .bodyJson(AuthRequest("MINECRAFT", token ?: "", "Meteor on Crack!", UUID.randomUUID().toString(), true))
             .sendJson(AuthResponse::class.java)
     }
@@ -117,7 +117,7 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
          * TheAltening 未提供公开的 discovery 文档说明，这里沿用其账号主机下的 `/discovery` 路径；
          * 若第三方服务调整接口，需要同步更新该地址。
          */
-        private val ENVIRONMENT = Environment(API_HOST + "/discovery", "The Altening")
+        private val ENVIRONMENT = Environment("$API_HOST/discovery", "The Altening")
 
         private val SERVICE: MinecraftServicesDiscoveryService =
             MinecraftServicesDiscoveryService.create(mc.proxy, true, ENVIRONMENT)

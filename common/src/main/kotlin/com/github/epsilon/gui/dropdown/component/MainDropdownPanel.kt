@@ -32,44 +32,44 @@ class MainDropdownPanel(
         isVisible = true
         isOpened = true
         add(
-            LabelSupplier { Category.COMBAT.getName() },
+            { Category.COMBAT.getName() },
             Category.COMBAT.icon,
             "category:combat",
             togglePanel,
             panelVisibleResolver
         )
         add(
-            LabelSupplier { Category.PLAYER.getName() },
+            { Category.PLAYER.getName() },
             Category.PLAYER.icon,
             "category:player",
             togglePanel,
             panelVisibleResolver
         )
         add(
-            LabelSupplier { Category.MOVEMENT.getName() },
+            { Category.MOVEMENT.getName() },
             Category.MOVEMENT.icon,
             "category:movement",
             togglePanel,
             panelVisibleResolver
         )
         add(
-            LabelSupplier { Category.RENDER.getName() },
+            { Category.RENDER.getName() },
             Category.RENDER.icon,
             "category:render",
             togglePanel,
             panelVisibleResolver
         )
         add(
-            LabelSupplier { EpsilonTranslations.Gui.TAB_FRIEND.getTranslatedName() },
+            { EpsilonTranslations.Gui.TAB_FRIEND.getTranslatedName() },
             IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver
         )
         add(
-            LabelSupplier { EpsilonTranslations.Gui.TAB_CONFIG.getTranslatedName() },
+            { EpsilonTranslations.Gui.TAB_CONFIG.getTranslatedName() },
             IconChars.SETTINGS, "config", togglePanel, panelVisibleResolver
         )
         entries.add(
             Entry(
-                LabelSupplier { EpsilonTranslations.Gui.DROPDOWN_COLLAPSE_ALL.getTranslatedName() },
+                { EpsilonTranslations.Gui.DROPDOWN_COLLAPSE_ALL.getTranslatedName() },
                 IconChars.CLOSE, "__collapse_all__", togglePanel, anySubPanelVisible
             )
         )
@@ -87,8 +87,8 @@ class MainDropdownPanel(
                 labelSupplier,
                 icon,
                 panelId,
-                togglePanel,
-                BooleanSupplier { panelVisibleResolver.getAsBoolean(panelId) })
+                togglePanel
+            ) { panelVisibleResolver.getAsBoolean(panelId) }
         )
     }
 

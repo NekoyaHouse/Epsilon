@@ -70,10 +70,10 @@ object QQAvatarManager {
         val image: BufferedImage
         try {
             image = downloadAvatar(qq)
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             mc.execute { fail(requestGeneration) }
             return
-        } catch (e: RuntimeException) {
+        } catch (_: RuntimeException) {
             mc.execute { fail(requestGeneration) }
             return
         }
@@ -94,7 +94,7 @@ object QQAvatarManager {
             avatarTexture = texture
             texture = null
             state = State.READY
-        } catch (e: RuntimeException) {
+        } catch (_: RuntimeException) {
             if (texture != null) {
                 texture.close()
             } else if (image != null) {
@@ -156,7 +156,7 @@ object QQAvatarManager {
 
     private fun findLocalAccount(): String? {
         val appData = System.getenv("APPDATA")
-        if (appData != null && !appData.isBlank()) {
+        if (appData != null && appData.isNotBlank()) {
             val account = newestMatchingDirectory(Path.of(appData, "QQ", "Partitions"), QQ_PARTITION)
             if (account != null) return account
         }
@@ -187,9 +187,9 @@ object QQAvatarManager {
                         }
                     }
                 }
-        } catch (ignored: IOException) {
+        } catch (_: IOException) {
             return null
-        } catch (ignored: SecurityException) {
+        } catch (_: SecurityException) {
             return null
         }
         return newestAccount

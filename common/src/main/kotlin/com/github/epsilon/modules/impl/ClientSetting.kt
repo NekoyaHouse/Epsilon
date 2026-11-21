@@ -124,7 +124,7 @@ object ClientSetting : Module("Client Setting", null) {
     @Suppress("unused")
     private val openHUDEditor by buttonSetting(
         "Open HUD Editor",
-        Runnable { mc.gui.setScreen(HudEditorScreen) }
+        { mc.gui.setScreen(HudEditorScreen) }
     )
 
     // General
@@ -237,7 +237,7 @@ object ClientSetting : Module("Client Setting", null) {
                     mc.vanillaPackResources.fullResources(),
                     if (SharedConstants.getCurrentVersion().stable()) IconSet.RELEASE else IconSet.SNAPSHOT
                 )
-            } catch (ignored: IOException) {
+            } catch (_: IOException) {
             }
         }
     ).group(sgAppearance)
@@ -301,13 +301,13 @@ object ClientSetting : Module("Client Setting", null) {
     @Suppress("unused")
     private val downloadAssets by buttonSetting(
         "Download Assets",
-        Runnable { AssetManager.openDownloadScreen() }
+        { AssetManager.openDownloadScreen() }
     ).group(sgResources)
 
     @Suppress("unused")
     private val clearAssetCache by buttonSetting(
         "Clear Asset Cache",
-        Runnable {
+        {
             val parent = mc.gui.screen()
             val lines = listOf(
                 EpsilonTranslations.Resources.CLEAR_CONFIRM_MESSAGE.getTranslatedName(),
@@ -318,22 +318,21 @@ object ClientSetting : Module("Client Setting", null) {
                 EpsilonTranslations.Resources.CLEAR_CONFIRM_TITLE.getTranslatedName(),
                 lines,
                 EpsilonTranslations.Resources.CLEAR_CONFIRM_YES.getTranslatedName(),
-                EpsilonTranslations.Resources.CLEAR_CONFIRM_NO.getTranslatedName(),
-                Runnable {
-                    AssetManager.clearCache()
-                    NotificationManager.success(
-                        EpsilonTranslations.Resources.CLEAR_SUCCESS_TITLE.getTranslatedName(),
-                        EpsilonTranslations.Resources.CLEAR_SUCCESS_MESSAGE.getTranslatedName()
-                    )
-                }
-            )
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_NO.getTranslatedName()
+            ) {
+                AssetManager.clearCache()
+                NotificationManager.success(
+                    EpsilonTranslations.Resources.CLEAR_SUCCESS_TITLE.getTranslatedName(),
+                    EpsilonTranslations.Resources.CLEAR_SUCCESS_MESSAGE.getTranslatedName()
+                )
+            }
         }
     ).group(sgResources)
 
     @Suppress("unused")
     private val openAssetFolder by buttonSetting(
         "Open Asset Folder",
-        Runnable {
+        {
             try {
                 val directory: Path = AssetManager.rootDirectory()
                 Files.createDirectories(directory)

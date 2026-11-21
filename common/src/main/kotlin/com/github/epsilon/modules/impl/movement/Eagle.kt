@@ -64,7 +64,7 @@ object Eagle : Module("Eagle", Category.MOVEMENT) {
         return if (minDelay == maxDelay) {
             minDelay.toString()
         } else {
-            minDelay.toString() + "-" + maxDelay.toString()
+            "$minDelay-$maxDelay"
         }
     }
 

@@ -14,8 +14,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.util.Util
 import java.awt.Color
 import java.net.URI
-import java.util.function.Function
-import java.util.function.Supplier
 import kotlin.math.roundToInt
 
 private const val TITLE = "欢迎使用 Epsilon / Welcome to Epsilon"
@@ -80,37 +78,33 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
         super.init()
         openedAtMs = Util.getMillis()
 
-        val buttonWidth = ((width - 40).toLong()).coerceIn((160).toLong(), (200).toLong()).toInt()
+        val buttonWidth = (width - 40).coerceIn(160, 200)
         val buttonX = (width - buttonWidth) / 2
         val cardHeight = getCardHeight()
         val buttonY = getCardY(cardHeight) + cardHeight - BUTTON_BOTTOM_PADDING - BUTTON_BLOCK_HEIGHT
 
         addRenderableWidget(
-            CycleButton.builder<EpsilonLanguage>(
-                Function { language -> Component.literal(language.toString()) },
-                Supplier { ClientSetting.language }
-            )
-                .withValues(EpsilonLanguage.values().toList())
+            CycleButton.builder<EpsilonLanguage>({ language -> Component.literal(language.toString()) }) {
+                ClientSetting.language
+            }
+                .withValues(EpsilonLanguage.entries)
                 .create(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT, Component.literal(LANGUAGE)) { _, language ->
                     ClientSetting.language = language
                     ConfigManager.saveNow()
                 }
         )
         addRenderableWidget(
-            Button.builder(Component.literal(DONT_SHOW_AGAIN), Button.OnPress { confirmDoNotShowAgain() })
+            Button.builder(Component.literal(DONT_SHOW_AGAIN)) { confirmDoNotShowAgain() }
                 .bounds(buttonX, buttonY + BUTTON_HEIGHT + BUTTON_GAP, buttonWidth, BUTTON_HEIGHT)
                 .build()
         )
         addRenderableWidget(
-            Button.builder(Component.literal(CONTINUE), Button.OnPress { continueToNextScreen() })
+            Button.builder(Component.literal(CONTINUE)) { continueToNextScreen() }
                 .bounds(buttonX, buttonY + (BUTTON_HEIGHT + BUTTON_GAP) * 2, buttonWidth, BUTTON_HEIGHT)
                 .build()
         )
         addRenderableWidget(
-            Button.builder(
-                Component.literal(OPEN_WEBSITE),
-                Button.OnPress { Blaze3D.openUri(URI.create(WEBSITE_URL)) }
-            )
+            Button.builder(Component.literal(OPEN_WEBSITE)) { Blaze3D.openUri(URI.create(WEBSITE_URL)) }
                 .bounds(buttonX, buttonY + (BUTTON_HEIGHT + BUTTON_GAP) * 3, buttonWidth, BUTTON_HEIGHT)
                 .build()
         )

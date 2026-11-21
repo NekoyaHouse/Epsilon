@@ -32,7 +32,7 @@ object SmtcService {
         executor = scheduled
         // reset 排在同一轮询线程上执行，保证 WinRT 公寓初始化与探测顺序不被破坏。
         scheduled.execute { SmtcEngine.reset() }
-        scheduled.scheduleWithFixedDelay(Runnable { poll(activeGeneration) }, 0L, 750L, TimeUnit.MILLISECONDS)
+        scheduled.scheduleWithFixedDelay({ poll(activeGeneration) }, 0L, 750L, TimeUnit.MILLISECONDS)
     }
 
     @Synchronized

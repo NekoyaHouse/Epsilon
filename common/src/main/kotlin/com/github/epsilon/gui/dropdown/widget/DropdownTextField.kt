@@ -238,7 +238,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
     }
 
     private fun insertText(introduced: String?): Boolean {
-        if (introduced == null || introduced.isEmpty()) return false
+        if (introduced.isNullOrEmpty()) return false
         val accepted = StringBuilder()
         introduced.codePoints().forEach { codePoint ->
             val candidate = String(Character.toChars(codePoint))
@@ -308,7 +308,7 @@ class DropdownTextField(private val maxLength: Int, inputFilter: Predicate<Strin
     }
 
     private fun trimToWidth(value: String?, scale: Float, maxWidth: Float, textMetrics: UiTextMetrics): String {
-        if (value == null || value.isEmpty()) return ""
+        if (value.isNullOrEmpty()) return ""
         if (textMetrics.textWidth(value, scale) <= maxWidth) return value
         val ellipsis = "..."
         val ellipsisWidth = textMetrics.textWidth(ellipsis, scale)

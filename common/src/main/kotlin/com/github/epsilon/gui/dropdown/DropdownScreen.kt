@@ -39,12 +39,8 @@ import net.minecraft.client.input.PreeditEvent
 import net.minecraft.network.chat.Component
 import java.awt.Color
 import java.util.*
-import java.util.function.Consumer
 
 object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
-
-    /** 光标闪烁周期（与 [DropdownTextField] 内部实现一致：每 500ms 翻转一次）。 */
-    private const val CARET_BLINK_PERIOD_MS = 500L
 
     private val panels: MutableList<DropdownPanel> = ArrayList()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
@@ -508,7 +504,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         var index = 0
         val mainPanel = MainDropdownPanel(
             index++,
-            Consumer { panelId -> handleMainPanelAction(panelId) },
+            ::handleMainPanelAction,
             { anySubPanelVisible() },
             { panelId -> isPanelVisible(panelId) }
         )
@@ -524,7 +520,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
 
         panels.add(createSubPanel(FriendDropdownPanel(index++), x, y))
         y += DropdownTheme.PANEL_HEADER_HEIGHT + DropdownTheme.PANEL_GAP
-        panels.add(createSubPanel(ConfigDropdownPanel(index++), x, y))
+        panels.add(createSubPanel(ConfigDropdownPanel(index), x, y))
 
         DropdownLayoutState.load(panels)
     }

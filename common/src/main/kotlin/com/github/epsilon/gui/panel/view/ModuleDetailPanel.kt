@@ -463,7 +463,7 @@ class ModuleDetailPanel(
         val parts = label.split("[^A-Za-z0-9]+".toRegex())
         val initials = StringBuilder()
         for (part in parts) {
-            if (!part.isEmpty() && Character.isLetterOrDigit(part[0])) {
+            if (part.isNotEmpty() && Character.isLetterOrDigit(part[0])) {
                 initials.append(Character.toUpperCase(part[0]))
             }
             if (initials.length == 3) {
@@ -475,7 +475,7 @@ class ModuleDetailPanel(
         }
 
         val compact = label.replace("[^A-Za-z0-9]".toRegex(), "").uppercase(Locale.ROOT)
-        if (!compact.isEmpty()) {
+        if (compact.isNotEmpty()) {
             return if (compact.length > 3) compact.substring(0, 3) else compact
         }
         // Symbol-only keys (e.g. ";", "[", "/"): fall back to the raw label so we never show "?".

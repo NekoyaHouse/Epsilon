@@ -38,7 +38,6 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
 import java.util.*
-import java.util.function.Predicate
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.roundToInt
@@ -462,7 +461,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
                     this.others,
                     this.invisible,
                     this.followFriend,
-                    Predicate { living -> living !== this.mc.player },
+                    { living -> living !== this.mc.player },
                     1,
                 )
             )

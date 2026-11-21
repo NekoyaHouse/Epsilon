@@ -24,7 +24,7 @@ internal class AStarSearch(
 
     fun findPath(): List<BlockPos> {
         // 标准 A* 数据结构：open 按 f 排序，closed 防止重复扩展。
-        val open = PriorityQueue<Node>(Node.COMPARATOR)
+        val open = PriorityQueue(Node.COMPARATOR)
         val gScores = HashMap<BlockPos, Double>()
         val cameFrom = HashMap<BlockPos, BlockPos>()
         val closed = HashSet<BlockPos>()

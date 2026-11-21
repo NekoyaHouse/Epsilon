@@ -81,7 +81,7 @@ object ClientIdentityHider {
 
     private fun filterChannelPayload(payload: CustomPacketPayload, mode: ClientSetting.HideMode): CustomPacketPayload? {
         val channels = readChannels(payload)
-        if (channels == null || channels.isEmpty()) {
+        if (channels.isNullOrEmpty()) {
             return payload
         }
 
@@ -148,7 +148,7 @@ object ClientIdentityHider {
             val channelsMethod: Method = payload.javaClass.getMethod("channels")
             val value = channelsMethod.invoke(payload)
             return if (value is Collection<*>) value as Collection<Identifier> else null
-        } catch (ignored: ReflectiveOperationException) {
+        } catch (_: ReflectiveOperationException) {
             return null
         }
     }
@@ -180,7 +180,7 @@ object ClientIdentityHider {
     private fun readAccessor(payload: CustomPacketPayload, accessor: String): Any? {
         try {
             return payload.javaClass.getMethod(accessor).invoke(payload)
-        } catch (ignored: ReflectiveOperationException) {
+        } catch (_: ReflectiveOperationException) {
             return null
         }
     }
@@ -193,17 +193,17 @@ object ClientIdentityHider {
         channels: List<Identifier>
     ): Array<Any?>? {
         if (parameterTypes.size == 1 && isCollectionParameter(parameterTypes[0])) {
-            return arrayOf<Any?>(asCollection(parameterTypes[0], channels))
+            return arrayOf(asCollection(parameterTypes[0], channels))
         }
         if (parameterTypes.size == 2 && type != null && parameterTypes[0].isAssignableFrom(type.javaClass) &&
             isCollectionParameter(parameterTypes[1])
         ) {
-            return arrayOf<Any?>(type, asCollection(parameterTypes[1], channels))
+            return arrayOf(type, asCollection(parameterTypes[1], channels))
         }
         if (parameterTypes.size == 3 && version is Int && protocol != null && isCollectionParameter(parameterTypes[2])) {
             val convertedProtocol = convertProtocol(protocol, parameterTypes[1])
             if (convertedProtocol != null) {
-                return arrayOf<Any?>(version, convertedProtocol, asCollection(parameterTypes[2], channels))
+                return arrayOf(version, convertedProtocol, asCollection(parameterTypes[2], channels))
             }
         }
         return null

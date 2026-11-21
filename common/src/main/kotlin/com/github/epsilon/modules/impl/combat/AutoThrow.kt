@@ -317,9 +317,9 @@ object AutoThrow : Module("Auto Throw", Category.COMBAT) {
         )
 
         var t = targetPos0
-        var tvx = targetVel0.x
+        val tvx = targetVel0.x
         var tvy = targetVel0.y
-        var tvz = targetVel0.z
+        val tvz = targetVel0.z
 
         var minDist = Double.POSITIVE_INFINITY
 

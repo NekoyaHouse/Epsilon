@@ -36,7 +36,7 @@ class IntSliderWidget(setting: IntSetting) :
         try {
             val value = text.toInt()
             applyValueNow(value)
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
         }
         inputField.text = formatPlainValue()
         inputField.setCursorToEnd()
@@ -48,7 +48,7 @@ class IntSliderWidget(setting: IntSetting) :
         try {
             val value = text.toInt()
             previewValue(value)
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
         }
     }
 

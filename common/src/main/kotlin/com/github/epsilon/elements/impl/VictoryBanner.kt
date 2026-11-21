@@ -29,7 +29,6 @@ import java.util.*
 import java.util.function.Supplier
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
-import com.google.common.base.Supplier as GuavaSupplier
 
 private const val IDEAL_WIDTH = 500.0f
 private const val BASE_HEIGHT = 66.0f
@@ -53,13 +52,11 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         onChanged = { _: TriggerMode -> recentTargets.clear() }
     ).group(triggerGroup)
     private val titleTriggers by stringListSetting(
-        "Title Triggers", listOf("胜利", "挑战成功", "Victory"),
-        { triggerMode == TriggerMode.Title }
-    )
+        "Title Triggers", listOf("胜利", "挑战成功", "Victory")
+    ) { triggerMode == TriggerMode.Title }
     private val chatTriggers by stringListSetting(
-        "Chat Triggers", listOf("获胜", "胜利", "挑战成功", "Victory"),
-        { triggerMode == TriggerMode.Chat }
-    )
+        "Chat Triggers", listOf("获胜", "胜利", "挑战成功", "Victory")
+    ) { triggerMode == TriggerMode.Chat }
     private val title by stringSetting("Title", "TARGET ELIMINATED").group(generalGroup)
     private val subtitle by stringSetting("Subtitle", "ELIMINATION CONFIRMED").group(generalGroup)
     private val holdTime by doubleSetting("Hold Time", 1.9, 0.2..10.0, 0.1).group(generalGroup)
@@ -76,7 +73,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     ).group(appearanceGroup)
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
+        Suppliers.memoize { TextRenderer.create() }
 
     @Volatile
     private var animationStartMs: Long = 0L
@@ -472,9 +469,9 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     private val HAIRLINE: Color = Color(224, 226, 220, 45)
 
     private fun matches(text: String?, triggers: List<String>?): Boolean {
-        if (text == null || text.isEmpty() || triggers == null) return false
+        if (text.isNullOrEmpty() || triggers == null) return false
         for (candidate in triggers) {
-            if (!candidate.isEmpty() && text.contains(candidate)) return true
+            if (candidate.isNotEmpty() && text.contains(candidate)) return true
         }
         return false
     }
@@ -486,7 +483,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
     }
 
     private fun displayTitle(value: String?): String {
-        return if (value == null || value.isBlank()) "TARGET ELIMINATED" else value
+        return if (value.isNullOrBlank()) "TARGET ELIMINATED" else value
     }
 
     private fun fitScale(
@@ -496,7 +493,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         maxWidth: Float,
         font: TtfFontLoader?
     ): Float {
-        if (text == null || text.isEmpty()) return requested
+        if (text.isNullOrEmpty()) return requested
         val natural = if (font == null) renderer.getWidth(text, 1.0f) else renderer.getWidth(text, 1.0f, font)
         if (natural <= 0.0f) return requested
         return (maxWidth / natural).coerceIn(0.1f, requested)

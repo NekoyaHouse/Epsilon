@@ -22,7 +22,6 @@ import java.awt.Color
 import java.util.*
 import java.util.function.Supplier
 import kotlin.math.roundToInt
-import com.google.common.base.Supplier as GuavaSupplier
 
 object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
 
@@ -80,7 +79,7 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
     private var frameMaxHealth: Float = 1.0f
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
+        Suppliers.memoize { TextRenderer.create() }
 
     override fun measure(deltaTracker: DeltaTracker) {
         frameTarget = null

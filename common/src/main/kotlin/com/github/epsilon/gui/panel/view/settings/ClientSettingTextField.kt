@@ -68,7 +68,7 @@ class ClientSettingTextField(private val maxLength: Int) {
 
         return when (event.key()) {
             InputConstants.KEY_BACKSPACE -> {
-                if (cursor > 0 && !text.isEmpty()) {
+                if (cursor > 0 && text.isNotEmpty()) {
                     text = text.substring(0, cursor - 1) + text.substring(cursor)
                     cursor--
                 }
@@ -149,7 +149,7 @@ class ClientSettingTextField(private val maxLength: Int) {
 
             InputConstants.KEY_V -> {
                 val clipboard = mc.keyboardHandler.clipboard
-                if (!clipboard.isEmpty()) {
+                if (clipboard.isNotEmpty()) {
                     val sanitized = clipboard.codePoints()
                         .filter { codepoint -> codepoint >= 32 && codepoint != 127 }
                         .collect(
@@ -158,7 +158,7 @@ class ClientSettingTextField(private val maxLength: Int) {
                             { left, right -> left.append(right) }
                         )
                         .toString()
-                    if (!sanitized.isEmpty()) {
+                    if (sanitized.isNotEmpty()) {
                         insertText(sanitized)
                     }
                 }
@@ -170,7 +170,7 @@ class ClientSettingTextField(private val maxLength: Int) {
     }
 
     private fun insertText(inserted: String?) {
-        if (inserted == null || inserted.isEmpty()) {
+        if (inserted.isNullOrEmpty()) {
             return
         }
         val available = maxLength - text.length
@@ -218,7 +218,7 @@ fun UiScope.ClientSettingTextField(
     val showPlaceholder = field.text.isEmpty() && !field.focused
     val display = if (showPlaceholder) placeholder else field.text
     val textColor: Color = if (showPlaceholder) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY
-    val showTrailing = field.focused && trailingHint != null && !trailingHint.isBlank() && !field.text.isEmpty()
+    val showTrailing = field.focused && !trailingHint.isNullOrBlank() && field.text.isNotEmpty()
     Input(
         UiRect(0.0f, 0.0f, width, height), field.focused, if (hovered) 0.6f else 0.0f,
         focusProgress, MD3Theme.PRIMARY, 1.0f,

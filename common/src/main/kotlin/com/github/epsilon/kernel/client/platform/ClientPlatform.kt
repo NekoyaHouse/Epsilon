@@ -67,7 +67,7 @@ object ClientPlatform {
             "amd64", "x86_64" -> "x86_64"
             "aarch64", "arm64" -> "arm64"
             "x86", "i386", "i686" -> "x86"
-            else -> if (arch.isBlank()) "unknown" else arch
+            else -> arch.ifBlank { "unknown" }
         }
     }
 

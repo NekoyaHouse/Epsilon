@@ -9,7 +9,7 @@ object EpsilonTranslateComponent {
     private const val PREFIX = "epsilon"
 
     fun create(prefix: String, suffix: String): TranslateComponent {
-        return DefaultTranslateComponent.create(PREFIX + "." + prefix + "." + suffix)
+        return DefaultTranslateComponent.create("$PREFIX.$prefix.$suffix")
     }
 
 }

@@ -37,7 +37,7 @@ class DoubleSliderWidget(setting: DoubleSetting) :
         try {
             val value = text.toDouble()
             applyValueNow(value)
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
         }
         inputField.text = formatPlainValue()
         inputField.setCursorToEnd()
@@ -49,7 +49,7 @@ class DoubleSliderWidget(setting: DoubleSetting) :
         try {
             val value = text.toDouble()
             previewValue(value)
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
         }
     }
 

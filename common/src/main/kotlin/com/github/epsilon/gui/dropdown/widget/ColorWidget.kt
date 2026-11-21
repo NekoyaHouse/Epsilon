@@ -20,10 +20,10 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
 
     private val openAnim: Animation = Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_EXPAND)
 
-    private val redField: DropdownTextField = DropdownTextField(3, { value -> value.matches(Regex("[0-9]")) })
-    private val greenField: DropdownTextField = DropdownTextField(3, { value -> value.matches(Regex("[0-9]")) })
-    private val blueField: DropdownTextField = DropdownTextField(3, { value -> value.matches(Regex("[0-9]")) })
-    private val alphaField: DropdownTextField = DropdownTextField(3, { value -> value.matches(Regex("[0-9]")) })
+    private val redField: DropdownTextField = DropdownTextField(3) { value -> value.matches(Regex("[0-9]")) }
+    private val greenField: DropdownTextField = DropdownTextField(3) { value -> value.matches(Regex("[0-9]")) }
+    private val blueField: DropdownTextField = DropdownTextField(3) { value -> value.matches(Regex("[0-9]")) }
+    private val alphaField: DropdownTextField = DropdownTextField(3) { value -> value.matches(Regex("[0-9]")) }
 
     private var opened by mutableStateOf(false)
     private var pickingSB by mutableStateOf(false)
@@ -479,7 +479,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
     private fun parseChannel(value: String): Int {
         return try {
             value.toInt().coerceIn(0, 255)
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             0
         }
     }

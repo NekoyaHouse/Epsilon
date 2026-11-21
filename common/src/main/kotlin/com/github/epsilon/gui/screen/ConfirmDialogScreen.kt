@@ -77,8 +77,8 @@ object ConfirmDialogScreen : Screen(Component.empty()) {
 
         override fun buttons(): List<DialogButton> {
             return listOf(
-                DialogButton(cancelLabel, false, Runnable { ConfirmDialogScreen.onClose() }),
-                DialogButton(confirmLabel, true, Runnable { DialogCard.close(ConfirmDialogScreen, onConfirm) })
+                DialogButton(cancelLabel, false) { ConfirmDialogScreen.onClose() },
+                DialogButton(confirmLabel, true) { DialogCard.close(ConfirmDialogScreen, onConfirm) }
             )
         }
     }

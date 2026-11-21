@@ -129,9 +129,8 @@ object PlatformNoticeScreen : Screen(Component.empty()) {
         override fun buttons(): List<DialogButton> {
             return listOf(
                 DialogButton(
-                    EpsilonTranslations.PlatformOnly.CONFIRM.getTranslatedName(), true,
-                    Runnable { PlatformNoticeScreen.onClose() }
-                )
+                    EpsilonTranslations.PlatformOnly.CONFIRM.getTranslatedName(), true
+                ) { PlatformNoticeScreen.onClose() }
             )
         }
     }

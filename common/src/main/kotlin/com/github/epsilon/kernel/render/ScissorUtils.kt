@@ -90,12 +90,10 @@ object ScissorUtils {
     fun clampFramebufferScissor(x: Int, y: Int, width: Int, height: Int): LuminRenderSystem.ScissorRect {
         val areaWidth = getFramebufferWidth()
         val areaHeight = getFramebufferHeight()
-        val left = (x.toLong()).coerceIn(((0).toLong()).toLong(), ((areaWidth).toLong()).toLong()).toInt().toInt()
-        val top = (y.toLong()).coerceIn(((0).toLong()).toLong(), ((areaHeight).toLong()).toLong()).toInt().toInt()
-        val right =
-            ((x + width).toLong()).coerceIn(((0).toLong()).toLong(), ((areaWidth).toLong()).toLong()).toInt().toInt()
-        val bottom =
-            ((y + height).toLong()).coerceIn(((0).toLong()).toLong(), ((areaHeight).toLong()).toLong()).toInt().toInt()
+        val left = x.coerceIn(0, areaWidth)
+        val top = y.coerceIn(0, areaHeight)
+        val right = (x + width).coerceIn(0, areaWidth)
+        val bottom = (y + height).coerceIn(0, areaHeight)
         return LuminRenderSystem.ScissorRect(left, top, maxOf(0, right - left), maxOf(0, bottom - top))
     }
 

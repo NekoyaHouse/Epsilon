@@ -120,7 +120,7 @@ class UiTextField(maxLength: Int) {
         }
         return when (event.key()) {
             InputConstants.KEY_BACKSPACE -> {
-                if (cursor > 0 && !textStore.isEmpty()) {
+                if (cursor > 0 && textStore.isNotEmpty()) {
                     textStore = textStore.substring(0, cursor - 1) + textStore.substring(cursor)
                     cursor--
                 }
@@ -196,8 +196,7 @@ class UiTextField(maxLength: Int) {
     }
 
     private fun safeCursor(): Int {
-        return (cursor.toLong()).coerceIn(((0).toLong()).toLong(), ((textStore.length).toLong()).toLong()).toInt()
-            .toInt()
+        return cursor.coerceIn(0, textStore.length)
     }
 
     private fun handleControlShortcut(key: Int): Boolean {
@@ -209,7 +208,7 @@ class UiTextField(maxLength: Int) {
 
             InputConstants.KEY_V -> {
                 val clipboard = mc.keyboardHandler.clipboard
-                if (!clipboard.isEmpty()) {
+                if (clipboard.isNotEmpty()) {
                     val sanitized = clipboard.codePoints()
                         .filter { codepoint -> codepoint >= 32 && codepoint != 127 }
                         .collect(
@@ -218,7 +217,7 @@ class UiTextField(maxLength: Int) {
                             { left, right -> left.append(right) }
                         )
                         .toString()
-                    if (!sanitized.isEmpty()) {
+                    if (sanitized.isNotEmpty()) {
                         insertText(sanitized)
                     }
                 }
@@ -230,7 +229,7 @@ class UiTextField(maxLength: Int) {
     }
 
     private fun insertText(inserted: String?) {
-        if (inserted == null || inserted.isEmpty()) {
+        if (inserted.isNullOrEmpty()) {
             return
         }
         val available = maxLength - textStore.length

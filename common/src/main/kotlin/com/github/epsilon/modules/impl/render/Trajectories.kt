@@ -28,7 +28,6 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
-import java.util.function.Predicate
 
 object Trajectories : Module("Trajectories", Category.RENDER) {
 
@@ -38,9 +37,8 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
     private val items: RegistryListSetting<Item> = addSetting(
         RegistryListSetting(
             "Items", defaultItems(), RegistryListSetting.Type.ITEM,
-            Predicate { item -> ProjectileSimulator.supports(item) },
-            { true }
-        )
+            { item -> ProjectileSimulator.supports(item) }
+        ) { true }
     ).group(generalGroup)
     private val otherPlayers by boolSetting("Other Players", true).group(generalGroup)
     private val firedProjectiles by boolSetting("Fired Projectiles", false).group(generalGroup)

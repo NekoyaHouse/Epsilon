@@ -546,7 +546,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         }
 
         val center = Vec3.atBottomCenterOf(pos)
-        for (dir in Direction.values()) {
+        for (dir in Direction.entries) {
             val normal = dir.unitVec3
             val hit = center.add(normal.scale(0.5))
             val baseBlockPos = pos.relative(dir)

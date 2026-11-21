@@ -196,7 +196,7 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
 
     private fun commitInput() {
         val buffer = inputBuffer
-        if (buffer == null || buffer.isBlank() || buffer == "-") {
+        if (buffer.isNullOrBlank() || buffer == "-") {
             commitPendingValue()
             inputBuffer = formatPlainValue()
             cursorIndex = inputBuffer!!.length
@@ -204,7 +204,7 @@ class IntSettingRow(private val intSetting: IntSetting) : SettingRow<IntSetting>
         }
         try {
             applyValueNow(buffer.toInt())
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             // 非法输入保留原值。
         }
         inputBuffer = formatPlainValue()

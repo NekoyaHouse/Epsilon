@@ -27,7 +27,7 @@ object EpsilonFontMetrics {
 
         return try {
             TtfFontLoader(FONT_ID).also { cachedFont = it }
-        } catch (ignored: RuntimeException) {
+        } catch (_: RuntimeException) {
             null
         }
     }

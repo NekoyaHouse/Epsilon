@@ -79,7 +79,7 @@ object ACSpoof : Module("AC Spoof", Category.RENDER) {
             currentStyle = character.style
             builder.appendCodePoint(character.codePoint)
         }
-        if (!builder.isEmpty()) {
+        if (builder.isNotEmpty()) {
             result.append(Component.literal(builder.toString()).withStyle(currentStyle ?: Style.EMPTY))
         }
         return result

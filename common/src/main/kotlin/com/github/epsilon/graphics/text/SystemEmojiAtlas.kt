@@ -118,7 +118,7 @@ object SystemEmojiAtlas : AutoCloseable {
         }
 
         val layers = colorGlyphFont.layersFor(glyphId)
-        if (layers == null || layers.isEmpty()) {
+        if (layers.isNullOrEmpty()) {
             return false
         }
 
@@ -177,8 +177,8 @@ object SystemEmojiAtlas : AutoCloseable {
             if (Files.isRegularFile(path)) {
                 return Font.createFont(Font.TRUETYPE_FONT, path.toFile())
             }
-        } catch (ignored: FontFormatException) {
-        } catch (ignored: IOException) {
+        } catch (_: FontFormatException) {
+        } catch (_: IOException) {
         }
         return Font(systemEmojiFamily(), Font.PLAIN, FONT_SIZE)
     }
@@ -247,9 +247,9 @@ object SystemEmojiAtlas : AutoCloseable {
                     val colors = readCpal(data, cpal)
                     val layers = readColr(data, colr)
                     return if (colors.isEmpty() || layers.isEmpty()) null else ColorGlyphFont(layers, colors)
-                } catch (ignored: RuntimeException) {
+                } catch (_: RuntimeException) {
                     return null
-                } catch (ignored: IOException) {
+                } catch (_: IOException) {
                     return null
                 }
             }

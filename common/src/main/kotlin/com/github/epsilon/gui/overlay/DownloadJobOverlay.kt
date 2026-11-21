@@ -81,7 +81,7 @@ object DownloadJobOverlay : AutoCloseable {
     /**
      * 绘制下载卡片。
      *
-     * 作用域原点就是 [cardBounds] 左上角，所以卡片内部的坐标全部相对卡片本身。
+     * 作用域原点是卡片左上角。
      */
     private fun drawCard(job: AssetManager.DownloadJob, hovered: Boolean) {
         val cardBounds = bounds ?: return

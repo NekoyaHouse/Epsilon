@@ -65,7 +65,7 @@ object MicrosoftLogin {
 
         // Refresh access token
         val res: AuthTokenResponse? = Http.post("https://login.live.com/oauth20_token.srf")
-            .bodyForm("client_id=" + CLIENT_ID + "&refresh_token=" + currentRefreshToken + "&grant_type=refresh_token&redirect_uri=http://127.0.0.1:" + PORT)
+            .bodyForm("client_id=$CLIENT_ID&refresh_token=$currentRefreshToken&grant_type=refresh_token&redirect_uri=http://127.0.0.1:$PORT")
             .sendJson(AuthTokenResponse::class.java)
 
         if (res == null) return LoginData()
@@ -75,7 +75,7 @@ object MicrosoftLogin {
 
         // XBL
         val xblRes: XblXstsResponse? = Http.post("https://user.auth.xboxlive.com/user/authenticate")
-            .bodyJson("{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"d=" + accessToken + "\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}")
+            .bodyJson("{\"Properties\":{\"AuthMethod\":\"RPS\",\"SiteName\":\"user.auth.xboxlive.com\",\"RpsTicket\":\"d=${accessToken}\"},\"RelyingParty\":\"http://auth.xboxlive.com\",\"TokenType\":\"JWT\"}")
             .sendJson(XblXstsResponse::class.java)
 
         if (xblRes == null) return LoginData()
@@ -176,7 +176,7 @@ object MicrosoftLogin {
 
     private fun handleCode(code: String) {
         val res: AuthTokenResponse? = Http.post("https://login.live.com/oauth20_token.srf")
-            .bodyForm("client_id=" + CLIENT_ID + "&code=" + code + "&grant_type=authorization_code&redirect_uri=http://127.0.0.1:" + PORT)
+            .bodyForm("client_id=$CLIENT_ID&code=$code&grant_type=authorization_code&redirect_uri=http://127.0.0.1:$PORT")
             .sendJson(AuthTokenResponse::class.java)
 
         if (res == null) fireCallback(null) else fireCallback(res.refresh_token)

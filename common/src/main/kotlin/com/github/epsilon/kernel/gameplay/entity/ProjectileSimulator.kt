@@ -190,7 +190,7 @@ class ProjectileSimulator(private val level: Level) {
     private fun configureShot(user: Entity, angleOffset: Double, partialTick: Float, data: MotionData, piercing: Int) {
         positionVec = user.getPosition(partialTick).add(0.0, user.getEyeHeight(user.pose) - 0.1, 0.0)
         val yaw = Math.toRadians(user.getYRot(partialTick).toDouble())
-        val pitch = Math.toRadians((user.getXRot(partialTick) + data.roll).toDouble())
+        val pitch = Math.toRadians((user.getXRot(partialTick) + data.roll))
         var direction = Vec3(-sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch))
 
         if (angleOffset != 0.0) {

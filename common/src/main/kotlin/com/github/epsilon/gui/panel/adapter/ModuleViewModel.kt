@@ -18,7 +18,7 @@ data class ModuleViewModel(
             val displayName = module.translatedName
             val description = module.name
             val categoryName = module.category!!.getName() + " " + module.category.name
-            val searchText = (displayName + " " + description + " " + categoryName).lowercase()
+            val searchText = "$displayName $description $categoryName".lowercase()
             return ModuleViewModel(module, displayName, description, module.isEnabled, module.category, searchText)
         }
 

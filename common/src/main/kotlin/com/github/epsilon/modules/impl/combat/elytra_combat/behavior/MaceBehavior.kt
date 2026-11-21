@@ -328,7 +328,7 @@ class MaceBehavior : ElytraCombatBehavior {
                 }
             }
         }
-        candidates.sortWith(Comparator.comparingDouble<BlockPos> { pos ->
+        candidates.sortWith(Comparator.comparingDouble { pos ->
             Vec3.atCenterOf(pos).distanceToSqr(targetEye)
         })
 

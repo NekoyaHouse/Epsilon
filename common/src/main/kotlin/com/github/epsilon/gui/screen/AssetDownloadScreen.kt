@@ -145,12 +145,12 @@ object AssetDownloadScreen : Screen(Component.literal("Assets")) {
                 return listOf(
                     DialogButton(
                         EpsilonTranslations.Resources.BUTTON_STOP.getTranslatedName(),
-                        false,
-                        Runnable { job.cancel() }),
+                        false
+                    ) { job.cancel() },
                     DialogButton(
                         EpsilonTranslations.Resources.BUTTON_BACKGROUND.getTranslatedName(),
-                        true,
-                        Runnable { AssetDownloadScreen.onClose() })
+                        true
+                    ) { AssetDownloadScreen.onClose() }
                 )
             }
 
@@ -164,8 +164,8 @@ object AssetDownloadScreen : Screen(Component.literal("Assets")) {
                 return listOf(
                     DialogButton(
                         EpsilonTranslations.Resources.BUTTON_DONE.getTranslatedName(),
-                        true,
-                        Runnable { AssetDownloadScreen.onClose() })
+                        true
+                    ) { AssetDownloadScreen.onClose() }
                 )
             }
 
@@ -175,18 +175,14 @@ object AssetDownloadScreen : Screen(Component.literal("Assets")) {
             val secondaryLabel = if (failed) EpsilonTranslations.Resources.BUTTON_CLOSE.getTranslatedName()
             else EpsilonTranslations.Resources.BUTTON_CANCEL.getTranslatedName()
             return listOf(
-                DialogButton(
-                    secondaryLabel, false, Runnable {
-                        manager.markDeclined(missing)
-                        AssetDownloadScreen.onClose()
-                    }
-                ),
-                DialogButton(
-                    primaryLabel, true, Runnable {
-                        downloadRequested = true
-                        manager.startDownload(missing)
-                    }
-                )
+                DialogButton(secondaryLabel, false) {
+                    manager.markDeclined(missing)
+                    AssetDownloadScreen.onClose()
+                },
+                DialogButton(primaryLabel, true) {
+                    downloadRequested = true
+                    manager.startDownload(missing)
+                }
             )
         }
 

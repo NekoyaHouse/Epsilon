@@ -124,7 +124,7 @@ internal object SmtcEngine {
     private fun readSnapshot(session: MemorySegment, arena: Arena): SmtcResult {
         val metadata = SmtcSession.readMetadata(session, arena)
         try {
-            val artist = if (metadata.artist.isEmpty()) metadata.albumArtist else metadata.artist
+            val artist = metadata.artist.ifEmpty { metadata.albumArtist }
             val nextTrackKey = buildTrackKey(metadata.sourceAppId, metadata.title, artist, metadata.albumTitle)
             val now = System.nanoTime()
             val changedTrack = nextTrackKey != trackKey

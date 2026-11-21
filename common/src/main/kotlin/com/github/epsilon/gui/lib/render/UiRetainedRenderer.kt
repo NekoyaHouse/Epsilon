@@ -139,7 +139,6 @@ internal object UiRetainedRenderer {
                     }
                 }
 
-                else -> Unit
             }
             start = index + 1
         }
@@ -155,7 +154,7 @@ internal object UiRetainedRenderer {
             transform.mapY(rect.x, rect.y), transform.mapY(rect.right(), rect.y),
             transform.mapY(rect.x, rect.bottom()), transform.mapY(rect.right(), rect.bottom())
         )
-        val x = xs.min();
+        val x = xs.min()
         val y = ys.min()
         val clip = LuminRenderSystem.toFramebufferScissor(x, y, xs.max() - x, ys.max() - y)
         return Render2DScissor(clip.x, clip.y, clip.width, clip.height)
@@ -163,7 +162,7 @@ internal object UiRetainedRenderer {
 
     private fun intersect(a: Render2DScissor?, b: Render2DScissor): Render2DScissor {
         if (a == null) return b
-        val x = maxOf(a.x, b.x);
+        val x = maxOf(a.x, b.x)
         val y = maxOf(a.y, b.y)
         return Render2DScissor(
             x, y, maxOf(0, minOf(a.x + a.width, b.x + b.width) - x),

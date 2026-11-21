@@ -339,8 +339,8 @@ class TrollSettingRow {
             enumDragged = enumDragged || abs(event.x() - dragStartX) > 2.0
             if (enumDragged) {
                 val modeCount = modesOf(setting).size
-                pendingEnumIndex = (((event.x() - bounds.x) / bounds.width * modeCount).toInt()
-                    .toLong()).coerceIn(((0).toLong()).toLong(), ((modeCount - 1).toLong()).toLong()).toInt().toInt()
+                pendingEnumIndex = ((event.x() - bounds.x) / bounds.width * modeCount)
+                    .toInt().coerceIn(0, modeCount - 1)
             }
         } else {
             updateNumber(event.x(), event.modifiers())
@@ -551,7 +551,6 @@ class TrollSettingRow {
                 ModuleAction.TOGGLE -> if (module != null && module.isEnabled) 1.0f else 0.0f
                 ModuleAction.BIND -> if (listening) 1.0f else 0.0f
                 ModuleAction.HIDDEN -> if (module != null && module.isHidden) 1.0f else 0.0f
-                null -> 0.0f
             }
         }
         return when (val s = setting) {

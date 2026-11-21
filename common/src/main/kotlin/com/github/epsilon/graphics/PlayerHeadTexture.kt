@@ -37,7 +37,7 @@ open class PlayerHeadTexture private constructor(uploaded: Uploaded) :
                     .getResourceOrThrow(ResourceLocationUtils.getIdentifier("textures/gui/steve.png"))
                     .open()
                     .use { stream -> NativeImage.read(stream) }
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 MissingTextureAtlasSprite.generateMissingImage()
             }
         }

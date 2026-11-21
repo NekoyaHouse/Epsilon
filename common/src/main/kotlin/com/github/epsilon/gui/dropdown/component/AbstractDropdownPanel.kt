@@ -169,11 +169,11 @@ abstract class AbstractDropdownPanel protected constructor(
             )
 
             val iconX = left + 7.5f
-            val textX = if (icon == null || icon.isBlank()) left + 10.0f else iconX + 16.0f
+            val textX = if (icon.isNullOrBlank()) left + 10.0f else iconX + 16.0f
             val textY =
                 top + (DropdownTheme.PANEL_HEADER_HEIGHT - metrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f
             val iconText = icon
-            if (iconText != null && !iconText.isBlank()) {
+            if (!iconText.isNullOrBlank()) {
                 val iconY = top + (DropdownTheme.PANEL_HEADER_HEIGHT - metrics.textHeight(
                     DropdownTheme.HEADER_ICON_SCALE,
                     StaticFontLoader.ICONS
@@ -413,7 +413,7 @@ abstract class AbstractDropdownPanel protected constructor(
     }
 
     protected fun trimToWidth(value: String?, scale: Float, maxWidth: Float, textMetrics: UiTextMetrics): String {
-        if (value == null || value.isEmpty()) return ""
+        if (value.isNullOrEmpty()) return ""
         if (textMetrics.textWidth(value, scale) <= maxWidth) return value
         val ellipsis = "..."
         val ellipsisWidth = textMetrics.textWidth(ellipsis, scale)

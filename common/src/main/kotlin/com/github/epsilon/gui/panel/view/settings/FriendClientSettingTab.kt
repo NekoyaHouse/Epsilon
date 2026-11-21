@@ -232,7 +232,7 @@ class FriendClientSettingTab(
 
     private fun addFriendFromInput() {
         val name = inputField.getText().trim()
-        if (!name.isEmpty() && !FriendManager.isFriend(name)) {
+        if (name.isNotEmpty() && !FriendManager.isFriend(name)) {
             FriendManager.addFriend(name)
         }
         inputField.clear()

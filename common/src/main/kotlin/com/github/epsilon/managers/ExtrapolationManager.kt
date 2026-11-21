@@ -72,9 +72,9 @@ object ExtrapolationManager : AlwaysListening {
     fun extrapolate(player: AbstractClientPlayer, m: List<Vec3>, extrapolation: Int, smoothening: Int): AABB {
         val motion = getMotion(m, smoothening)
 
-        var x = motion.x
+        val x = motion.x
         var y = motion.y
-        var z = motion.z
+        val z = motion.z
 
         val stepHeight = 0.6
 
@@ -88,7 +88,7 @@ object ExtrapolationManager : AlwaysListening {
             val level = mc.level!!
             val list: List<VoxelShape> = level.getEntityCollisions(player, box.contract(x, y, z))
             val movement = Vec3(x, y, z)
-            var vec3d = if (movement.lengthSqr() == 0.0) {
+            val vec3d = if (movement.lengthSqr() == 0.0) {
                 movement
             } else {
                 Entity.collideBoundingBox(player, movement, box, level, list)

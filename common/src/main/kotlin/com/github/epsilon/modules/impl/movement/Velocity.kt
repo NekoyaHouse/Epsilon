@@ -186,7 +186,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                     packets.add(packet as Packet<in ClientPacketListener?>)
                     startDelay = System.currentTimeMillis()
                 }
-                yaw = Mth.wrapDegrees(Math.toDegrees(atan2(packet.movement.z, packet.movement.x)) + 90.0).toFloat();
+                yaw = Mth.wrapDegrees(Math.toDegrees(atan2(packet.movement.z, packet.movement.x)) + 90.0).toFloat()
             }
         }
     }

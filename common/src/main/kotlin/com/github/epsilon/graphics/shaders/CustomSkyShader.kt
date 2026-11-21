@@ -46,7 +46,7 @@ object CustomSkyShader {
         if (mode == CustomSky.ShaderMode.Local) {
             ensureInput(target)
             val inputTarget = input
-            if (inputTarget == null || inputTarget.colorTexture == null || inputTarget.colorTextureView == null) {
+            if (inputTarget?.colorTexture == null || inputTarget.colorTextureView == null) {
                 return
             }
 

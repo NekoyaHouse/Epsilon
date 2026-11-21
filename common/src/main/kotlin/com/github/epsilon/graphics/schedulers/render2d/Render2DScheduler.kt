@@ -124,7 +124,7 @@ class Render2DScheduler : IRenderer {
         if (list == null || !list.resourcesCurrent()) {
             val commands = ArrayList<Render2DCommand>()
             val previous = capture
-            val oldX = captureX;
+            val oldX = captureX
             val oldY = captureY
             captureX = originX; captureY = originY
             capture = commands
@@ -1257,7 +1257,7 @@ class Render2DScheduler : IRenderer {
         private fun intersect(a: Render2DScissor?, b: Render2DScissor?): Render2DScissor? {
             if (a == null) return b
             if (b == null) return a
-            val x = maxOf(a.x, b.x);
+            val x = maxOf(a.x, b.x)
             val y = maxOf(a.y, b.y)
             return Render2DScissor(
                 x, y, maxOf(0, minOf(a.x + a.width, b.x + b.width) - x),

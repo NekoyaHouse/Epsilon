@@ -47,10 +47,10 @@ object Shaders : Module("Shaders", Category.RENDER) {
         { hasEntityTargets() || chests }
     ).group(sgTargets)
 
-    val entityShader: ShaderSettings = ShaderSettings("", sgEntityShader, { hasEntityTargets() })
+    val entityShader: ShaderSettings = ShaderSettings("", sgEntityShader) { hasEntityTargets() }
     val friendsColor by colorSetting("Friends Color", Color(0x30FF00), false, { friends }).group(sgEntityShader)
-    val handsShader: ShaderSettings = ShaderSettings("Hands ", sgHandsShader, { hands })
-    val chestShader: ShaderSettings = ShaderSettings("Chest ", sgChestShader, { chests })
+    val handsShader: ShaderSettings = ShaderSettings("Hands ", sgHandsShader) { hands }
+    val chestShader: ShaderSettings = ShaderSettings("Chest ", sgChestShader) { chests }
 
     fun shouldRenderChest(blockPos: BlockPos): Boolean {
         val player = mc.player ?: return false

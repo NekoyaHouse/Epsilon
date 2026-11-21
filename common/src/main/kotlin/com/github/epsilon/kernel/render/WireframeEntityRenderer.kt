@@ -81,7 +81,7 @@ object WireframeEntityRenderer {
     }
 
     fun endBatch() {
-        if (isBatching()) AntiAlias.render(Runnable { endDraw() })
+        if (isBatching()) AntiAlias.render { endDraw() }
     }
 
     fun render(
