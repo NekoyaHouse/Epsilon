@@ -87,8 +87,9 @@ Immediate canvas → transient geometry ─────────────�
 
 Within each flush, explicit layers sort ascending; submissions within a layer preserve declaration order, with child
 trees expanded at their insertion point. Viewports follow the same rule and submit through the host batch. Primitive
-types and textures never override this order. Rectangles, rounded rectangles, outlines and chevron triangles share the
-shape pipeline; text, textures and effects use their own pipelines. Only adjacent ranges with compatible pipeline,
+types and textures never override this order. Antialiased rectangles, rounded rectangles, outlines and chevron triangles
+share the shape pipeline. `RectHorizontalGradient` with `antialias = false` uses `RectRenderer` to draw adjacent gradients
+without fading their shared edges. Text, textures and effects use their own pipelines. Only adjacent ranges with compatible pipeline,
 geometry page, resources, uniforms and scissor can batch. Ordinary AA/non-AA text allows up to eight atlas/sampler pairs
 in one run; a per-range instance attribute selects the atlas without changing glyph order. A ninth pair starts another
 run. Blur/glitch text and arbitrary textures retain their existing resource boundaries. No spatial reordering or global

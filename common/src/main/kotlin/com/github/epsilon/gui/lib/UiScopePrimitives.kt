@@ -140,8 +140,11 @@ fun UiScope.RectVerticalGradient(x: Float, y: Float, width: Float, height: Float
     tree.rectVerticalGradient(x, y, width, height, top, bottom)
 }
 
-fun UiScope.RectHorizontalGradient(x: Float, y: Float, width: Float, height: Float, left: Color, right: Color) {
-    tree.rectHorizontalGradient(x, y, width, height, left, right)
+/** Use `antialias = false` for adjacent gradients that share an edge. */
+fun UiScope.RectHorizontalGradient(
+    x: Float, y: Float, width: Float, height: Float, left: Color, right: Color, antialias: Boolean = true,
+) {
+    tree.rectHorizontalGradient(x, y, width, height, left, right, antialias)
 }
 
 // ---------------------------------------------------------------------------

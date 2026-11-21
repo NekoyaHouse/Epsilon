@@ -69,8 +69,8 @@ Composition → UiRenderNode → 局部 DisplayList → GeometryArena
 
 ### 顺序与提交
 
-每次 flush 内按显式 layer 升序绘制，同层保持声明顺序，子树在插入位置展开。视口遵循同样的规则，内容与滚动条进入宿主批次。图元种类、字体图集和纹理不会覆盖该顺序。矩形、圆角、描边与箭头三角形共用
-shape pipeline，文字、纹理与特效保留各自管线。只有相邻且 pipeline、几何页、资源、uniform 和 scissor 兼容的范围能够合批。普通
+每次 flush 内按显式 layer 升序绘制，同层保持声明顺序，子树在插入位置展开。视口遵循同样的规则，内容与滚动条进入宿主批次。图元种类、字体图集和纹理不会覆盖该顺序。抗锯齿矩形、圆角、描边与箭头三角形共用
+shape pipeline。`RectHorizontalGradient` 指定 `antialias = false` 时使用 `RectRenderer`，相邻渐变的共边不会做透明度过渡。文字、纹理与特效保留各自管线。只有相邻且 pipeline、几何页、资源、uniform 和 scissor 兼容的范围能够合批。普通
 AA/非 AA 文字允许一个批次绑定最多八组图集/sampler，每个范围通过实例属性选择图集并保留字形顺序；第九组另起批次。模糊/故障文字与普通纹理仍遵循各自资源边界。不做空间重排或全局重叠依赖图。
 
 Dropdown 模块行在每个面板预留的层区间内显式保留旧版透明叠加关系：按钮填充/描边、半透明行表面与 Hold

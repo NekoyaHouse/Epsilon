@@ -67,7 +67,7 @@ object LuminUiRenderer {
             is UiTree.RectGradientNode -> {
                 layer.addRectGradient(
                     node.x, node.y, node.width, node.height,
-                    node.topLeft, node.bottomLeft, node.bottomRight, node.topRight
+                    node.topLeft, node.bottomLeft, node.bottomRight, node.topRight, node.antialias
                 )
             }
 

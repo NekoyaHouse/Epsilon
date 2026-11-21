@@ -5,6 +5,7 @@ enum class Render2DCommandKind {
     ROUND_RECT,
     ROUND_RECT_OUTLINE,
     RECT,
+    FLAT_RECT,
     TRIANGLE,
     ARC,
     TEXTURE,
