@@ -6,6 +6,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import org.lwjgl.system.Configuration
 
 /**
  * 安卓环境下 msdfgen 原生库的引导加载器。
@@ -16,11 +17,17 @@ import java.nio.file.StandardCopyOption
  *
  * 本加载器**仅在精确判定为安卓环境后**，把随 mod 分发的 bionic 版 `liblwjgl_msdfgen.so`
  * 提前解压并显式 `System.load`；其它平台完全不介入，仍走 LWJGL 默认的桌面 natives 检索流程。
+ *
+ * 注意：LWJGL 的 `Configuration.LIBRARY_PATH` 在类加载时就把 `org.lwjgl.librarypath` 缓存进了
+ * 静态字段，运行期只改系统属性不会被重新读取，必须同步调用 `Configuration.LIBRARY_PATH.set(...)`
+ * 写入其配置缓存，`Library.loadSystem` 的 librarypath 回退才能扫到本目录。
  */
 internal object MsdfgenNativeBootstrap {
 
     private const val LIB_NAME = "liblwjgl_msdfgen.so"
     private const val RESOURCE_ROOT = "assets/epsilon/natives/android"
+    private const val LIBRARY_PATH_KEY = "org.lwjgl.librarypath"
+    private const val MODULE_PATH = "org/lwjgl/msdfgen"
 
     @Volatile
     private var loaded = false
@@ -52,8 +59,8 @@ internal object MsdfgenNativeBootstrap {
                 val libFile = extract(abi)
                 // 显式按绝对路径加载，库名(soname)与 LWJGL 绑定一致：liblwjgl_msdfgen.so
                 System.load(libFile.absolutePath)
-                // 把解压目录补进 LWJGL librarypath，后续 loadLibrary 检索也能命中。
-                appendLibraryPath(libFile.parentFile.toPath())
+                // 把解压目录补进 LWJGL librarypath（含其配置缓存），后续 loadSystem 检索也能命中。
+                registerLibraryPath(libFile.parentFile.toPath())
                 loaded = true
                 Constants.LOGGER.info("[msdfgen] 安卓原生库已加载: ${libFile.absolutePath}")
             } catch (t: Throwable) {
@@ -62,7 +69,7 @@ internal object MsdfgenNativeBootstrap {
         }
     }
 
-    /** 从 mod jar 资源中按 ABI 解压原生库到可写临时目录，返回库文件。 */
+    /** 从 mod jar 资源中按 ABI 解压原生库到可写缓存目录，返回库文件。 */
     private fun extract(abi: String): File {
         val resource = "/$RESOURCE_ROOT/$abi/$LIB_NAME"
         val stream = MsdfgenNativeBootstrap::class.java.getResourceAsStream(resource)
@@ -83,14 +90,47 @@ internal object MsdfgenNativeBootstrap {
         if (target.length() <= 0L) {
             throw IllegalStateException("安卓原生库为空: ${target.absolutePath}")
         }
+
+        // 同时放一份到 LWJGL bundled 子路径（linux/<arch>/org/lwjgl/msdfgen/），
+        // 兼容 Library#findFile 按模块子目录结构的优先查找；根目录的扁平文件作为回退。
+        val bundledDir = targetDir.resolve("linux").resolve(toLwjglArch(abi)).resolve(MODULE_PATH)
+        bundledDir.mkdirs()
+        Files.copy(
+            target.toPath(),
+            bundledDir.resolve(LIB_NAME).toPath(),
+            StandardCopyOption.REPLACE_EXISTING,
+        )
         return target
     }
 
-    /** 将目录追加到 `org.lwjgl.librarypath`，供 LWJGL 按库名检索。 */
-    private fun appendLibraryPath(dir: Path) {
-        val key = "org.lwjgl.librarypath"
-        val current = System.getProperty(key)
-        val value = if (current.isNullOrBlank()) dir.toString() else "$dir${File.pathSeparator}$current"
-        System.setProperty(key, value)
+    /**
+     * 将目录追加到 `org.lwjgl.librarypath`。
+     *
+     * 除系统属性外，必须同步写入 LWJGL 的 `Configuration.LIBRARY_PATH` 缓存；该缓存在
+     * LWJGL core 类加载时初始化，之后 `get()` 不再回读系统属性。
+     */
+    private fun registerLibraryPath(dir: Path) {
+        val existing = System.getProperty(LIBRARY_PATH_KEY)
+        val combined = if (existing.isNullOrBlank()) {
+            dir.toString()
+        } else {
+            "$dir${File.pathSeparator}$existing"
+        }
+        System.setProperty(LIBRARY_PATH_KEY, combined)
+        try {
+            Configuration.LIBRARY_PATH.set(combined)
+            Constants.LOGGER.info("[msdfgen] LWJGL librarypath=${Configuration.LIBRARY_PATH.get()}")
+        } catch (t: Throwable) {
+            Constants.LOGGER.warn("[msdfgen] 写入 LWJGL LIBRARY_PATH 缓存失败，仅使用系统属性", t)
+        }
+    }
+
+    /** 安卓 ABI 目录名 → LWJGL bundled 路径中的架构段名。 */
+    private fun toLwjglArch(abi: String): String = when (abi) {
+        "arm64-v8a" -> "arm64"
+        "armeabi-v7a" -> "arm32"
+        "x86_64" -> "x64"
+        "x86" -> "x86"
+        else -> abi
     }
 }
