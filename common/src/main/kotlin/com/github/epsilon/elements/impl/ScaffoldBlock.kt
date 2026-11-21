@@ -13,7 +13,6 @@ import net.minecraft.util.Mth
 import java.awt.Color
 import java.util.function.Supplier
 import kotlin.math.pow
-import com.google.common.base.Supplier as GuavaSupplier
 
 object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
 
@@ -45,7 +44,7 @@ object ScaffoldBlock : HudModule("Scaffold Block", 0f, 0f, 84f, 28f) {
     private var frameVisible: Boolean = false
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
+        Suppliers.memoize { TextRenderer.create() }
 
     init {
         onEnable {

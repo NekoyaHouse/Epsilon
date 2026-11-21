@@ -83,7 +83,7 @@ object FXAAShader {
         this.ensureInput(framebuffer)
 
         val inputTarget = this.input
-        if (inputTarget == null || inputTarget.colorTexture == null || inputTarget.colorTextureView == null) {
+        if (inputTarget?.colorTexture == null || inputTarget.colorTextureView == null) {
             return
         }
 

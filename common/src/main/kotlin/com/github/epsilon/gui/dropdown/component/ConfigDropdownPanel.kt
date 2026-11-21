@@ -238,7 +238,7 @@ class ConfigDropdownPanel(panelIndex: Int) :
     private fun errorText(e: Exception): String {
         val message = e.message
         return EpsilonTranslations.Gui.CONFIG_ERROR_TITLE.getTranslatedName() + ": " +
-                if (message == null || message.isBlank()) e.javaClass.simpleName else message
+                if (message.isNullOrBlank()) e.javaClass.simpleName else message
     }
 
     private fun getCenteredTextY(textMetrics: UiTextMetrics, boxY: Float, boxH: Float, scale: Float): Float {

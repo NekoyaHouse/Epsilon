@@ -70,11 +70,11 @@ object HandView : Module("Hand View", Category.RENDER) {
 
     private val customTransform by boolSetting("Custom Transform", false)
     private val mainHandTransform: TransformSettings =
-        TransformSettings("Main Hand", mainHandGroup, { customTransform })
+        TransformSettings("Main Hand", mainHandGroup) { customTransform }
     private val offHandTransform: TransformSettings =
-        TransformSettings("Off Hand", offHandGroup, { customTransform })
+        TransformSettings("Off Hand", offHandGroup) { customTransform }
     private val armTransform: TransformSettings =
-        TransformSettings("Arm", armGroup, { customTransform })
+        TransformSettings("Arm", armGroup) { customTransform }
 
     init {
         handler<HeldItemRenderEvent> {

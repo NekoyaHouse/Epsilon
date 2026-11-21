@@ -426,12 +426,12 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             }
             val hovered = rect.contains(mouseX.toDouble(), mouseY.toDouble())
             scope.button(
-                x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS.toFloat(),
+                x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS,
                 MD3Theme.SECONDARY_CONTAINER, labels[i], 0.8f, MD3Theme.ON_SECONDARY_CONTAINER,
             )
             if (hovered) {
                 scope.roundRect(
-                    x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS.toFloat(),
+                    x, addBarY, buttonWidth, buttonHeight, MD3Theme.CONTROL_RADIUS,
                     MD3Theme.stateLayer(MD3Theme.PRIMARY, 0.16f, 36),
                 )
             }
@@ -504,12 +504,12 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         val cancelBtn = UiRect(panelX + PAD, y, cancelWidth, buttonHeight)
         scope.asUiScope(textRenderer).Interaction("cancel", cancelBtn) { onClick { exitAddMode(); true } }
         scope.button(
-            cancelBtn.x, cancelBtn.y, cancelBtn.width, cancelBtn.height, MD3Theme.CONTROL_RADIUS.toFloat(),
+            cancelBtn.x, cancelBtn.y, cancelBtn.width, cancelBtn.height, MD3Theme.CONTROL_RADIUS,
             Color(0, 0, 0, 0), EpsilonTranslations.Gui.ACCOUNTS_CANCEL.getTranslatedName(), 0.6f, MD3Theme.TEXT_PRIMARY,
         )
         scope.outline(
             cancelBtn.x, cancelBtn.y, cancelBtn.width, cancelBtn.height,
-            MD3Theme.CONTROL_RADIUS.toFloat(), 1.0f, MD3Theme.OUTLINE,
+            MD3Theme.CONTROL_RADIUS, 1.0f, MD3Theme.OUTLINE,
         )
 
         if (withAdd) {
@@ -519,7 +519,7 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
             val bg = if (canAdd) MD3Theme.PRIMARY else MD3Theme.withAlpha(MD3Theme.PRIMARY, 80)
             val fg = if (canAdd) MD3Theme.ON_PRIMARY else MD3Theme.withAlpha(MD3Theme.ON_PRIMARY, 100)
             scope.button(
-                addBtn.x, addBtn.y, addBtn.width, addBtn.height, MD3Theme.CONTROL_RADIUS.toFloat(), bg,
+                addBtn.x, addBtn.y, addBtn.width, addBtn.height, MD3Theme.CONTROL_RADIUS, bg,
                 EpsilonTranslations.Gui.ACCOUNTS_ADD.getTranslatedName(), 0.6f, fg,
             )
         }

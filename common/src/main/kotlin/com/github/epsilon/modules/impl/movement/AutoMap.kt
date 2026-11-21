@@ -22,7 +22,7 @@ import kotlin.math.*
 object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
     private const val STATE_VERSION = 1
-    private val TWO_PI = PI * 2.0
+    private const val TWO_PI = PI * 2.0
 
     private val autoLaunch by boolSetting("Auto Launch", true)
     private val spiralSpacing by doubleSetting("Spiral Spacing", 192.0, 16.0..1024.0, 1.0)
@@ -33,8 +33,8 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     private val takeoffFirework by boolSetting("Takeoff Firework", true, { autoLaunch })
 
     private val saveInterval by intSetting("Save Interval", 100, 20..1200, 20)
-    private val writeRecordButton by buttonSetting("Write Record", Runnable { writeRecord(true) })
-    private val resetRecordButton by buttonSetting("Reset Record", Runnable { resetRecord(true) })
+    private val writeRecordButton by buttonSetting("Write Record", { writeRecord(true) })
+    private val resetRecordButton by buttonSetting("Reset Record", { resetRecord(true) })
 
     private var initializedInWorld = false
     private var routeLoaded = false
@@ -299,7 +299,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
 
     private fun sendMessage(message: String) {
         runSafe {
-            player.sendSystemMessage(Component.literal("[自动扫图] " + message))
+            player.sendSystemMessage(Component.literal("[自动扫图] $message"))
         }
     }
 
@@ -315,7 +315,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     private fun readString(obj: JsonObject, key: String, fallback: String): String {
         return try {
             if (obj.has(key) && obj.get(key).isJsonPrimitive) obj.get(key).asString else fallback
-        } catch (ignored: Exception) {
+        } catch (_: Exception) {
             fallback
         }
     }
@@ -323,7 +323,7 @@ object AutoMap : Module("Auto Map", Category.MOVEMENT) {
     private fun readDouble(obj: JsonObject, key: String, fallback: Double): Double {
         return try {
             if (obj.has(key) && obj.get(key).isJsonPrimitive) obj.get(key).asDouble else fallback
-        } catch (ignored: Exception) {
+        } catch (_: Exception) {
             fallback
         }
     }

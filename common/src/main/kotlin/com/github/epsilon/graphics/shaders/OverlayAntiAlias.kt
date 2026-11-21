@@ -34,7 +34,7 @@ object OverlayAntiAlias {
 
     private fun createResolvePipeline(scale: Int): RenderPipeline {
         return RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
-            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_" + scale))
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_$scale"))
             .withVertexShader("core/screenquad")
             .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa"))
             .withShaderDefine("SSAA_SCALE", scale)
@@ -46,7 +46,7 @@ object OverlayAntiAlias {
 
     private fun createDepthPipeline(scale: Int): RenderPipeline {
         return RenderPipeline.builder()
-            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_depth_" + scale))
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_depth_$scale"))
             .withVertexShader("core/screenquad")
             .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa_depth"))
             .withShaderDefine("SSAA_SCALE", scale)

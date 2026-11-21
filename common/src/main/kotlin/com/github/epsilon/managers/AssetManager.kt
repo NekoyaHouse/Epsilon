@@ -127,11 +127,7 @@ object AssetManager {
             internal set
 
         init {
-            var total = 0L
-            for (asset in assetList) {
-                total += asset.expectedBytes()
-            }
-            totalBytes = maxOf(1L, total)
+            totalBytes = assetList.sumOf { it.expectedBytes() }.coerceAtLeast(1L)
         }
 
         fun assets(): List<Asset> {
@@ -336,11 +332,11 @@ object AssetManager {
             }
         }
         mc.execute {
-            if (mc.gui.screen() is AssetDownloadScreen) {
+            if (mc.gui.screen() === AssetDownloadScreen) {
                 return@execute
             }
             normalizeFfmpegDownloadUrl()
-            mc.gui.setScreen(AssetDownloadScreen(mc.gui.screen(), selected, declineOnClose))
+            AssetDownloadScreen.show(mc.gui.screen(), selected, declineOnClose)
         }
     }
 
@@ -376,7 +372,7 @@ object AssetManager {
             return null
         }
 
-        val ordered = ArrayList<Asset>(Asset.entries)
+        val ordered = ArrayList(Asset.entries)
         ordered.retainAll(requested)
 
         val job = DownloadJob(ordered)
@@ -402,7 +398,7 @@ object AssetManager {
             job.setStatus(DownloadJob.Status.SUCCESS)
             job.setCurrent(null)
             notifyResult(true, null)
-        } catch (e: DownloadCancelledException) {
+        } catch (_: DownloadCancelledException) {
             job.setStatus(DownloadJob.Status.CANCELLED)
             job.setCurrent(null)
         } catch (e: Throwable) {
@@ -747,7 +743,7 @@ object AssetManager {
     private fun isFile(path: Path, minBytes: Long): Boolean {
         try {
             return Files.isRegularFile(path) && Files.size(path) >= minBytes
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             return false
         }
     }
@@ -766,7 +762,7 @@ object AssetManager {
                 }
                 return true
             }
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             return false
         }
     }
@@ -786,7 +782,7 @@ object AssetManager {
                 }
                 return false
             }
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             return false
         }
     }
@@ -811,7 +807,7 @@ object AssetManager {
     private fun moveReplacing(source: Path, target: Path) {
         try {
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-        } catch (e: AtomicMoveNotSupportedException) {
+        } catch (_: AtomicMoveNotSupportedException) {
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING)
         }
     }
@@ -819,7 +815,7 @@ object AssetManager {
     private fun sleep(millis: Long) {
         try {
             Thread.sleep(millis)
-        } catch (e: InterruptedException) {
+        } catch (_: InterruptedException) {
             Thread.currentThread().interrupt()
         }
     }
@@ -832,7 +828,7 @@ object AssetManager {
     private object ClientSettingUrl {
 
         fun resourceBaseUrl(): String {
-            var base = ClientSetting.resourceBaseUrl.trim()
+            val base = ClientSetting.resourceBaseUrl.trim()
             if (base.isEmpty()) {
                 return DEFAULT_RESOURCE_BASE_URL
             }

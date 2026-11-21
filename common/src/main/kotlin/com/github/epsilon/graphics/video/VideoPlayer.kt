@@ -105,7 +105,7 @@ object VideoPlayer {
                 newGrabber.start()
 
                 val first = newGrabber.grabImage()
-                if (first != null && first.image != null) {
+                if (first?.image != null) {
                     val fb = copyFrameLocked(first)
                     latestFrame.set(fb)
                     lastPtsUs = if (first.timestamp > 0) first.timestamp else newGrabber.timestamp
@@ -170,11 +170,11 @@ object VideoPlayer {
                 if (grabber != null) {
                     try {
                         grabber.stop()
-                    } catch (ignored: Throwable) {
+                    } catch (_: Throwable) {
                     }
                     try {
                         grabber.close()
-                    } catch (ignored: Throwable) {
+                    } catch (_: Throwable) {
                     }
                     this.grabber = null
                 }
@@ -265,10 +265,10 @@ object VideoPlayer {
                         if (stopped || grabber == null) break
 
                         val frame = grabber.grabImage()
-                        if (frame == null || frame.image == null) {
+                        if (frame?.image == null) {
                             grabber.setTimestamp(0)
                             val first = grabber.grabImage()
-                            if (first != null && first.image != null) {
+                            if (first?.image != null) {
                                 ptsUs = if (first.timestamp > 0) first.timestamp else grabber.timestamp
                                 lastPtsUs = ptsUs
 
@@ -297,7 +297,7 @@ object VideoPlayer {
                         latestFrame.set(decodedFrame)
                     }
                 }
-            } catch (ignored: InterruptedException) {
+            } catch (_: InterruptedException) {
             } catch (e: Throwable) {
                 Constants.LOGGER.error("[VideoPlayer] Decode thread error:", e)
             }
@@ -351,7 +351,7 @@ object VideoPlayer {
                 } else {
                     try {
                         tex.close()
-                    } catch (ignored: Throwable) {
+                    } catch (_: Throwable) {
                     }
                 }
                 this.tex = null

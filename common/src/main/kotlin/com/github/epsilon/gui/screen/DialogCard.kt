@@ -8,6 +8,7 @@ import com.github.epsilon.gui.lib.scene.UiScene
 import com.github.epsilon.gui.theme.DialogZ
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
+import com.github.epsilon.kernel.MinecraftWrapper.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.MouseButtonEvent
@@ -15,15 +16,20 @@ import net.minecraft.network.chat.Component
 import java.awt.Color
 
 /**
- * Epsilon 风格的模态卡片对话框基类。
+ * Epsilon 模态对话框共用的卡片渲染和输入处理。
  *
- * 统一负责离屏渲染目标、遮罩、卡片外壳、标题、按钮布局与点击路由，子类只需要描述卡片
- * 尺寸、正文内容和按钮列表即可。
+ * 每次打开时创建独立的内容。若父界面也是对话框，关闭子对话框时会恢复父对话框的内容。
  */
-abstract class EpsilonDialogScreen protected constructor(
-    protected val parent: Screen?,
-    title: Component,
-) : Screen(title) {
+internal object DialogCard {
+
+    const val CARD_PADDING = 14.0f
+    const val BODY_SCALE = 0.62f
+    const val BUTTON_HEIGHT = 26.0f
+
+    private const val TITLE_SCALE = 0.95f
+    private const val BUTTON_GAP = 6.0f
+    private const val BUTTON_MIN_WIDTH = 78.0f
+    private val SCRIM = Color(0, 0, 0, 150)
 
     /**
      * 对话框按钮描述。
@@ -32,50 +38,77 @@ abstract class EpsilonDialogScreen protected constructor(
      * @param primary 是否使用主色（否则使用次级容器色）
      * @param action  点击回调
      */
-    protected data class DialogButton(val label: String, val primary: Boolean, val action: Runnable)
+    data class DialogButton(val label: String, val primary: Boolean, val action: Runnable)
+
+    abstract class Content(val screenTitle: Component? = null) {
+        abstract fun titleText(): String
+        abstract fun cardWidth(): Float
+        abstract fun cardHeight(): Float
+
+        /** 绘制卡片正文，坐标以卡片左上角为原点。 */
+        abstract fun buildBody(scope: UiTree.Scope, contentTop: Float)
+
+        /** 当前帧的按钮列表，按从左到右的顺序返回。 */
+        abstract fun buttons(): List<DialogButton>
+
+        /** 用户主动关闭对话框时调用。 */
+        open fun onClose() {}
+    }
+
+    private data class Session(
+        val screen: Screen,
+        val content: Content,
+        val parent: Screen?,
+        val previous: Session?,
+    )
 
     private data class ButtonHit(val bounds: UiRect, val button: DialogButton)
 
-    private val scene = UiScene(EpsilonUiTheme)
-    private val buttonHits: MutableList<ButtonHit> = ArrayList()
+    private val scene by lazy { UiScene(EpsilonUiTheme) }
 
     private var renderTarget: LuminRenderSystem.LuminRenderTarget? = null
     private var cardArea: UiRect = UiRect(0.0f, 0.0f, 0.0f, 0.0f)
+    private var current: Session? = null
+    private var pending: Session? = null
 
-    protected abstract fun titleText(): String
-
-    protected abstract fun cardWidth(): Float
-
-    protected abstract fun cardHeight(): Float
-
-    /**
-     * 绘制卡片正文；坐标以卡片左上角为原点。
-     */
-    protected abstract fun buildBody(scope: UiTree.Scope, contentTop: Float, mouseX: Int, mouseY: Int)
-
-    /**
-     * 当前帧的按钮列表，按从左到右的顺序返回。
-     */
-    protected abstract fun buttons(): List<DialogButton>
-
-    /**
-     * 对话框被关闭（ESC、关闭按钮或父界面切换）时回调。
-     */
-    protected open fun onDialogClosed() {
+    fun show(screen: Screen, parent: Screen?, content: Content) {
+        val previous = current?.takeIf { it.screen === parent }
+        if (screen === parent || screen === mc.gui.screen() ||
+            generateSequence(previous) { it.previous }.any { it.screen === screen }
+        ) return
+        switchTo(screen, Session(screen, content, parent, previous))
     }
 
-    override fun isPauseScreen(): Boolean {
-        return false
+    private fun switchTo(screen: Screen?, session: Session?) {
+        val previousPending = pending
+        pending = session
+        try {
+            mc.gui.setScreen(screen)
+        } finally {
+            pending = previousPending
+        }
     }
 
-    override fun onClose() {
-        onDialogClosed()
-        minecraft.gui.setScreen(parent)
+    // Gui.setScreen 可能被取消，等 added() 确认切换后再采用待显示的内容。
+    fun added(screen: Screen) {
+        current = pending?.takeIf { it.screen === screen }
     }
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        val minecraft = this.minecraft
-        val window = minecraft.window
+    fun isShowing(screen: Screen): Boolean = current?.screen === screen
+
+    fun title(screen: Screen): Component? = current?.takeIf { it.screen === screen }?.content?.screenTitle
+
+    fun close(screen: Screen, action: Runnable? = null) {
+        val session = current?.takeIf { it.screen === screen } ?: return
+        action?.run()
+        if (current !== session) return
+        session.content.onClose()
+        switchTo(session.parent, session.previous)
+    }
+
+    fun extractRenderState(screen: Screen, graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
+        val content = current?.takeIf { it.screen === screen }?.content ?: return
+        val window = mc.window
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("epsilon-dialog", window.width, window.height)
         }
@@ -88,10 +121,10 @@ abstract class EpsilonDialogScreen protected constructor(
         val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
         val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
 
-        val cardW = minOf(cardWidth(), width - 20.0f)
-        val cardH = minOf(cardHeight(), height - 20.0f)
+        val cardW = minOf(content.cardWidth(), width - 20.0f)
+        val cardH = minOf(content.cardHeight(), height - 20.0f)
         cardArea = UiRect((width - cardW) * 0.5f, (height - cardH) * 0.5f, cardW, cardH)
-        val hits = layoutButtons()
+        val hits = layoutButtons(content.buttons())
 
         scene.beginFrame()
         val tree =
@@ -108,9 +141,9 @@ abstract class EpsilonDialogScreen protected constructor(
                         MD3Theme.CARD_RADIUS.toFloat(), MD3Theme.SURFACE_CONTAINER_LOW
                     )
                 }
-                scope.pushAbsolute(cardArea) { content ->
-                    content.text(titleText(), CARD_PADDING, CARD_PADDING, TITLE_SCALE, MD3Theme.TEXT_PRIMARY)
-                    buildBody(content, CARD_PADDING + 22.0f, epsilonMouseX, epsilonMouseY)
+                scope.pushAbsolute(cardArea) { body ->
+                    body.text(content.titleText(), CARD_PADDING, CARD_PADDING, TITLE_SCALE, MD3Theme.TEXT_PRIMARY)
+                    content.buildBody(body, CARD_PADDING + 22.0f)
                 }
                 scope.layer(DialogZ.Content) { content ->
                     for ((index, hit) in hits.withIndex()) {
@@ -127,7 +160,7 @@ abstract class EpsilonDialogScreen protected constructor(
                             if (hit.button.primary) MD3Theme.ON_PRIMARY_CONTAINER else MD3Theme.TEXT_PRIMARY
                         content.button(
                             hit.bounds,
-                            MD3Theme.CONTROL_RADIUS.toFloat(),
+                            MD3Theme.CONTROL_RADIUS,
                             background,
                             hit.button.label,
                             0.62f,
@@ -145,39 +178,30 @@ abstract class EpsilonDialogScreen protected constructor(
         )
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
+    fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         scene.input.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick)
         return true
     }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
-        return true
-    }
-
-    override fun removed() {
+    fun removed() {
+        current = null
         scene.resetComposition()
-
-        super.removed()
-        if (renderTarget != null) {
-            renderTarget!!.close()
-            renderTarget = null
-        }
+        renderTarget?.close()
+        renderTarget = null
     }
 
-    protected fun cardBounds(): UiRect {
+    fun cardBounds(): UiRect {
         return cardArea
     }
 
     /**
-     * 供子类测量文本使用的渲染器。
+     * 供卡片正文测量文本使用的渲染器。
      */
-    protected fun textMetrics(): TextRenderer {
+    fun textMetrics(): TextRenderer {
         return scene.scheduler().textMetrics()
     }
 
-    private fun layoutButtons(): List<ButtonHit> {
-        buttonHits.clear()
-        val buttons = buttons()
+    private fun layoutButtons(buttons: List<DialogButton>): List<ButtonHit> {
         if (buttons.isEmpty() || cardArea.width <= 0.0f) {
             return emptyList()
         }
@@ -193,25 +217,13 @@ abstract class EpsilonDialogScreen protected constructor(
 
         var x = cardArea.x + cardArea.width - CARD_PADDING - totalWidth
         val y = cardArea.y + cardArea.height - CARD_PADDING - BUTTON_HEIGHT
+        val hits = ArrayList<ButtonHit>(buttons.size)
         for (i in buttons.indices) {
             val bounds = UiRect(x, y, widths[i], BUTTON_HEIGHT)
-            buttonHits.add(ButtonHit(bounds, buttons[i]))
+            hits.add(ButtonHit(bounds, buttons[i]))
             x += widths[i] + BUTTON_GAP
         }
-        return buttonHits.toList()
-    }
-
-    companion object {
-
-        const val CARD_PADDING: Float = 14.0f
-        const val TITLE_SCALE: Float = 0.95f
-        const val BODY_SCALE: Float = 0.62f
-        const val BUTTON_HEIGHT: Float = 26.0f
-        const val BUTTON_GAP: Float = 6.0f
-        const val BUTTON_MIN_WIDTH: Float = 78.0f
-
-        private val SCRIM: Color = Color(0, 0, 0, 150)
-
+        return hits
     }
 
 }

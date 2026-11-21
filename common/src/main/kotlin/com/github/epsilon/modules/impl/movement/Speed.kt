@@ -205,7 +205,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                     setMotionY(yMotion)
                     event.y = yMotion
                     event.cancel()
-                    speed = speed * (if (boost) 1.6835 else 1.395)
+                    speed *= (if (boost) 1.6835 else 1.395)
                 } else if (stage == 3) {
                     speed = distance - 0.66 * (distance - getSpeed(slow, strafeSpeed))
 

@@ -167,7 +167,7 @@ object LuminUiRenderer {
                 )
                 val textY = bounds.y + (bounds.height - metrics.getHeight(node.textScale)) / 2.0f
                 layer.addText(node.label, bounds.x + 8.0f, textY, node.textScale, node.foreground)
-                if (trailingIcon != null && !trailingIcon.isEmpty() && trailingIconFont != null) {
+                if (!trailingIcon.isNullOrEmpty() && trailingIconFont != null) {
                     val iconWidth = metrics.getWidth(trailingIcon, node.trailingIconScale, trailingIconFont)
                     val iconY =
                         bounds.y + (bounds.height - metrics.getHeight(node.trailingIconScale, trailingIconFont)) / 2.0f
@@ -408,17 +408,12 @@ object LuminUiRenderer {
             val textX = bounds.x + element.textInset
             val textY = bounds.y + (bounds.height - metrics.getHeight(element.textScale)) / 2.0f
 
-            if (!text.isEmpty()) {
+            if (text.isNotEmpty()) {
                 val selection = element.selection
                 val selectionColor = element.selectionColor
                 if (selection != null && selectionColor != null) {
-                    val start =
-                        (selection.start.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong())
-                            .toInt().toInt()
-                    val end = (selection.end.toLong()).coerceIn(
-                        ((start).toLong()).toLong(),
-                        ((text.length).toLong()).toLong()
-                    ).toInt().toInt()
+                    val start = selection.start.coerceIn(0, text.length)
+                    val end = selection.end.coerceIn(start, text.length)
                     if (end > start) {
                         val selectionX = textX + metrics.getWidth(text.substring(0, start), element.textScale)
                         val selectionWidth = metrics.getWidth(text.substring(start, end), element.textScale)
@@ -432,9 +427,7 @@ object LuminUiRenderer {
             val caretIndex = element.caretIndex
             val caretColor = element.caretColor
             if (caretIndex != null && caretColor != null) {
-                val safeCaretIndex =
-                    (caretIndex.toLong()).coerceIn(((0).toLong()).toLong(), ((text.length).toLong()).toLong()).toInt()
-                        .toInt()
+                val safeCaretIndex = caretIndex.coerceIn(0, text.length)
                 val caretX = textX + metrics.getWidth(text.substring(0, safeCaretIndex), element.textScale)
                 layer.addRect(caretX, bounds.y + 4.0f, 1.0f, bounds.height - 8.0f, caretColor)
             }
@@ -442,7 +435,7 @@ object LuminUiRenderer {
 
         val trailingHint = element.trailingHint
         val trailingHintColor = element.trailingHintColor
-        if (trailingHint != null && !trailingHint.isBlank() && trailingHintColor != null) {
+        if (!trailingHint.isNullOrBlank() && trailingHintColor != null) {
             val hintWidth = metrics.getWidth(trailingHint, element.trailingHintScale)
             val hintY = bounds.y + (bounds.height - metrics.getHeight(element.trailingHintScale)) / 2.0f
             val hintX = bounds.right() - element.textInset - hintWidth

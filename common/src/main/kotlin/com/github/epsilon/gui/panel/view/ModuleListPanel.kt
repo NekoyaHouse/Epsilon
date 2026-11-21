@@ -254,7 +254,7 @@ class ModuleListPanel(protected val state: PanelState) : AutoCloseable {
             }
 
             InputConstants.KEY_BACKSPACE -> {
-                if (searchCursorIndex > 0 && !query.isEmpty()) {
+                if (searchCursorIndex > 0 && query.isNotEmpty()) {
                     state.setSearchQuery(
                         query.substring(0, searchCursorIndex - 1) + query.substring(searchCursorIndex)
                     )

@@ -16,7 +16,7 @@ enum class AccountSortMode(
     TYPE(
         EpsilonTranslations.Gui.ACCOUNTS_SORT_TYPE,
         Comparator.comparing<Account<*>, String> { a -> a.type.name }
-            .thenComparing({ a: Account<*> -> a.username.lowercase() }),
+            .thenComparing { a: Account<*> -> a.username.lowercase() },
     );
 
     fun getLabel(): String {

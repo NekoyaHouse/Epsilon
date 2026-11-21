@@ -2,9 +2,15 @@ package com.github.epsilon.gui.screen
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.gui.lib.UiTree
+import com.github.epsilon.gui.screen.DialogCard.BODY_SCALE
+import com.github.epsilon.gui.screen.DialogCard.BUTTON_HEIGHT
+import com.github.epsilon.gui.screen.DialogCard.CARD_PADDING
+import com.github.epsilon.gui.screen.DialogCard.DialogButton
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.managers.AssetManager
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import java.util.*
 import kotlin.math.roundToInt
@@ -15,185 +21,189 @@ import kotlin.math.roundToInt
  * 展示每个资源的大小与状态，用户确认后由 [AssetManager] 在后台线程下载。
  * 关闭界面不会中断下载，用户也可以在下载中显式取消。
  */
-class AssetDownloadScreen(
-    parent: Screen?,
-    assets: Collection<AssetManager.Asset>,
-    private val declineOnClose: Boolean,
-) : EpsilonDialogScreen(parent, Component.literal("Assets")) {
+object AssetDownloadScreen : Screen(Component.literal("Assets")) {
 
-    private val assets: List<AssetManager.Asset>
+    private const val ROW_HEIGHT = 20.0f
+    private const val STATUS_BLOCK_HEIGHT = 30.0f
 
-    private var downloadRequested: Boolean = false
+    fun show(parent: Screen?, assets: Collection<AssetManager.Asset>, declineOnClose: Boolean) {
+        val ordered = AssetManager.Asset.entries.filter { it in assets }
+        DialogCard.show(this, parent, Download(ordered, declineOnClose))
+    }
 
-    init {
-        val ordered: MutableList<AssetManager.Asset> = ArrayList()
-        for (asset in AssetManager.Asset.values()) {
-            if (assets.contains(asset)) {
-                ordered.add(asset)
-            }
+    override fun added() = DialogCard.added(this)
+
+    override fun removed() = DialogCard.removed()
+
+    override fun isPauseScreen(): Boolean = false
+
+    override fun onClose() = DialogCard.close(this)
+
+    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) =
+        DialogCard.extractRenderState(this, graphics, mouseX, mouseY)
+
+    override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean =
+        DialogCard.mouseClicked(event, doubleClick)
+
+    override fun mouseReleased(event: MouseButtonEvent): Boolean = true
+
+    private class Download(
+        private val assets: List<AssetManager.Asset>,
+        private val declineOnClose: Boolean,
+    ) : DialogCard.Content() {
+
+        private var downloadRequested = false
+
+        override fun titleText(): String {
+            return EpsilonTranslations.Resources.TITLE.getTranslatedName()
         }
-        this.assets = ordered.toList()
-    }
 
-    override fun titleText(): String {
-        return EpsilonTranslations.Resources.TITLE.getTranslatedName()
-    }
+        override fun cardWidth(): Float {
+            return 350.0f
+        }
 
-    override fun cardWidth(): Float {
-        return 350.0f
-    }
+        override fun cardHeight(): Float {
+            return CARD_PADDING * 2.0f + 36.0f + maxOf(1, assets.size) * ROW_HEIGHT +
+                    STATUS_BLOCK_HEIGHT + BUTTON_HEIGHT + 10.0f
+        }
 
-    override fun cardHeight(): Float {
-        return CARD_PADDING * 2.0f + 36.0f + maxOf(1, assets.size) * ROW_HEIGHT +
-                STATUS_BLOCK_HEIGHT + BUTTON_HEIGHT + 10.0f
-    }
+        override fun buildBody(scope: UiTree.Scope, contentTop: Float) {
+            val manager = AssetManager
+            val job = manager.activeJob()
+            val running = job != null && job.isRunning()
+            val cardWidth = DialogCard.cardBounds().width
 
-    override fun buildBody(scope: UiTree.Scope, contentTop: Float, mouseX: Int, mouseY: Int) {
-        val manager = AssetManager
-        val job = manager.activeJob()
-        val running = job != null && job.isRunning()
+            var y = contentTop
+            for (asset in assets) {
+                val ready = manager.isReady(asset)
+                val downloading = running && job.currentAsset() == asset
 
-        var y = contentTop
-        for (asset in assets) {
-            val ready = manager.isReady(asset)
-            val downloading = running && job.currentAsset() == asset
-
-            scope.text(
-                label(asset), CARD_PADDING, y, BODY_SCALE,
-                if (ready) MD3Theme.TEXT_PRIMARY else MD3Theme.TEXT_SECONDARY
-            )
-
-            val size = formatSize(asset.expectedBytes())
-            val status = if (downloading) {
-                String.format(
-                    Locale.ROOT, "%s %d%%", EpsilonTranslations.Resources.STATUS_DOWNLOADING.getTranslatedName(),
-                    (job.currentProgress() * 100.0f).roundToInt()
+                scope.text(
+                    label(asset), CARD_PADDING, y, BODY_SCALE,
+                    if (ready) MD3Theme.TEXT_PRIMARY else MD3Theme.TEXT_SECONDARY
                 )
-            } else {
-                if (ready) EpsilonTranslations.Resources.STATUS_READY.getTranslatedName()
-                else EpsilonTranslations.Resources.STATUS_MISSING.getTranslatedName()
-            }
-            val trailing = "$size  ·  $status"
-            val trailingWidth = textMetrics().getWidth(trailing, BODY_SCALE)
-            scope.text(
-                trailing, cardBounds().width - CARD_PADDING - trailingWidth, y,
-                BODY_SCALE,
-                if (ready) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_SECONDARY
-            )
-            y += ROW_HEIGHT
-        }
 
-        y += 6.0f
-        if (running) {
-            val barWidth = cardBounds().width - CARD_PADDING * 2.0f
-            scope.roundRect(CARD_PADDING, y, barWidth, 6.0f, 3.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
-            val filled = maxOf(2.0f, barWidth * job.progress())
-            scope.roundRect(CARD_PADDING, y, filled, 6.0f, 3.0f, MD3Theme.PRIMARY_CONTAINER)
-            y += 12.0f
-            val current = job.currentAsset()
-            val line = if (current == null) {
-                EpsilonTranslations.Resources.DOWNLOADING.getTranslatedName()
-            } else {
-                String.format(
-                    Locale.ROOT, "%s %s %d%%",
-                    EpsilonTranslations.Resources.DOWNLOADING.getTranslatedName(),
-                    label(current), (job.currentProgress() * 100.0f).roundToInt()
-                )
-            }
-            scope.text(line, CARD_PADDING, y, BODY_SCALE, MD3Theme.TEXT_SECONDARY)
-            return
-        }
-
-        if (job != null && job.status() == AssetManager.DownloadJob.Status.FAILED) {
-            val error = String.format(EpsilonTranslations.Resources.FAILED.getTranslatedName(), job.error())
-            scope.text(error, CARD_PADDING, y, BODY_SCALE, MD3Theme.ERROR)
-            return
-        }
-
-        val allReady = assets.all { asset -> AssetManager.isReady(asset) }
-        scope.text(
-            if (allReady) EpsilonTranslations.Resources.DOWNLOAD_SUCCESS_MESSAGE.getTranslatedName()
-            else EpsilonTranslations.Resources.HINT.getTranslatedName(),
-            CARD_PADDING, y, BODY_SCALE, MD3Theme.TEXT_MUTED
-        )
-    }
-
-    override fun buttons(): List<DialogButton> {
-        val manager = AssetManager
-        val job = manager.activeJob()
-        if (job != null && job.isRunning()) {
-            return listOf(
-                DialogButton(
-                    EpsilonTranslations.Resources.BUTTON_STOP.getTranslatedName(),
-                    false,
-                    Runnable { job.cancel() }),
-                DialogButton(
-                    EpsilonTranslations.Resources.BUTTON_BACKGROUND.getTranslatedName(),
-                    true,
-                    Runnable { onClose() })
-            )
-        }
-
-        val missing: EnumSet<AssetManager.Asset> = EnumSet.noneOf(AssetManager.Asset::class.java)
-        for (asset in assets) {
-            if (!manager.isReady(asset)) {
-                missing.add(asset)
-            }
-        }
-        if (missing.isEmpty()) {
-            return listOf(
-                DialogButton(
-                    EpsilonTranslations.Resources.BUTTON_DONE.getTranslatedName(),
-                    true,
-                    Runnable { onClose() })
-            )
-        }
-
-        val failed = job != null && job.status() == AssetManager.DownloadJob.Status.FAILED
-        val primaryLabel = if (failed) EpsilonTranslations.Resources.BUTTON_RETRY.getTranslatedName()
-        else EpsilonTranslations.Resources.BUTTON_DOWNLOAD.getTranslatedName()
-        val secondaryLabel = if (failed) EpsilonTranslations.Resources.BUTTON_CLOSE.getTranslatedName()
-        else EpsilonTranslations.Resources.BUTTON_CANCEL.getTranslatedName()
-        return listOf(
-            DialogButton(
-                secondaryLabel, false, Runnable {
-                    manager.markDeclined(missing)
-                    onClose()
+                val size = formatSize(asset.expectedBytes())
+                val status = if (downloading) {
+                    String.format(
+                        Locale.ROOT, "%s %d%%", EpsilonTranslations.Resources.STATUS_DOWNLOADING.getTranslatedName(),
+                        (job.currentProgress() * 100.0f).roundToInt()
+                    )
+                } else {
+                    if (ready) EpsilonTranslations.Resources.STATUS_READY.getTranslatedName()
+                    else EpsilonTranslations.Resources.STATUS_MISSING.getTranslatedName()
                 }
-            ),
-            DialogButton(
-                primaryLabel, true, Runnable {
+                val trailing = "$size  ·  $status"
+                val trailingWidth = DialogCard.textMetrics().getWidth(trailing, BODY_SCALE)
+                scope.text(
+                    trailing, cardWidth - CARD_PADDING - trailingWidth, y,
+                    BODY_SCALE,
+                    if (ready) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_SECONDARY
+                )
+                y += ROW_HEIGHT
+            }
+
+            y += 6.0f
+            if (running) {
+                val barWidth = cardWidth - CARD_PADDING * 2.0f
+                scope.roundRect(CARD_PADDING, y, barWidth, 6.0f, 3.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST)
+                val filled = maxOf(2.0f, barWidth * job.progress())
+                scope.roundRect(CARD_PADDING, y, filled, 6.0f, 3.0f, MD3Theme.PRIMARY_CONTAINER)
+                y += 12.0f
+                val current = job.currentAsset()
+                val line = if (current == null) {
+                    EpsilonTranslations.Resources.DOWNLOADING.getTranslatedName()
+                } else {
+                    String.format(
+                        Locale.ROOT, "%s %s %d%%",
+                        EpsilonTranslations.Resources.DOWNLOADING.getTranslatedName(),
+                        label(current), (job.currentProgress() * 100.0f).roundToInt()
+                    )
+                }
+                scope.text(line, CARD_PADDING, y, BODY_SCALE, MD3Theme.TEXT_SECONDARY)
+                return
+            }
+
+            if (job != null && job.status() == AssetManager.DownloadJob.Status.FAILED) {
+                val error = String.format(EpsilonTranslations.Resources.FAILED.getTranslatedName(), job.error())
+                scope.text(error, CARD_PADDING, y, BODY_SCALE, MD3Theme.ERROR)
+                return
+            }
+
+            val allReady = assets.all { asset -> AssetManager.isReady(asset) }
+            scope.text(
+                if (allReady) EpsilonTranslations.Resources.DOWNLOAD_SUCCESS_MESSAGE.getTranslatedName()
+                else EpsilonTranslations.Resources.HINT.getTranslatedName(),
+                CARD_PADDING, y, BODY_SCALE, MD3Theme.TEXT_MUTED
+            )
+        }
+
+        override fun buttons(): List<DialogButton> {
+            val manager = AssetManager
+            val job = manager.activeJob()
+            if (job != null && job.isRunning()) {
+                return listOf(
+                    DialogButton(
+                        EpsilonTranslations.Resources.BUTTON_STOP.getTranslatedName(),
+                        false
+                    ) { job.cancel() },
+                    DialogButton(
+                        EpsilonTranslations.Resources.BUTTON_BACKGROUND.getTranslatedName(),
+                        true
+                    ) { AssetDownloadScreen.onClose() }
+                )
+            }
+
+            val missing: EnumSet<AssetManager.Asset> = EnumSet.noneOf(AssetManager.Asset::class.java)
+            for (asset in assets) {
+                if (!manager.isReady(asset)) {
+                    missing.add(asset)
+                }
+            }
+            if (missing.isEmpty()) {
+                return listOf(
+                    DialogButton(
+                        EpsilonTranslations.Resources.BUTTON_DONE.getTranslatedName(),
+                        true
+                    ) { AssetDownloadScreen.onClose() }
+                )
+            }
+
+            val failed = job != null && job.status() == AssetManager.DownloadJob.Status.FAILED
+            val primaryLabel = if (failed) EpsilonTranslations.Resources.BUTTON_RETRY.getTranslatedName()
+            else EpsilonTranslations.Resources.BUTTON_DOWNLOAD.getTranslatedName()
+            val secondaryLabel = if (failed) EpsilonTranslations.Resources.BUTTON_CLOSE.getTranslatedName()
+            else EpsilonTranslations.Resources.BUTTON_CANCEL.getTranslatedName()
+            return listOf(
+                DialogButton(secondaryLabel, false) {
+                    manager.markDeclined(missing)
+                    AssetDownloadScreen.onClose()
+                },
+                DialogButton(primaryLabel, true) {
                     downloadRequested = true
                     manager.startDownload(missing)
                 }
             )
-        )
-    }
-
-    override fun onDialogClosed() {
-        if (declineOnClose && !downloadRequested) {
-            AssetManager.markDeclined(assets)
         }
-    }
 
-    private companion object {
-
-        private const val ROW_HEIGHT = 20.0f
-        private const val STATUS_BLOCK_HEIGHT = 30.0f
-
-        private fun label(asset: AssetManager.Asset): String {
-            return when (asset) {
-                AssetManager.Asset.VIDEO -> EpsilonTranslations.Resources.VIDEO.getTranslatedName()
-                AssetManager.Asset.LIGHT_TRAILS -> EpsilonTranslations.Resources.LIGHT_TRAILS.getTranslatedName()
-                AssetManager.Asset.REISA -> EpsilonTranslations.Resources.REISA.getTranslatedName()
-                AssetManager.Asset.FFMPEG -> EpsilonTranslations.Resources.FFMPEG.getTranslatedName()
+        override fun onClose() {
+            if (declineOnClose && !downloadRequested) {
+                AssetManager.markDeclined(assets)
             }
         }
+    }
 
-        private fun formatSize(bytes: Long): String {
-            return String.format(Locale.ROOT, "%.1f MB", bytes / 1024.0 / 1024.0)
+    private fun label(asset: AssetManager.Asset): String {
+        return when (asset) {
+            AssetManager.Asset.VIDEO -> EpsilonTranslations.Resources.VIDEO.getTranslatedName()
+            AssetManager.Asset.LIGHT_TRAILS -> EpsilonTranslations.Resources.LIGHT_TRAILS.getTranslatedName()
+            AssetManager.Asset.REISA -> EpsilonTranslations.Resources.REISA.getTranslatedName()
+            AssetManager.Asset.FFMPEG -> EpsilonTranslations.Resources.FFMPEG.getTranslatedName()
         }
+    }
 
+    private fun formatSize(bytes: Long): String {
+        return String.format(Locale.ROOT, "%.1f MB", bytes / 1024.0 / 1024.0)
     }
 
 }

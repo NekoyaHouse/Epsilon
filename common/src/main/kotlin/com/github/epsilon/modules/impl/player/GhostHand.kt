@@ -44,7 +44,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
                 posList.add(pos)
 
                 if (level.getBlockState(pos).hasBlockEntity()) {
-                    for (hand in InteractionHand.values()) {
+                    for (hand in InteractionHand.entries) {
                         val result = gameMode.useItemOn(
                             player,
                             hand,

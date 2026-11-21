@@ -30,7 +30,7 @@ class DefaultTranslateComponent private constructor(
     }
 
     override fun createChild(suffix: String): TranslateComponent {
-        return create(fullKey + "." + suffix)
+        return create("$fullKey.$suffix")
     }
 
     companion object {
@@ -49,7 +49,7 @@ class DefaultTranslateComponent private constructor(
         }
 
         private fun formatKey(key: String?): String {
-            if (key == null || key.isEmpty()) {
+            if (key.isNullOrEmpty()) {
                 return ""
             }
 

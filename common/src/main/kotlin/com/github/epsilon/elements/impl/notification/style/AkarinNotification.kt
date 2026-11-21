@@ -197,7 +197,7 @@ class AkarinNotification(private val owner: Notifications) {
             color.red,
             color.green,
             color.blue,
-            (alpha.toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong()).toInt().toInt()
+            alpha.coerceIn(0, 255)
         )
     }
 

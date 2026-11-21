@@ -45,7 +45,7 @@ class EpsilonGuiRenderer(
 
     private val oversizedItemRenderers: MutableMap<Any, OversizedItemRenderer> = Object2ObjectOpenHashMap()
     private val draws: MutableList<Draw> = ArrayList()
-    private val vertexBuffer = StagedVertexBuffer(Supplier { "GUI Vertex Buffer" }, 786432)
+    private val vertexBuffer = StagedVertexBuffer({ "GUI Vertex Buffer" }, 786432)
     private var firstDrawIndexAfterBlur: Int = Int.MAX_VALUE
     private val guiProjection = Projection()
     private val guiProjectionMatrixBuffer = ProjectionMatrixBuffer("gui")
@@ -124,7 +124,7 @@ class EpsilonGuiRenderer(
     }
 
     private fun draw() {
-        if (!draws.isEmpty()) {
+        if (draws.isNotEmpty()) {
             guiProjection.setupOrtho(
                 1000.0f, 11000.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), true
             )
@@ -138,7 +138,7 @@ class EpsilonGuiRenderer(
                 RenderSystem.getDynamicUniforms().writeTransform(Matrix4f().setTranslation(0.0f, 0.0f, -11000.0f))
             if (firstDrawIndexAfterBlur > 0) {
                 executeDrawRange(
-                    Supplier { "GUI before blur" },
+                    { "GUI before blur" },
                     mainRenderTarget,
                     dynamicTransforms,
                     0,
@@ -150,7 +150,7 @@ class EpsilonGuiRenderer(
                 RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(mainRenderTarget.depthTexture!!, 0.0)
                 minecraft.gameRenderer.processBlurEffect()
                 executeDrawRange(
-                    Supplier { "GUI after blur" },
+                    { "GUI after blur" },
                     mainRenderTarget,
                     dynamicTransforms,
                     firstDrawIndexAfterBlur,
@@ -220,7 +220,7 @@ class EpsilonGuiRenderer(
 
     private fun prepareItemElements() {
         val itemsInFrame = renderState.itemModelIdentities
-        if (!itemsInFrame.isEmpty()) {
+        if (itemsInFrame.isNotEmpty()) {
             val guiScale = getGuiScaleInvalidatingItemAtlasIfChanged()
             val itemAtlas = prepareItemAtlas(
                 itemsInFrame,
@@ -438,13 +438,13 @@ class EpsilonGuiRenderer(
         }
 
         private val SCISSOR_COMPARATOR: Comparator<ScreenRectangle?> = Comparator.nullsFirst(
-            Comparator<ScreenRectangle?> { a, b ->
+            Comparator { a, b ->
                 if (a == null || b == null) 0 else compareScreenRectangle(a, b)
             }
         )
 
         private val TEXTURE_COMPARATOR: Comparator<TextureSetup?> = Comparator.nullsFirst(
-            Comparator<TextureSetup?> { a, b ->
+            Comparator { a, b ->
                 if (a == null || b == null) 0 else a.sortKey.compareTo(b.sortKey)
             }
         )

@@ -107,7 +107,7 @@ object MotionBlurShader {
         ensureProgram()
         ensureInput(target.width, target.height)
         val inputTarget = input
-        if (inputTarget == null || inputTarget.colorTexture == null || inputTarget.colorTextureView == null) return
+        if (inputTarget?.colorTexture == null || inputTarget.colorTextureView == null) return
 
         var frameScale = 1.0f
         if (settings.refreshRateScaling) {

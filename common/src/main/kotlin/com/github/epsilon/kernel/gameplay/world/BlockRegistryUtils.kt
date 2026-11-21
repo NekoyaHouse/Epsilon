@@ -60,7 +60,7 @@ object BlockRegistryUtils {
      * @return 操作结果
      */
     fun byId(id: String?): Block? {
-        if (id == null || id.isBlank()) {
+        if (id.isNullOrBlank()) {
             return null
         }
         val identifier = Identifier.tryParse(id.trim().lowercase(Locale.ROOT)) ?: return null

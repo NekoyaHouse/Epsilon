@@ -499,12 +499,8 @@ class ConfigClientSettingTab(
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_MESSAGE.getTranslatedName(),
                 trimToWidth(configName, 0.60f, popupWidth - 24.0f, measureTextRenderer.asUiTextMetrics()),
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CONFIRM.getTranslatedName(),
-                EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL.getTranslatedName(),
-                {
-                    tryDeleteConfig(configName)
-
-                }
-            )
+                EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL.getTranslatedName()
+            ) { tryDeleteConfig(configName) }
         )
     }
 
@@ -549,7 +545,7 @@ class ConfigClientSettingTab(
 
     private fun buildErrorDetail(exception: Exception): String {
         val message = exception.message
-        return if (message == null || message.isBlank()) exception.javaClass.simpleName else message
+        return if (message.isNullOrBlank()) exception.javaClass.simpleName else message
     }
 
     private fun getInputSectionBounds(bounds: UiRect): UiRect {
@@ -619,7 +615,7 @@ class ConfigClientSettingTab(
     }
 
     private fun trimToWidth(value: String?, scale: Float, width: Float, metrics: UiTextMetrics): String {
-        if (value == null || value.isEmpty()) {
+        if (value.isNullOrEmpty()) {
             return ""
         }
         if (metrics.textWidth(value, scale) <= width) {

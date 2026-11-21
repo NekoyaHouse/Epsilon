@@ -102,7 +102,7 @@ class StringListSelectPopup(
             )
 
             val placeholder =
-                if (input.isEmpty()) EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() else input
+                input.ifEmpty { EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() }
             val localInputBounds = inputBounds.relativeTo(animatedBounds)
             Positioned(localInputBounds.x, localInputBounds.y, localInputBounds.width, localInputBounds.height) {
                 Interaction("editor") {
@@ -167,7 +167,7 @@ class StringListSelectPopup(
     }
 
     private fun keyPressed(event: KeyEvent): Boolean {
-        if (event.key() == InputConstants.KEY_RETURN && !input.isBlank()) {
+        if (event.key() == InputConstants.KEY_RETURN && input.isNotBlank()) {
             addFn(input.trim())
             input = ""
             resetScroll()
@@ -175,7 +175,7 @@ class StringListSelectPopup(
         }
         return when (event.key()) {
             InputConstants.KEY_BACKSPACE -> {
-                if (!input.isEmpty()) input = input.substring(0, input.length - 1)
+                if (input.isNotEmpty()) input = input.substring(0, input.length - 1)
                 true
             }
 
@@ -336,7 +336,7 @@ class StringListSelectPopup(
     }
 
     private fun trim(value: String?, scale: Float, maxWidth: Float): String {
-        if (value == null || value.isEmpty()) return ""
+        if (value.isNullOrEmpty()) return ""
         val maxChars = maxOf(3, (maxWidth / (5.0f * scale)).toInt())
         return if (value.length <= maxChars) value else value.substring(0, maxOf(0, maxChars - 3)) + "..."
     }
@@ -367,7 +367,7 @@ class StringListSelectPopup(
         private const val MIN_SCROLL_VELOCITY = 0.3f
         private const val MAX_QUERY_LENGTH = 64
 
-        private val SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 1.0f
+        private const val SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 1.0f
 
     }
 

@@ -71,7 +71,7 @@ class RegistryListSetting<T : Any>(
         }
     }
 
-    private val registry: Registry<T>? = registryType.registry<T>()
+    private val registry: Registry<T>? = registryType.registry()
 
     private val filterRef: Predicate<T> = filter ?: registryType.defaultFilter()
 

@@ -80,7 +80,7 @@ class MessagePopup(
             val detailScale = 0.52f
             Text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY)
             Text(message, 12.0f, 25.0f, messageScale, MD3Theme.TEXT_SECONDARY)
-            if (detail != null && !detail.isBlank()) {
+            if (!detail.isNullOrBlank()) {
                 Text(detail, 12.0f, 38.0f, detailScale, MD3Theme.TEXT_MUTED)
             }
 

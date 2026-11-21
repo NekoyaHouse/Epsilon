@@ -364,7 +364,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
         if (settings.isEmpty()) {
             return emptyList()
         }
-        return if (ownerKey == null || ownerKey.isBlank()) {
+        return if (ownerKey.isNullOrBlank()) {
             SettingLayoutPlanner.plan(settings)
         } else {
             SettingLayoutPlanner.plan(ownerKey, settings)
@@ -477,7 +477,7 @@ class SettingListController(private val popupHost: PanelPopupHost) : AutoCloseab
     }
 
     private fun trimToWidth(value: String?, scale: Float, width: Float, metrics: UiTextMetrics): String {
-        if (value == null || value.isEmpty() || width <= 0.0f) {
+        if (value.isNullOrEmpty() || width <= 0.0f) {
             return ""
         }
         if (metrics.textWidth(value, scale) <= width) {

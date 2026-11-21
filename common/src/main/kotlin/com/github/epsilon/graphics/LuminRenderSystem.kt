@@ -274,7 +274,7 @@ object LuminRenderSystem {
             uniform: T,
         ): GpuBufferSlice {
             val storage = UNIFORMS.computeIfAbsent(key) { ignored ->
-                DynamicGpuDataStorageMapped<DynamicGpuDataStorage.DynamicGpuData>(
+                DynamicGpuDataStorageMapped(
                     label, uniformSize, GpuBuffer.USAGE_UNIFORM, initialCapacity
                 )
             } as DynamicGpuDataStorage<T>

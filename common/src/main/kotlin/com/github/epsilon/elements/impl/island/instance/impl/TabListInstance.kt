@@ -17,7 +17,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.resources.Identifier
 import net.minecraft.util.FormattedCharSequence
-import net.minecraft.util.FormattedCharSink
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.*
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
@@ -368,7 +367,7 @@ class TabListInstance(
         scale: Float,
         renderer: TextRenderer,
     ) {
-        if (text == null || text.isEmpty()) return
+        if (text.isNullOrEmpty()) return
         var currentColor = baseColor
         val builder = StringBuilder()
 
@@ -422,7 +421,7 @@ class TabListInstance(
         scale: Float,
         renderer: TextRenderer,
     ) {
-        if (text == null || text.isEmpty()) return
+        if (text.isNullOrEmpty()) return
         var currentColor = baseColor
         val builder = StringBuilder()
 
@@ -471,16 +470,14 @@ class TabListInstance(
             val replacement = ACSpoof.text(original, TEXT_DEFAULT.rgb)
             if (replacement !== original) {
                 val spoofed: MutableList<TextSegment> = ArrayList()
-                replacement.accept(object : FormattedCharSink {
-                    override fun accept(index: Int, style: Style, codePoint: Int): Boolean {
-                        spoofed.add(
-                            TextSegment(
-                                String(Character.toChars(codePoint)), resolveStyleColor(style, TEXT_DEFAULT), 0f
-                            )
+                replacement.accept { _, style, codePoint ->
+                    spoofed.add(
+                        TextSegment(
+                            String(Character.toChars(codePoint)), resolveStyleColor(style, TEXT_DEFAULT), 0f
                         )
-                        return true
-                    }
-                })
+                    )
+                    true
+                }
                 segments = spoofed
             }
         }
@@ -595,7 +592,7 @@ class TabListInstance(
 
         private fun isBlankLine(line: List<TextSegment>): Boolean {
             for (segment in line) {
-                if (!segment.text.isBlank()) return false
+                if (segment.text.isNotBlank()) return false
             }
             return true
         }
@@ -674,7 +671,7 @@ class TabListInstance(
 
             return try {
                 Color(Integer.parseInt(String(hex), 16))
-            } catch (ignored: NumberFormatException) {
+            } catch (_: NumberFormatException) {
                 null
             }
         }

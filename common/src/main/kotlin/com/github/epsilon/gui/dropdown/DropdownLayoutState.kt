@@ -79,7 +79,7 @@ object DropdownLayoutState {
         if (value == null || !value.isJsonPrimitive) return fallback
         try {
             return value.asFloat
-        } catch (ignored: Exception) {
+        } catch (_: Exception) {
             return fallback
         }
     }
@@ -89,7 +89,7 @@ object DropdownLayoutState {
         if (value == null || !value.isJsonPrimitive) return fallback
         try {
             return value.asBoolean
-        } catch (ignored: Exception) {
+        } catch (_: Exception) {
             return fallback
         }
     }

@@ -358,10 +358,10 @@ class TtfFontLoader : IFontLoader {
     }
 
     private fun freeGlyph(glyph: TtfGlyph?) {
-        if (glyph != null && glyph.glyphData != null) {
+        if (glyph?.glyphData != null) {
             MemoryUtil.memFree(glyph.glyphData)
         }
-        if (glyph != null && glyph.alphaData != null) {
+        if (glyph?.alphaData != null) {
             MemoryUtil.memFree(glyph.alphaData)
         }
     }

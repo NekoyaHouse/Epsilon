@@ -223,8 +223,7 @@ class EnumWidget(setting: EnumSetting<*>) : SettingWidget<EnumSetting<*>>(settin
         }
         textColor = MD3Theme.withAlpha(
             textColor,
-            ((textColor.alpha * alpha).toInt().toLong()).coerceIn(((0).toLong()).toLong(), ((255).toLong()).toLong())
-                .toInt().toInt()
+            (textColor.alpha * alpha).toInt().coerceIn(0, 255)
         )
         Text(
             setting.getTranslatedValueUnchecked(mode),

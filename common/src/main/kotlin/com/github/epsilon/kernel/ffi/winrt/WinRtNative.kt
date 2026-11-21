@@ -21,7 +21,7 @@ internal object WinRtNative {
 
     private const val S_OK = 0
     private const val S_FALSE = 1
-    private val RPC_E_CHANGED_MODE: Int = 0x80010106.toInt()
+    private const val RPC_E_CHANGED_MODE: Int = 0x80010106.toInt()
 
     private const val ASYNC_STATUS_COMPLETED = 1
     private const val ASYNC_STATUS_CANCELED = 2
@@ -303,7 +303,7 @@ internal object WinRtNative {
                 }
                 try {
                     Thread.sleep(1L)
-                } catch (interrupted: InterruptedException) {
+                } catch (_: InterruptedException) {
                     Thread.currentThread().interrupt()
                     throw WinRtException(S_OK, "IAsyncOperation interrupted")
                 }

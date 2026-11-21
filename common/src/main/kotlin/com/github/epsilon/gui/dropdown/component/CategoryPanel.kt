@@ -100,7 +100,7 @@ class CategoryPanel : AbstractDropdownPanel {
 
     private fun getComparator(sortMode: ClientSetting.ModuleSort): Comparator<ModuleButton> {
         val nameComparator: Comparator<ModuleButton> =
-            Comparator.comparing<ModuleButton, String>(
+            Comparator.comparing(
                 { button -> normalizedName(button.module) },
                 String.CASE_INSENSITIVE_ORDER
             )

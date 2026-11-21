@@ -39,7 +39,7 @@ class SessionAccount(label: String) : Account<SessionAccount>(AccountType.Sessio
             return false
         }
 
-        if (profile == null || profile.id == null || profile.name == null) return false
+        if (profile?.id == null || profile.name == null) return false
 
         cache.username = profile.name!!
         cache.uuid = profile.id!!

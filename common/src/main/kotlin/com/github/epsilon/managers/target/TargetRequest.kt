@@ -82,7 +82,7 @@ class TargetRequest(
         ): TargetRequest {
             return TargetRequest(
                 range, fov, player, mob, animal, villager, ambient, water, others, invisible, false,
-                Predicate { true }, maxTargets
+                { true }, maxTargets
             )
         }
 

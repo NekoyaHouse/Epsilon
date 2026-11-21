@@ -1,7 +1,6 @@
 package com.github.epsilon.neoforge
 
 import com.github.epsilon.BuildConfig
-import com.github.epsilon.Constants
 import com.github.epsilon.assets.i18n.LanguageReloadListener
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import net.neoforged.api.distmarker.Dist

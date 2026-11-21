@@ -209,7 +209,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
                     UiRect(0.0f, 0.0f, localSearchBounds.width, localSearchBounds.height), inputFocused, 1.0f,
                     0.0f, Color(0, 0, 0, 0), 0.0f,
                     8.0f,
-                    if (query.isEmpty()) EpsilonTranslations.Gui.LIST_SEARCH.getTranslatedName() else query, 0.54f,
+                    query.ifEmpty { EpsilonTranslations.Gui.LIST_SEARCH.getTranslatedName() }, 0.54f,
                     if (query.isEmpty()) MD3Theme.TEXT_MUTED else MD3Theme.TEXT_PRIMARY,
                     null, null,
                     if (inputFocused) query.length else null, MD3Theme.PRIMARY, null, 0.0f, null
@@ -333,7 +333,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     private fun keyPressed(event: KeyEvent): Boolean {
         return when (event.key()) {
             InputConstants.KEY_BACKSPACE -> {
-                if (!query.isEmpty()) {
+                if (query.isNotEmpty()) {
                     query = query.substring(0, query.length - 1)
                     resetScroll()
                 }
@@ -558,7 +558,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
     }
 
     private fun trim(value: String?, scale: Float, maxWidth: Float): String {
-        if (value == null || value.isEmpty()) return ""
+        if (value.isNullOrEmpty()) return ""
         val maxChars = maxOf(3, (maxWidth / (5.0f * scale)).toInt())
         return if (value.length <= maxChars) value else value.substring(0, maxOf(0, maxChars - 3)) + "..."
     }
@@ -598,7 +598,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
         private const val CATEGORY_TAB_HEIGHT = 16.0f
         private const val CATEGORY_TAB_GAP = 4.0f
 
-        private val SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 1.0f
+        private const val SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 1.0f
 
         @Suppress("UNCHECKED_CAST")
         private fun <T : Any> collectRegistryEntries(registry: Registry<T>, setting: Setting<List<T>>): List<T> {
@@ -780,7 +780,7 @@ class RegistryListSelectPopup<T : Any> private constructor(
         }
 
         private fun formatPath(value: String?): String {
-            if (value == null || value.isBlank()) {
+            if (value.isNullOrBlank()) {
                 return ""
             }
             val path = if (value.contains(":")) value.substring(value.indexOf(':') + 1) else value

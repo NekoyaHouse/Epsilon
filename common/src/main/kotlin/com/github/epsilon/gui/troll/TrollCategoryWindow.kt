@@ -29,7 +29,7 @@ class TrollCategoryWindow(private val category: Category?) : TrollWindow() {
 
     override fun layout(metrics: UiTextMetrics, screenWidth: Float, screenHeight: Float) {
         var order: Comparator<Module> =
-            Comparator.comparing<Module, String>({ it.translatedName }, String.CASE_INSENSITIVE_ORDER)
+            Comparator.comparing({ it.translatedName }, String.CASE_INSENSITIVE_ORDER)
         if (ClientSetting.moduleSort == ClientSetting.ModuleSort.EnabledFirst) {
             order = Comparator.comparing<Module, Boolean> { it.isEnabled }.reversed().thenComparing(order)
         }

@@ -39,13 +39,13 @@ class AccountSortButton {
             bounds.y,
             bounds.width,
             bounds.height,
-            MD3Theme.CONTROL_RADIUS.toFloat(),
+            MD3Theme.CONTROL_RADIUS,
             MD3Theme.SECONDARY_CONTAINER
         )
         if (hoverProgress > 0.01f) {
             scope.roundRect(
                 bounds.x, bounds.y, bounds.width, bounds.height,
-                MD3Theme.CONTROL_RADIUS.toFloat(),
+                MD3Theme.CONTROL_RADIUS,
                 MD3Theme.stateLayer(MD3Theme.PRIMARY, hoverProgress, 34),
             )
         }

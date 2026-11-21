@@ -38,7 +38,7 @@ enum class FFmpegNativePlatform(
      * JavaCPP 产物名，例如 `ffmpeg-6.1.1-1.5.10-macosx-arm64.jar`。
      */
     fun archiveName(): String {
-        return "ffmpeg-" + VERSION + "-" + classifier + ".jar"
+        return "ffmpeg-$VERSION-$classifier.jar"
     }
 
     /**
@@ -67,7 +67,7 @@ enum class FFmpegNativePlatform(
         private const val VERSION = "6.1.1-1.5.10"
 
         private const val MAVEN_MIRROR_BASE =
-            "https://maven.aliyun.com/repository/public/org/bytedeco/ffmpeg/" + VERSION + "/"
+            "https://maven.aliyun.com/repository/public/org/bytedeco/ffmpeg/$VERSION/"
 
         /**
          * 当前平台对应的 FFmpeg 原生库产物，平台不受支持时返回 `null`。

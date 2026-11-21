@@ -46,11 +46,18 @@ import java.util.*
 import kotlin.math.roundToInt
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
-class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
+object TrollGuiScreen : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
+
+    private const val TOGGLE_SIZE = 30.0f
+    private const val TOGGLE_GAP = 8.0f
+    private const val TOGGLE_MARGIN = 10.0f
+    private const val SEARCH_TEXT_SCALE = 2.0f
+    private const val SEARCH_TEXT_MARGIN = 8.0f
+    private const val SEARCH_TEXT_FADE_MS = 5000L
 
     private val textMetrics: Supplier<UiTextMetrics> =
-        Suppliers.memoize(Supplier { TextRenderer.create().asUiTextMetrics() })
-    private val scene: Supplier<UiScene> = Suppliers.memoize(Supplier { UiScene(EpsilonUiTheme) })
+        Suppliers.memoize { TextRenderer.create().asUiTextMetrics() }
+    private val scene: Supplier<UiScene> = Suppliers.memoize { UiScene(EpsilonUiTheme) }
     private val windows: MutableList<TrollWindow> = ArrayList()
     private val popupHost: PanelPopupHost = PanelPopupHost { scene.get().input }
     private val guiOpenAnimation: Animation = Animation(Easing.EASE_OUT_CUBIC, 400L)
@@ -157,8 +164,8 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         }
 
         val friendWindow = this.friendWindow
-        if (friendWindow != null) {
-            friendWindow.position(maxOf(0.0f, width - friendWindow.bounds.width - gap), gap)
+        friendWindow?.let {
+            it.position(maxOf(0.0f, width - it.bounds.width - gap), gap)
         }
         val configWindow = this.configWindow
         if (configWindow != null) {
@@ -433,7 +440,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
     }
 
     fun renderPendingFrame(): Boolean {
-        val pendingScene = this.pendingScene ?: return false
+        if (pendingScene == null) return false
 
         val previousTarget = LuminRenderSystem.getActiveTarget()
         val previousProjection = RenderSystem.getProjectionMatrixBuffer()
@@ -765,7 +772,7 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         return false
     }
 
-    private data class WindowPass(
+    private class WindowPass(
         val bounds: UiRect,
         val batch: UiRenderBatch,
         val popup: Boolean,
@@ -774,16 +781,5 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         val blurSegmentCount: Int,
         val blur: Boolean = true,
     )
-
-    companion object {
-        val INSTANCE: TrollGuiScreen = TrollGuiScreen()
-
-        private const val TOGGLE_SIZE = 30.0f
-        private const val TOGGLE_GAP = 8.0f
-        private const val TOGGLE_MARGIN = 10.0f
-        private const val SEARCH_TEXT_SCALE = 2.0f
-        private const val SEARCH_TEXT_MARGIN = 8.0f
-        private const val SEARCH_TEXT_FADE_MS = 5000L
-    }
 
 }

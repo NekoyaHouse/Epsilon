@@ -120,7 +120,7 @@ object Http {
                     return ProxySelector.of(proxy.address() as InetSocketAddress)
                 }
             }
-        } catch (ignored: Throwable) {
+        } catch (_: Throwable) {
             // 客户端尚未初始化时退回直连。
         }
         return ProxySelector.getDefault()

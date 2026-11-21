@@ -119,7 +119,7 @@ object SpearKill : Module("Spear Kill", Category.COMBAT) {
                 )
             )
 
-            if (!candidates.isEmpty()) {
+            if (candidates.isNotEmpty()) {
                 killtarget = candidates.first()
             } else {
                 killtarget = null

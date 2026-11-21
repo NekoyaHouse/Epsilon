@@ -15,7 +15,6 @@ import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import java.awt.Color
 import java.util.function.Supplier
-import com.google.common.base.Supplier as GuavaSupplier
 
 object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
 
@@ -94,7 +93,7 @@ object Watermark : HudModule("Watermark", 0f, 0f, 200f, 28f) {
         0.05, { mode == Mode.Glitch })
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
+        Suppliers.memoize { TextRenderer.create() }
 
     override fun measure(deltaTracker: DeltaTracker) {
         val textRenderer = textRendererSupplier.get()

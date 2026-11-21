@@ -252,7 +252,7 @@ class ShadowRenderer private constructor() : IRenderer {
 
         val info = LuminRenderSystem.prepareQuadRendering(maxOf(vertexCount, segmentedVertexCount), applyProjection)
         sharedInfo = info
-        if (info == null || info.colorView == null) return false
+        if (info?.colorView == null) return false
 
         for (i in 0 until segmentedShadows.size) {
             val shadow = segmentedShadows[i]

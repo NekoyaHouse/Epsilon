@@ -159,7 +159,7 @@ class ElytraPathNavigator {
         window: WindowSnapshot,
     ): Boolean {
         // 结果必须来自当前窗口代际，且在时间/起点/目标偏移容差内才可使用。
-        if (result == null || result.path == null || result.epoch != window.epoch) {
+        if (result?.path == null || result.epoch != window.epoch) {
             return false
         }
 
@@ -210,13 +210,13 @@ class ElytraPathNavigator {
                     this.latestResult.set(result)
                 }
                 lastSearchNanos = System.nanoTime()
-            } catch (interrupted: InterruptedException) {
+            } catch (_: InterruptedException) {
                 return
             } catch (throwable: Throwable) {
                 Constants.LOGGER.warn("Error in ElytraCombat path worker loop", throwable)
                 try {
                     waitForWork(100L)
-                } catch (interrupted: InterruptedException) {
+                } catch (_: InterruptedException) {
                     return
                 }
             }

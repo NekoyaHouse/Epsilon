@@ -14,7 +14,6 @@ import net.minecraft.client.DeltaTracker
 import java.awt.Color
 import java.util.function.Supplier
 import kotlin.math.abs
-import com.google.common.base.Supplier as GuavaSupplier
 
 object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
 
@@ -147,7 +146,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     private var lastSortedModules: MutableList<Module> = ArrayList()
 
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
+        Suppliers.memoize { TextRenderer.create() }
 
     /** 本帧布局结果：measure 阶段生成，drawUi 阶段只读。 */
     private var frameSimple = false
@@ -432,7 +431,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
             entries.add(RenderEntry(module, name, info, nameWidth, nameWidth + suffixWidth, animation))
         }
 
-        entries.sortWith(compareByDescending<RenderEntry> { it.displayWidth })
+        entries.sortWith(compareByDescending { it.displayWidth })
 
         val sortedModules: MutableList<Module> = ArrayList(entries.size)
         for (entry in entries) {
@@ -590,7 +589,7 @@ object ModuleList : HudModule("Module List", 4.0f, 16.0f, 96.0f, 20.0f) {
     }
 
     private fun normalizeInfo(info: String?): String {
-        return if (info == null || info.isBlank()) "" else info
+        return if (info.isNullOrBlank()) "" else info
     }
 
     private class ToggleAnimation(now: Long) {

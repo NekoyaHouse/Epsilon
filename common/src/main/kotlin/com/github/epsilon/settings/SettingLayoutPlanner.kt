@@ -148,7 +148,7 @@ object SettingLayoutPlanner {
         }
         var normalized = value.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "_")
         normalized = normalized.replace(Regex("^_+|_+$"), "")
-        return if (normalized.isBlank()) "group" else normalized
+        return normalized.ifBlank { "group" }
     }
 
     /**

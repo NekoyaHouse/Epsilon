@@ -305,7 +305,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
     }
 
     private fun trimToWidth(value: String?, scale: Float, maxWidth: Float, textMetrics: UiTextMetrics): String {
-        if (value == null || value.isEmpty() || maxWidth <= 0.0f) return ""
+        if (value.isNullOrEmpty() || maxWidth <= 0.0f) return ""
         if (textMetrics.textWidth(value, scale) <= maxWidth) return value
         val ellipsis = "..."
         val ellipsisWidth = textMetrics.textWidth(ellipsis, scale)
@@ -401,23 +401,15 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             for (element in section.elements()) {
                 when (element) {
                     is SettingLayoutPlanner.Section.SettingElement -> {
-                        val widget = widgetFactory(element.setting())
-                        if (widget == null) {
-                            continue
-                        }
+                        val widget = widgetFactory(element.setting()) ?: continue
                         elements.add(WidgetElement(widget))
                     }
 
                     is SettingLayoutPlanner.Section.GroupElement -> {
-                        val child = buildNode(element.section(), widgetFactory)
-                        if (child == null) {
-                            continue
-                        }
+                        val child = buildNode(element.section(), widgetFactory) ?: continue
                         elements.add(ChildElement(child))
                     }
 
-                    else -> {
-                    }
                 }
             }
             if (elements.isEmpty()) {

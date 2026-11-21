@@ -187,7 +187,7 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
     private fun pollQueries() {
         while (queries.isNotEmpty()) {
             val query = queries.first()
-            val start = query.getValue(0);
+            val start = query.getValue(0)
             val end = query.getValue(1)
             if (start.isEmpty || end.isEmpty) break
             stats.gpuNanos =

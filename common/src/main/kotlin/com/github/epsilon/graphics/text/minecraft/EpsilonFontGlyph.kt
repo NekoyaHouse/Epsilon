@@ -17,7 +17,6 @@ import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.network.chat.Style
 import org.joml.Matrix4fc
 import java.util.*
-import java.util.function.Supplier
 
 // 原 Java 版本的 private static final 常量；放在文件级私有时，
 // 嵌套 data class 也能直接访问，不需要经过 companion 作用域。
@@ -71,10 +70,9 @@ class EpsilonFontGlyph private constructor(
             RenderType.create(
                 "epsilon_ttf_text",
                 RenderSetup.builder(LuminRenderPipelines.TTF_FONT)
-                    .withTexture(
-                        "Sampler0",
-                        descriptor.atlas.getTextureId(),
-                        Supplier { descriptor.atlas.getTexture().sampler })
+                    .withTexture("Sampler0", descriptor.atlas.getTextureId()) {
+                        descriptor.atlas.getTexture().sampler
+                    }
                     .createRenderSetup()
             )
         }

@@ -481,7 +481,7 @@ object ElytraDirectionSolver {
                 offsets.add(RotationOffset(yaw, pitch, (abs(yaw) + abs(pitch) * 0.75f).toDouble()))
             }
         }
-        offsets.sortWith(Comparator.comparingDouble<RotationOffset> { offset -> offset.penalty })
+        offsets.sortWith(Comparator.comparingDouble { offset -> offset.penalty })
         return offsets.toList()
     }
 

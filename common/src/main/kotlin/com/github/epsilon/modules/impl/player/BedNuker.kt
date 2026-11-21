@@ -223,7 +223,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
         var coveredFaceTarget: TargetData? = null
 
-        for (bedFace in Direction.values()) {
+        for (bedFace in Direction.entries) {
             val candidate = getBedFaceTarget(bedPos, bedFace, maxRange, eyes) ?: continue
 
             if (coveredFaceTarget == null || candidate.distanceSq < coveredFaceTarget.distanceSq) {
@@ -237,7 +237,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
     private fun NonNullContext.getDirectBedTarget(bedPos: BlockPos, maxRange: Double, eyes: Vec3): TargetData? {
         var best: TargetData? = null
 
-        for (face in Direction.values()) {
+        for (face in Direction.entries) {
             if (face == Direction.DOWN) continue
 
             val adjacentPos = bedPos.relative(face)
@@ -329,7 +329,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         var bestFace = Direction.UP
         var bestDistance = Double.MAX_VALUE
 
-        for (direction in Direction.values()) {
+        for (direction in Direction.entries) {
             val facePoint = center.add(
                 direction.stepX * 0.5,
                 direction.stepY * 0.5,

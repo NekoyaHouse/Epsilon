@@ -40,7 +40,7 @@ class ArcRenderer private constructor() : IRenderer {
         private const val BUFFER_SIZE = 16 * 1024L
         private const val STRIDE = 56
         private const val ARC_BYTES = STRIDE * 4L
-        private val TAU = (PI * 2.0).toFloat()
+        private const val TAU = (PI * 2.0).toFloat()
 
         fun create(): ArcRenderer = RendererManager.register(ArcRenderer())
 

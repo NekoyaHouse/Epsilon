@@ -137,7 +137,7 @@ object CombatWeaponController {
             stopSpearUse()
         }
 
-        val spear = find(Predicate { stack -> isSpearItem(stack) })
+        val spear = find { stack -> isSpearItem(stack) }
         if (!spear.found()) {
             return false
         }
@@ -266,7 +266,7 @@ object CombatWeaponController {
             return false
         }
         return runSafeOrFalse {
-            findInHotbar(Predicate { stack -> NavenInvUtils.isAxe(stack) }).found()
+            findInHotbar { stack -> NavenInvUtils.isAxe(stack) }.found()
         }
     }
 
@@ -279,13 +279,13 @@ object CombatWeaponController {
         if (hotbar != -1) {
             // 热栏切换使用 silent swap，恢复动作延迟到 Selection.restore。
             swap(hotbar, true)
-            return Selection(true, true, Runnable { swapBack() })
+            return Selection(true, true) { swapBack() }
         }
 
         val inventory = find(predicate, 9, 35).slot
         if (inventory != -1) {
             invSwap(inventory)
-            return Selection(true, false, Runnable { invSwapBack() })
+            return Selection(true, false) { invSwapBack() }
         }
         return null
     }

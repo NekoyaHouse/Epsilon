@@ -95,7 +95,7 @@ class ConfirmActionPopup(
             val detailScale = 0.60f
             Text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY)
             Text(message, 12.0f, 24.0f, messageScale, MD3Theme.TEXT_SECONDARY)
-            if (detail != null && !detail.isBlank()) {
+            if (!detail.isNullOrBlank()) {
                 Text(detail, 12.0f, 37.0f, detailScale, MD3Theme.PRIMARY)
             }
 

@@ -163,7 +163,7 @@ object StaticFontLoader {
     }
 
     private fun resolveCustomFont(fontPath: String?): Path? {
-        if (fontPath == null || fontPath.isBlank()) {
+        if (fontPath.isNullOrBlank()) {
             return null
         }
 
@@ -193,7 +193,7 @@ object StaticFontLoader {
             if (directPath != null) {
                 return directPath
             }
-        } catch (ignored: InvalidPathException) {
+        } catch (_: InvalidPathException) {
         }
 
         return resolveSystemFont(normalized)
@@ -274,11 +274,11 @@ object StaticFontLoader {
                 Files.walk(directory).use { paths ->
                     paths.filter { Files.isRegularFile(it) }
                         .filter { hasSupportedFontExtension(it) }
-                        .sorted(Comparator.comparing<Path, String> { path -> path.toString().lowercase(Locale.ROOT) })
+                        .sorted(Comparator.comparing { path -> path.toString().lowercase(Locale.ROOT) })
                         .forEach { path -> registerSystemFont(lookup, path.toAbsolutePath().normalize()) }
                 }
-            } catch (ignored: IOException) {
-            } catch (ignored: SecurityException) {
+            } catch (_: IOException) {
+            } catch (_: SecurityException) {
             }
         }
         return lookup
@@ -308,13 +308,13 @@ object StaticFontLoader {
     }
 
     private fun addDirectory(directories: MutableSet<Path>, first: String?, vararg more: String) {
-        if (first == null || first.isBlank()) {
+        if (first.isNullOrBlank()) {
             return
         }
 
         try {
             directories.add(Path.of(first, *more).toAbsolutePath().normalize())
-        } catch (ignored: InvalidPathException) {
+        } catch (_: InvalidPathException) {
         }
     }
 
@@ -329,9 +329,9 @@ object StaticFontLoader {
                 putFontLookupKey(lookup, font.getFamily(Locale.ROOT), path)
                 putFontLookupKey(lookup, font.psName, path)
             }
-        } catch (ignored: FontFormatException) {
-        } catch (ignored: IOException) {
-        } catch (ignored: RuntimeException) {
+        } catch (_: FontFormatException) {
+        } catch (_: IOException) {
+        } catch (_: RuntimeException) {
         }
     }
 

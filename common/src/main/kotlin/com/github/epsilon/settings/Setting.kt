@@ -11,7 +11,8 @@ import kotlin.reflect.KProperty
 
 abstract class Setting<V>(
     val name: String,
-    defaultValue: V,
+    // 默认值，供子类在构造期归一化与 [reset] 使用。
+    protected var defaultValue: V,
     val visible: Visibility?,
     var onChanged: ((V) -> Unit)?,
 ) : ReadWriteProperty<Any?, V> {
@@ -19,9 +20,6 @@ abstract class Setting<V>(
     open var value: V
         get() = valueStore
         set(newValue) = writeValue(newValue)
-
-    // 默认值，仅供子类在构造期归一化与 [reset] 使用。
-    protected var defaultValue: V = defaultValue
 
     var isGlobalSetting: Boolean = false
 
@@ -39,12 +37,6 @@ abstract class Setting<V>(
 
     val displayName: String
         get() = translateComponent?.getTranslatedName() ?: name
-
-    /**
-     * 可跨会话识别该设置的稳定 key，用于平台不支持提示去重。
-     */
-    val noticeKey: String
-        get() = translateComponent?.getFullKey() ?: name
 
     val isVisible: Boolean get() = visible?.check() ?: true
 

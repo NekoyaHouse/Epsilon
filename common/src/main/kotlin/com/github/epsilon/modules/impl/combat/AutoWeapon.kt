@@ -226,7 +226,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
             if (axeSlot != -1) return axeSlot
         }
 
-        val isFalling = player.fallDistance.toDouble() > 1.5
+        val isFalling = player.fallDistance > 1.5
         val durability = smartDurability
 
         val isLiving = livingTarget != null
@@ -424,7 +424,7 @@ object AutoWeapon : Module("Auto Weapon", Category.COMBAT) {
         if (!enchantDensity || !isFalling) return 0.0
         val player = this.mc.player ?: return 0.0
         val level = EnchantmentLookup.getEnchantmentLevel(stack, Enchantments.DENSITY)
-        if (level > 0) return (50 + (level * player.fallDistance * 2)).toDouble()
+        if (level > 0) return (50 + (level * player.fallDistance * 2))
         return 0.0
     }
 

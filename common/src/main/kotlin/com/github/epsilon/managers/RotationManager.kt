@@ -307,7 +307,7 @@ object RotationManager : AlwaysListening {
                         (20 + (Random.nextDouble() - 0.5).toFloat() *
                                 (Random.nextDouble() * Random.nextDouble() * Random.nextDouble() * 360).toFloat()) *
                                 (if (nn.player.tickCount / 10 % 2 == 0) -1 else 1)
-                        ).toFloat()
+                        )
 
                 offset.set(
                     (offset.yaw + -Mth.sin(Math.toRadians(randomAngle.toDouble())) * speed).toFloat(),
@@ -333,8 +333,8 @@ object RotationManager : AlwaysListening {
                         (offset.pitch + Mth.cos(Math.toRadians(randomAngle.toDouble())) * speed).toFloat()
                     )
 
-                    targetYaw = targetYaw + offset.yaw
-                    targetPitch = targetPitch + offset.pitch
+                    targetYaw += offset.yaw
+                    targetPitch += offset.pitch
                 }
 
                 if (!raytrace.apply(Rotation(targetYaw, targetPitch))) {

@@ -165,10 +165,7 @@ class TtfFontFile private constructor(
         val boxWidth = maxOf(3, (boxHeight * FALLBACK_WIDTH_RATIO).roundToInt())
         // 笔画不能太细（缩放后会消失），也不能填满方框（环会退化成实心块）。
         val maxStroke = maxOf(1, (minOf(boxWidth, boxHeight) - 1) / 2)
-        val stroke = ((boxHeight * FALLBACK_STROKE_RATIO).roundToInt().toLong()).coerceIn(
-            ((1).toLong()).toLong(),
-            ((maxStroke).toLong()).toLong()
-        ).toInt().toInt()
+        val stroke = (boxHeight * FALLBACK_STROKE_RATIO).roundToInt().coerceIn(1, maxStroke)
 
         val bitmapWidth = boxWidth + FALLBACK_PADDING * 2
         val bitmapHeight = boxHeight + FALLBACK_PADDING * 2
@@ -226,7 +223,7 @@ class TtfFontFile private constructor(
     @Synchronized
     fun getVisualHeight(sample: String?): Float {
         check(!destroyed) { "TTF font has been destroyed" }
-        if (sample == null || sample.isEmpty()) {
+        if (sample.isNullOrEmpty()) {
             return fontHeight.toFloat()
         }
 

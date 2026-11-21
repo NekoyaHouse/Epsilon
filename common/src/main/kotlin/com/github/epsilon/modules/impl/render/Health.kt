@@ -23,9 +23,9 @@ import java.util.*
 object Health : Module("Health", Category.RENDER) {
 
     private const val HEART_CHARACTER = "\u2764"
-    private val HEART_COLOR: Int = 0xFFFF5555.toInt() // §c
-    private val ABSORPTION_COLOR: Int = 0xFFFFFF55.toInt() // §e
-    private val ABSORPTION_HEART_COLOR: Int = 0xFFFFAA00.toInt() // §6
+    private const val HEART_COLOR: Int = 0xFFFF5555.toInt() // §c
+    private const val ABSORPTION_COLOR: Int = 0xFFFFFF55.toInt() // §e
+    private const val ABSORPTION_HEART_COLOR: Int = 0xFFFFAA00.toInt() // §6
     private const val HEART_SIZE = 9
     private const val HEART_SPACING = 8
     private const val HEARTS_PER_ROW = 10
@@ -152,7 +152,7 @@ object Health : Module("Health", Category.RENDER) {
             val column = i % HEARTS_PER_ROW
             val columnsInRow = minOf(HEARTS_PER_ROW, containerCount - row * HEARTS_PER_ROW)
             val rowX = centerX - (columnsInRow * HEART_SPACING + 1) / 2.0f
-            var x = rowX + column * HEART_SPACING
+            val x = rowX + column * HEART_SPACING
             var y = (baseY - row * ROW_HEIGHT).toFloat()
 
             if (currentHealth <= 4) {

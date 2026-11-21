@@ -29,7 +29,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
 import kotlin.math.roundToInt
-import com.google.common.base.Supplier as GuavaSupplier
 
 object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
 
@@ -55,7 +54,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
     private val popCounts: ConcurrentHashMap<UUID, Int> = ConcurrentHashMap()
     private val nameScrollStartTimes: MutableMap<UUID, Long> = HashMap()
     private val textRendererSupplier: Supplier<TextRenderer> =
-        Suppliers.memoize(GuavaSupplier { TextRenderer.create() })
+        Suppliers.memoize { TextRenderer.create() }
     private var cachedRows: List<PlayerRow> = emptyList()
     private var rowsInitialized: Boolean = false
 
@@ -188,7 +187,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
             players.add(player)
         }
 
-        players.sortWith(compareBy<AbstractClientPlayer> { self.distanceToSqr(it) })
+        players.sortWith(compareBy { self.distanceToSqr(it) })
 
         val count = minOf(maxPlayers, players.size)
         val rows: MutableList<PlayerRow> = ArrayList(count)
