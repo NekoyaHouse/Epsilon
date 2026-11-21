@@ -18,15 +18,20 @@ import org.lwjgl.system.Configuration
  * 本加载器**仅在精确判定为安卓环境后**，把随 mod 分发的 bionic 版 `liblwjgl_msdfgen.so`
  * 提前解压并显式 `System.load`；其它平台完全不介入，仍走 LWJGL 默认的桌面 natives 检索流程。
  *
- * 注意：LWJGL 的 `Configuration.LIBRARY_PATH` 在类加载时就把 `org.lwjgl.librarypath` 缓存进了
- * 静态字段，运行期只改系统属性不会被重新读取，必须同步调用 `Configuration.LIBRARY_PATH.set(...)`
- * 写入其配置缓存，`Library.loadSystem` 的 librarypath 回退才能扫到本目录。
+ * 加载要点：
+ * - LWJGL 的 `Configuration.LIBRARY_PATH` 在类加载时就把 `org.lwjgl.librarypath` 缓存进静态字段，
+ *   运行期只改系统属性不会被重新读取，必须同步 `Configuration.LIBRARY_PATH.set(...)` 写入缓存。
+ * - LWJGL `Library.loadSystem` 会依次尝试 classpath 资源、`org.lwjgl.librarypath`、
+ *   `java.library.path`、`System.loadLibrary`。桌面 natives 仍在 classpath 时，SharedLibraryLoader
+ *   解压 glibc 库失败会跳过 librarypath 回退，因此这里额外把 `.so` 铺进 `java.library.path` /
+ *   librarypath 中已有的可写目录，保证后续回退路径也能命中。
  */
 internal object MsdfgenNativeBootstrap {
 
     private const val LIB_NAME = "liblwjgl_msdfgen.so"
     private const val RESOURCE_ROOT = "assets/epsilon/natives/android"
     private const val LIBRARY_PATH_KEY = "org.lwjgl.librarypath"
+    private const val JAVA_LIBRARY_PATH_KEY = "java.library.path"
     private const val MODULE_PATH = "org/lwjgl/msdfgen"
 
     @Volatile
@@ -59,8 +64,11 @@ internal object MsdfgenNativeBootstrap {
                 val libFile = extract(abi)
                 // 显式按绝对路径加载，库名(soname)与 LWJGL 绑定一致：liblwjgl_msdfgen.so
                 System.load(libFile.absolutePath)
-                // 把解压目录补进 LWJGL librarypath（含其配置缓存），后续 loadSystem 检索也能命中。
+                // 把解压目录补进 LWJGL librarypath（含其配置缓存）。
                 registerLibraryPath(libFile.parentFile.toPath())
+                // 额外铺进 java.library.path / librarypath 中已有的可写目录，覆盖其余回退路径。
+                deployToRuntimeLibraryDirs(libFile, abi)
+                logClasspathVisibility(abi)
                 loaded = true
                 Constants.LOGGER.info("[msdfgen] 安卓原生库已加载: ${libFile.absolutePath}")
             } catch (t: Throwable) {
@@ -122,6 +130,62 @@ internal object MsdfgenNativeBootstrap {
             Constants.LOGGER.info("[msdfgen] LWJGL librarypath=${Configuration.LIBRARY_PATH.get()}")
         } catch (t: Throwable) {
             Constants.LOGGER.warn("[msdfgen] 写入 LWJGL LIBRARY_PATH 缓存失败，仅使用系统属性", t)
+        }
+    }
+
+    /**
+     * 把 `.so` 复制到 `java.library.path` / `org.lwjgl.librarypath` 中已存在且可写的目录，
+     * 同时放置扁平文件与 bundled 子路径副本，供 LWJGL 的 METHOD 3/4 回退命中。
+     */
+    private fun deployToRuntimeLibraryDirs(libFile: File, abi: String) {
+        val dirs = linkedSetOf<String>()
+        listOf(JAVA_LIBRARY_PATH_KEY, LIBRARY_PATH_KEY).forEach { key ->
+            System.getProperty(key)?.let { value ->
+                value.split(File.pathSeparator).forEach { p ->
+                    if (p.isNotBlank()) {
+                        dirs.add(p)
+                    }
+                }
+            }
+        }
+
+        val arch = toLwjglArch(abi)
+        val deployed = mutableListOf<String>()
+        for (dirStr in dirs) {
+            val dir = File(dirStr)
+            if (!dir.isDirectory || !dir.canWrite()) {
+                continue
+            }
+            runCatching {
+                Files.copy(
+                    libFile.toPath(),
+                    File(dir, LIB_NAME).toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                )
+                val bundled = File(dir, "linux/$arch/$MODULE_PATH")
+                bundled.mkdirs()
+                Files.copy(
+                    libFile.toPath(),
+                    File(bundled, LIB_NAME).toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                )
+                deployed.add(dirStr)
+            }
+        }
+        Constants.LOGGER.info("[msdfgen] 已部署到运行时库目录: $deployed")
+    }
+
+    /** 诊断：记录 classpath 上是否能看到桌面 msdfgen natives 资源，便于判断 LWJGL 走了哪条分支。 */
+    private fun logClasspathVisibility(abi: String) {
+        val cl = MsdfgenNativeBootstrap::class.java.classLoader
+        val arch = toLwjglArch(abi)
+        val candidates = listOf(
+            "linux/$arch/$MODULE_PATH/$LIB_NAME",
+            LIB_NAME,
+        )
+        candidates.forEach { resource ->
+            val url = cl?.getResource(resource)
+            Constants.LOGGER.info("[msdfgen] classpath 资源 $resource -> ${url ?: "未找到"}")
         }
     }
 
