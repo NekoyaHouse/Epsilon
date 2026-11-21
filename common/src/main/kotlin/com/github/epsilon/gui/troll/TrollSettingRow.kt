@@ -287,7 +287,7 @@ class TrollSettingRow {
             module.isHidden = !module.isHidden
         } else if (action == ModuleAction.TOGGLE && module != null) {
             if (button == InputConstants.MOUSE_BUTTON_RIGHT || module.category == null) {
-                TrollGuiScreen.INSTANCE.openSettings(
+                TrollGuiScreen.openSettings(
                     module,
                     event.x() - bounds.x + inputOriginX,
                     event.y() - bounds.y + inputOriginY
@@ -295,7 +295,7 @@ class TrollSettingRow {
             } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 module.toggle()
             } else if (button == InputConstants.MOUSE_BUTTON_MIDDLE) {
-                TrollGuiScreen.INSTANCE.openSettings(
+                TrollGuiScreen.openSettings(
                     module,
                     event.x() - bounds.x + inputOriginX,
                     event.y() - bounds.y + inputOriginY
@@ -317,7 +317,7 @@ class TrollSettingRow {
         } else if (setting is StringSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             startEditing()
         } else if (setting is ColorSetting && button == InputConstants.MOUSE_BUTTON_RIGHT) {
-            TrollGuiScreen.INSTANCE.openColorPicker(
+            TrollGuiScreen.openColorPicker(
                 setting,
                 event.x() - bounds.x + inputOriginX,
                 event.y() - bounds.y + inputOriginY
@@ -325,9 +325,9 @@ class TrollSettingRow {
         } else if (setting is ButtonSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
             setting.value.run()
         } else if (setting is StringListSetting && button == InputConstants.MOUSE_BUTTON_LEFT) {
-            TrollGuiScreen.INSTANCE.openStringListSettingPopup(setting)
+            TrollGuiScreen.openStringListSettingPopup(setting)
         } else if (setting is RegistryListSetting<*> && button == InputConstants.MOUSE_BUTTON_LEFT) {
-            TrollGuiScreen.INSTANCE.openRegistryListSettingPopup(setting)
+            TrollGuiScreen.openRegistryListSettingPopup(setting)
         }
         return true
     }

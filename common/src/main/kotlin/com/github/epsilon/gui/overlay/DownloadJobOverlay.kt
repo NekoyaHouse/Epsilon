@@ -5,7 +5,7 @@ import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.gui.lib.*
 import com.github.epsilon.gui.lib.scene.UiLayer
 import com.github.epsilon.gui.lib.scene.UiScene
-import com.github.epsilon.gui.screen.EpsilonDialogScreen
+import com.github.epsilon.gui.screen.DialogCard
 import com.github.epsilon.gui.theme.EpsilonUiTheme
 import com.github.epsilon.gui.theme.MD3Theme
 import com.github.epsilon.kernel.MinecraftWrapper.mc
@@ -32,7 +32,7 @@ object DownloadJobOverlay : AutoCloseable {
     fun extractRenderState(screen: Screen, graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
         val minecraft = mc
         val job = AssetManager.activeJob()
-        if (screen != minecraft.gui.screen() || screen is EpsilonDialogScreen || job == null || !job.isRunning()) {
+        if (screen != minecraft.gui.screen() || job == null || !job.isRunning() || DialogCard.isShowing(screen)) {
             close()
             return
         }

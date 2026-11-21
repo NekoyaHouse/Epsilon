@@ -40,12 +40,6 @@ abstract class Setting<V>(
     val displayName: String
         get() = translateComponent?.getTranslatedName() ?: name
 
-    /**
-     * 可跨会话识别该设置的稳定 key，用于平台不支持提示去重。
-     */
-    val noticeKey: String
-        get() = translateComponent?.getFullKey() ?: name
-
     val isVisible: Boolean get() = visible?.check() ?: true
 
     open fun initTranslateComponent(component: TranslateComponent) {

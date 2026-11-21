@@ -46,7 +46,14 @@ import java.util.*
 import kotlin.math.roundToInt
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
-class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
+object TrollGuiScreen : Screen(Component.literal("TrollGui")), ListSettingPopupScreen {
+
+    private const val TOGGLE_SIZE = 30.0f
+    private const val TOGGLE_GAP = 8.0f
+    private const val TOGGLE_MARGIN = 10.0f
+    private const val SEARCH_TEXT_SCALE = 2.0f
+    private const val SEARCH_TEXT_MARGIN = 8.0f
+    private const val SEARCH_TEXT_FADE_MS = 5000L
 
     private val textMetrics: Supplier<UiTextMetrics> =
         Suppliers.memoize(Supplier { TextRenderer.create().asUiTextMetrics() })
@@ -774,16 +781,5 @@ class TrollGuiScreen private constructor() : Screen(Component.literal("TrollGui"
         val blurSegmentCount: Int,
         val blur: Boolean = true,
     )
-
-    companion object {
-        val INSTANCE: TrollGuiScreen = TrollGuiScreen()
-
-        private const val TOGGLE_SIZE = 30.0f
-        private const val TOGGLE_GAP = 8.0f
-        private const val TOGGLE_MARGIN = 10.0f
-        private const val SEARCH_TEXT_SCALE = 2.0f
-        private const val SEARCH_TEXT_MARGIN = 8.0f
-        private const val SEARCH_TEXT_FADE_MS = 5000L
-    }
 
 }

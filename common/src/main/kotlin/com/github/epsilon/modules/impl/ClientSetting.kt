@@ -313,21 +313,19 @@ object ClientSetting : Module("Client Setting", null) {
                 EpsilonTranslations.Resources.CLEAR_CONFIRM_MESSAGE.getTranslatedName(),
                 AssetManager.rootDirectory().toString()
             )
-            mc.gui.setScreen(
-                ConfirmDialogScreen(
-                    parent,
-                    EpsilonTranslations.Resources.CLEAR_CONFIRM_TITLE.getTranslatedName(),
-                    lines,
-                    EpsilonTranslations.Resources.CLEAR_CONFIRM_YES.getTranslatedName(),
-                    EpsilonTranslations.Resources.CLEAR_CONFIRM_NO.getTranslatedName(),
-                    Runnable {
-                        AssetManager.clearCache()
-                        NotificationManager.success(
-                            EpsilonTranslations.Resources.CLEAR_SUCCESS_TITLE.getTranslatedName(),
-                            EpsilonTranslations.Resources.CLEAR_SUCCESS_MESSAGE.getTranslatedName()
-                        )
-                    }
-                )
+            ConfirmDialogScreen.show(
+                parent,
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_TITLE.getTranslatedName(),
+                lines,
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_YES.getTranslatedName(),
+                EpsilonTranslations.Resources.CLEAR_CONFIRM_NO.getTranslatedName(),
+                Runnable {
+                    AssetManager.clearCache()
+                    NotificationManager.success(
+                        EpsilonTranslations.Resources.CLEAR_SUCCESS_TITLE.getTranslatedName(),
+                        EpsilonTranslations.Resources.CLEAR_SUCCESS_MESSAGE.getTranslatedName()
+                    )
+                }
             )
         }
     ).group(sgResources)
@@ -380,9 +378,9 @@ object ClientSetting : Module("Client Setting", null) {
 
     fun getGuiScreen(): Screen {
         return when (guiMode) {
-            GuiMode.Dropdown -> DropdownScreen.INSTANCE
+            GuiMode.Dropdown -> DropdownScreen
             GuiMode.Panel -> PanelScreen
-            GuiMode.TrollHack -> TrollGuiScreen.INSTANCE
+            GuiMode.TrollHack -> TrollGuiScreen
         }
     }
 

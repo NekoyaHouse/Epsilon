@@ -41,7 +41,10 @@ import java.awt.Color
 import java.util.*
 import java.util.function.Consumer
 
-class DropdownScreen private constructor() : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
+object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
+
+    /** 光标闪烁周期（与 [DropdownTextField] 内部实现一致：每 500ms 翻转一次）。 */
+    private const val CARET_BLINK_PERIOD_MS = 500L
 
     private val panels: MutableList<DropdownPanel> = ArrayList()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
@@ -620,7 +623,7 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
     private val searchHeight: Float
         get() = 20.0f
 
-    private fun reactInstance(action: ReisaDropdownCompanion.Action?) {
+    fun react(action: ReisaDropdownCompanion.Action?) {
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
             reisaCompanion.react(action)
@@ -665,23 +668,9 @@ class DropdownScreen private constructor() : Screen(Component.literal("DropdownG
         )
     }
 
-    companion object {
-
-        val INSTANCE: DropdownScreen = DropdownScreen()
-
-        /** 光标闪烁周期（与 [DropdownTextField] 内部实现一致：每 500ms 翻转一次）。 */
-        private const val CARET_BLINK_PERIOD_MS = 500L
-
-        /** 供 Kotlin 调用方使用的静态入口（原 Java 的 `DropdownScreen.INSTANCE.react(...)`）。 */
-        fun react(action: ReisaDropdownCompanion.Action?) {
-            INSTANCE.reactInstance(action)
-        }
-
-        /** 当前界面会话 id，供输入状态去重。 */
-        fun getSessionId(): Int {
-            return INSTANCE.currentSessionId
-        }
-
+    /** 当前界面会话 id，供输入状态去重。 */
+    fun getSessionId(): Int {
+        return currentSessionId
     }
 
 }

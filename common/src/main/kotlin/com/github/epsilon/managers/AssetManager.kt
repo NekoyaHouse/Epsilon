@@ -336,11 +336,11 @@ object AssetManager {
             }
         }
         mc.execute {
-            if (mc.gui.screen() is AssetDownloadScreen) {
+            if (mc.gui.screen() === AssetDownloadScreen) {
                 return@execute
             }
             normalizeFfmpegDownloadUrl()
-            mc.gui.setScreen(AssetDownloadScreen(mc.gui.screen(), selected, declineOnClose))
+            AssetDownloadScreen.show(mc.gui.screen(), selected, declineOnClose)
         }
     }
 
