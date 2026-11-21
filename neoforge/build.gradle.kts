@@ -13,7 +13,6 @@ plugins {
 val neoforgeVersion = project.property("neoforge_version").toString()
 val modId = project.property("mod_id").toString()
 val msdfgenNatives = rootProject.extra["msdfgen_native_classifiers"] as List<*>
-// 安卓包不内嵌桌面 natives，metadata 重命名时也跳过对应条目。
 val bundledMsdfgenNatives: List<*> =
     if (project.hasProperty("androidBuild")) emptyList<Any>() else msdfgenNatives
 
@@ -45,7 +44,6 @@ val extractedSodiumNeoForgeModJar = files(
 
 dependencies {
     implementation(jarJar(libs.lwjgl.msdfgen.get())!!)
-    // 安卓包(-PandroidBuild)不内嵌桌面 glibc 的 msdfgen natives；安卓 .so 已随 mod 资源分发。
     if (!project.hasProperty("androidBuild")) {
         msdfgenNatives.forEach { runtimeOnly(jarJar("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it")!!) }
     }

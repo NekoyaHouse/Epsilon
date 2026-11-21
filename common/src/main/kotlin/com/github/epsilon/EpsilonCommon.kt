@@ -19,7 +19,6 @@ import com.github.epsilon.modules.impl.ClientSetting
 object EpsilonCommon {
 
     fun init() {
-        // 安卓环境提前加载 msdfgen 原生库；非安卓直接返回，不影响默认流程。
         MsdfgenNativeBootstrap.ensureLoaded()
 
         Constants.LOGGER.info("Welcome to ${Constants.NAME}.")
