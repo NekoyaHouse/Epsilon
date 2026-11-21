@@ -8,7 +8,11 @@ val modId = project.property("mod_id").toString()
 dependencies {
     implementation(include(libs.lwjgl.msdfgen.get())!!)
     val msdfgenNatives = rootProject.extra["msdfgen_native_classifiers"] as List<*>
-    msdfgenNatives.forEach { runtimeOnly(include("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it")!!) }
+    // 安卓包(-PandroidBuild)不内嵌桌面 glibc 的 msdfgen natives；安卓 .so 已随 mod 资源分发，
+    // 由 MsdfgenNativeBootstrap 在判定为安卓后显式加载。
+    if (!project.hasProperty("androidBuild")) {
+        msdfgenNatives.forEach { runtimeOnly(include("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it")!!) }
+    }
     minecraft(libs.minecraft)
     implementation(libs.fabric.loader)
     implementation(libs.fabric.api)
