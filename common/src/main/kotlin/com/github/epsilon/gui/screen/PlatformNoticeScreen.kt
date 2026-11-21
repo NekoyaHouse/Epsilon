@@ -71,7 +71,8 @@ object PlatformNoticeScreen : Screen(Component.empty()) {
     override fun mouseReleased(event: MouseButtonEvent): Boolean = true
 
     private fun noticeTitle(viaRequirement: ViaVersionRequirement?): String {
-        val title = if (viaRequirement == null) EpsilonTranslations.PlatformOnly.TITLE else EpsilonTranslations.ViaOnly.TITLE
+        val title =
+            if (viaRequirement == null) EpsilonTranslations.PlatformOnly.TITLE else EpsilonTranslations.ViaOnly.TITLE
         return title.getTranslatedName()
     }
 

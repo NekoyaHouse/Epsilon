@@ -32,7 +32,8 @@ object Particles : Module("Particles", Category.RENDER) {
         Heart(Sprite.HEART),
         SnowFlake(Sprite.SNOWFLAKE),
         Drop(Sprite.DROP),
-        Cloud(Sprite.CLOUD)
+        Cloud(Sprite.CLOUD),
+        Shit(Sprite.SHIT)
     }
 
     private enum class ColorMode {
@@ -69,6 +70,13 @@ object Particles : Module("Particles", Category.RENDER) {
         .withCull(false)
         .build()
 
+    private val translucentParticlePipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        .withLocation(ResourceLocationUtils.getIdentifier("pipeline/particles_translucent"))
+        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+        .withCull(false)
+        .build()
+
     private val trailPipeline = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/particle_trails"))
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
@@ -82,6 +90,7 @@ object Particles : Module("Particles", Category.RENDER) {
             ripples.clear()
             splashes.clear()
         }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             splashes.removeAll { it.tick() }
             particles.removeAll { it.tick(player.position()) }
@@ -135,13 +144,16 @@ object Particles : Module("Particles", Category.RENDER) {
                 particles.add(particle)
             }
         }
+
         safeEventHandler<Render3DEvent> { event ->
             if (particles.isEmpty() && ripples.isEmpty() && splashes.isEmpty()) return@safeEventHandler
 
             val stack = event.poseStack
             val camera = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-            val quads = LuminImmediateRenderer.beginPosTexColorQuads(particlePipeline, ParticleAtlas.texture)
+            val sprite = mode.sprite
+            val pipeline = if (sprite == Sprite.SHIT) translucentParticlePipeline else particlePipeline
+            val particleQuads = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, ParticleAtlas.texture)
             val lines = LuminImmediateRenderer.beginLines(trailPipeline)
 
             for (particle in particles) {
@@ -166,7 +178,7 @@ object Particles : Module("Particles", Category.RENDER) {
                 if (physics == Physics.Rain) {
                     stack.rotateDegrees(Axis.ZP, Mth.lerp(partialTick, particle.prevRotation, particle.rotation))
                 }
-                drawQuad(stack, quads, mode.sprite, size.toFloat(), particleColor)
+                drawQuad(stack, particleQuads, sprite, size.toFloat(), particleColor)
                 stack.popPose()
 
                 if (physics == Physics.Rain && !particle.bounced) {
@@ -181,6 +193,13 @@ object Particles : Module("Particles", Category.RENDER) {
                         withAlpha(particle.color, 0.0f), 0.0f, 1.0f, 0.0f, 1.0f
                     )
                 }
+            }
+
+            val quads = if (sprite == Sprite.SHIT) {
+                particleQuads.end()
+                LuminImmediateRenderer.beginPosTexColorQuads(particlePipeline, ParticleAtlas.texture)
+            } else {
+                particleQuads
             }
 
             for (ripple in ripples) {
