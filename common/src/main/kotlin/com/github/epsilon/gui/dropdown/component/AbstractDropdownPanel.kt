@@ -14,6 +14,7 @@ import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
 import com.github.epsilon.kernel.state.setValue
 import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.client.input.MouseButtonEvent
 import com.github.epsilon.gui.lib.state.LuminAnimatable as Animation
 
 abstract class AbstractDropdownPanel protected constructor(
@@ -120,13 +121,17 @@ abstract class AbstractDropdownPanel protected constructor(
             InputRegion(
                 key = this@AbstractDropdownPanel to "header",
                 bounds = UiRect(left, top, panelWidth, DropdownTheme.PANEL_HEADER_HEIGHT),
-                screenCoordinates = false,
+                // 缓存会为标题栏附加随面板移动的变换，拖动以固定的屏幕坐标为准。
+                screenCoordinates = true,
                 onPress = { event, _ ->
                     when (event.button()) {
                         InputConstants.MOUSE_BUTTON_LEFT -> {
-                            dragging = true; dragOffsetX = (x - event.x()).toFloat(); dragOffsetY =
-                                (y - event.y()).toFloat()
-                            DropdownScreen.react(ReisaDropdownCompanion.Action.DRAG); true
+                            val (mouseX, mouseY) = DropdownScreen.toContentCoordinates(event)
+                            dragging = true
+                            dragOffsetX = x - mouseX
+                            dragOffsetY = y - mouseY
+                            DropdownScreen.react(ReisaDropdownCompanion.Action.DRAG)
+                            true
                         }
 
                         InputConstants.MOUSE_BUTTON_RIGHT -> {
@@ -137,8 +142,8 @@ abstract class AbstractDropdownPanel protected constructor(
                         else -> false
                     }
                 },
-                onDrag = { event, _, _ -> mouseDragged(event.x(), event.y()) },
-                onRelease = { event -> mouseReleased(event.x(), event.y(), event.button()) },
+                onDrag = { event, _, _ -> dragPanel(event) },
+                onRelease = { event -> mouseReleased(event.button()) },
                 onCancel = { dragging = false; scrollBar.reset() })
             InputRegion(
                 key = this@AbstractDropdownPanel to "scroll", bounds = UiRect(left, top, panelWidth, panelHeight),
@@ -261,27 +266,18 @@ abstract class AbstractDropdownPanel protected constructor(
         }
 
 
-    private fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+    private fun mouseReleased(button: Int): Boolean {
         if (button == InputConstants.MOUSE_BUTTON_LEFT && dragging) {
             dragging = false; return true
         }
         return false
     }
 
-    private fun mouseDragged(mouseX: Double, mouseY: Double): Boolean {
-        if (scrollBar.isDragging()) {
-            val newScroll = scrollBar.mouseDragged(mouseY, getScrollbarViewport(), maxScroll, cachedContentHeight)
-            if (newScroll >= 0.0f) {
-                setScrollImmediate(newScroll)
-            }
-            return true
-        }
-        if (dragging) {
-            x = (mouseX + dragOffsetX).toFloat()
-            y = (mouseY + dragOffsetY).toFloat()
-            return true
-        }
-        return false
+    private fun dragPanel(event: MouseButtonEvent): Boolean {
+        if (!dragging) return false
+        val (mouseX, mouseY) = DropdownScreen.toContentCoordinates(event)
+        setPosition(mouseX + dragOffsetX, mouseY + dragOffsetY)
+        return true
     }
 
 

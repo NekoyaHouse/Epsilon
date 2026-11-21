@@ -183,7 +183,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
                 popupHost.activePopup!!.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())
         val backgroundMouseX = if (popupHovered) Int.MIN_VALUE else mouseX
         val backgroundMouseY = if (popupHovered) Int.MIN_VALUE else mouseY
-        val inverseEntrance = entranceTransform(screenBounds).inverse()!!
+        val inverseEntrance = inverseEntranceTransform()
         val contentMouseX = inverseEntrance.mapX(mouseX.toFloat(), mouseY.toFloat()).toInt()
         val contentMouseY = inverseEntrance.mapY(mouseX.toFloat(), mouseY.toFloat()).toInt()
 
@@ -322,7 +322,9 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             bounds,
             dropdownLayer,
             key,
-            retainPosition = key is Pair<*, *> && key.second == "background",
+            // Focus 入场时缩放的中心固定在屏幕上，移动面板后需要重新计算变换原点。
+            retainPosition = key is Pair<*, *> && key.second == "background" &&
+                    (entranceMode != ClientSetting.DropdownEntranceAnimation.Focus || entranceAnim.isFinished),
         ) {
             if (key == "scrim") content() else entranceContent(content)
         }
@@ -349,6 +351,17 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             ClientSetting.DropdownEntranceAnimation.Slide -> Render2DTransform.translation(0.0f, remaining * 28.0f)
             else -> Render2DTransform.IDENTITY
         }
+    }
+
+    private fun inverseEntranceTransform(): Render2DTransform =
+        entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f)).inverse()!!
+
+    /** 将 Epsilon 屏幕坐标换算为入场变换前的布局坐标。 */
+    internal fun toContentCoordinates(event: MouseButtonEvent): Pair<Float, Float> {
+        val inverse = inverseEntranceTransform()
+        val x = event.x().toFloat()
+        val y = event.y().toFloat()
+        return inverse.mapX(x, y) to inverse.mapY(x, y)
     }
 
     private fun UiScope.entranceContent(content: UiScope.() -> Unit) {
@@ -397,13 +410,11 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
         val handled = scene.input.mouseClicked(mouse, isDoubleClick)
         if (handled) {
-            val inverseEntrance = entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f)).inverse()!!
-            val contentMouseX = inverseEntrance.mapX(mouse.x().toFloat(), mouse.y().toFloat()).toDouble()
-            val contentMouseY = inverseEntrance.mapY(mouse.x().toFloat(), mouse.y().toFloat()).toDouble()
+            val (contentMouseX, contentMouseY) = toContentCoordinates(mouse)
             val panel = panels.lastOrNull {
                 it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(
-                    contentMouseX,
-                    contentMouseY
+                    contentMouseX.toDouble(),
+                    contentMouseY.toDouble()
                 )
             }
             if (panel != null) {
@@ -432,12 +443,10 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             LuminRenderSystem.toEpsilonMouseY(mouseY)
         )
 
-        val handled = scene.input.mouseDragged(
+        return scene.input.mouseDragged(
             LuminRenderSystem.toEpsilonMouseEvent(event),
             LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY)
         )
-        if (handled) DropdownLayoutState.save(panels)
-        return handled
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
