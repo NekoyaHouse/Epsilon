@@ -70,7 +70,7 @@ internal object MsdfgenNativeBootstrap {
             try {
                 Files.createDirectories(archive.parentFile.toPath())
                 Files.deleteIfExists(part.toPath())
-                Constants.LOGGER.info("[Downloading Android native library] {}", abi)
+                Constants.LOGGER.info("[Downloading Android native library] {}: {}", abi, DOWNLOAD_BASE_URL + ARCHIVE_NAME)
                 Http.download(DOWNLOAD_BASE_URL + ARCHIVE_NAME, part.toPath(), null, null)
                 if (!isUsable(part)) {
                     Files.deleteIfExists(part.toPath())
