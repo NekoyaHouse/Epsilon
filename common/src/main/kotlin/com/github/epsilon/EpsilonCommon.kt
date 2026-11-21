@@ -3,6 +3,7 @@ package com.github.epsilon
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager
 import com.github.epsilon.assets.i18n.I18NFileGenerator
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
+import com.github.epsilon.graphics.text.ttf.MsdfgenNativeBootstrap
 import com.github.epsilon.managers.*
 import com.github.epsilon.managers.network.ClientboundPacketManager
 import com.github.epsilon.managers.network.ServerboundPacketManager
@@ -18,6 +19,8 @@ import com.github.epsilon.modules.impl.ClientSetting
 object EpsilonCommon {
 
     fun init() {
+        MsdfgenNativeBootstrap.ensureLoaded()
+
         Constants.LOGGER.info("Welcome to ${Constants.NAME}.")
 
         // 初始化客户端系统：模块与 HUD 元素必须在配置恢复之前完成注册

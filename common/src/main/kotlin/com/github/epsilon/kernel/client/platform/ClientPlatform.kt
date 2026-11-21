@@ -1,5 +1,6 @@
 package com.github.epsilon.kernel.client.platform
 
+import java.io.File
 import java.util.*
 
 /**
@@ -19,6 +20,7 @@ object ClientPlatform {
 
     private val FAMILY: Family = detectFamily()
     private val ARCHITECTURE: String = normalizeArchitecture(System.getProperty("os.arch", ""))
+    private val IS_ANDROID: Boolean = detectAndroid()
 
     fun family(): Family {
         return FAMILY
@@ -38,6 +40,19 @@ object ClientPlatform {
 
     fun isMacosArm64(): Boolean {
         return FAMILY == Family.MACOS && ARCHITECTURE == "arm64"
+    }
+
+    fun isAndroid(): Boolean = IS_ANDROID
+
+    fun androidAbi(): String? {
+        if (!IS_ANDROID) return null
+        return when (ARCHITECTURE) {
+            "arm64" -> "arm64-v8a"
+            "arm32" -> "armeabi-v7a"
+            "x86_64" -> "x86_64"
+            "x86" -> "x86"
+            else -> null
+        }
     }
 
     /**
@@ -66,9 +81,40 @@ object ClientPlatform {
         return when (arch) {
             "amd64", "x86_64" -> "x86_64"
             "aarch64", "arm64" -> "arm64"
+            "arm", "armv7l", "armv7a", "aarch32" -> "arm32"
             "x86", "i386", "i686" -> "x86"
             else -> if (arch.isBlank()) "unknown" else arch
         }
+    }
+
+    private fun detectAndroid(): Boolean {
+        val osName = System.getProperty("os.name", "").lowercase(Locale.ROOT)
+        if (osName.startsWith("windows") || osName.startsWith("mac") || osName.startsWith("darwin")) {
+            return false
+        }
+
+        val osVersion = System.getProperty("os.version", "").lowercase(Locale.ROOT)
+        if (osVersion.contains("android")) {
+            return true
+        }
+
+        val vmName = System.getProperty("java.vm.name", "").lowercase(Locale.ROOT)
+        val vmVendor = System.getProperty("java.vendor", "").lowercase(Locale.ROOT)
+        if (vmName.contains("dalvik") || vmVendor.contains("android")) {
+            return true
+        }
+
+        System.getenv().keys.forEach { key ->
+            if (key.startsWith("POJAV", ignoreCase = true)) {
+                return true
+            }
+        }
+
+        if (File("/system/build.prop").isFile) {
+            return true
+        }
+
+        return false
     }
 
     private fun familyName(family: Family): String {
