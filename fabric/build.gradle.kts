@@ -8,9 +8,7 @@ val modId = project.property("mod_id").toString()
 dependencies {
     implementation(include(libs.lwjgl.msdfgen.get())!!)
     val msdfgenNatives = rootProject.extra["msdfgen_native_classifiers"] as List<*>
-    if (!project.hasProperty("androidBuild")) {
-        msdfgenNatives.forEach { runtimeOnly(include("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it")!!) }
-    }
+    msdfgenNatives.forEach { runtimeOnly(include("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it")!!) }
     minecraft(libs.minecraft)
     implementation(libs.fabric.loader)
     implementation(libs.fabric.api)

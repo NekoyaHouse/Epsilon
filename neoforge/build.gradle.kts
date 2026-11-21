@@ -13,8 +13,6 @@ plugins {
 val neoforgeVersion = project.property("neoforge_version").toString()
 val modId = project.property("mod_id").toString()
 val msdfgenNatives = rootProject.extra["msdfgen_native_classifiers"] as List<*>
-val bundledMsdfgenNatives: List<*> =
-    if (project.hasProperty("androidBuild")) emptyList<Any>() else msdfgenNatives
 
 val sodiumNeoForgeOuterJar by configurations.creating {
     isCanBeResolved = true
@@ -44,9 +42,7 @@ val extractedSodiumNeoForgeModJar = files(
 
 dependencies {
     implementation(jarJar(libs.lwjgl.msdfgen.get())!!)
-    if (!project.hasProperty("androidBuild")) {
-        msdfgenNatives.forEach { runtimeOnly(jarJar("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it")!!) }
-    }
+    msdfgenNatives.forEach { runtimeOnly(jarJar("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it")!!) }
     compileOnly(libs.sodium.neoforge)
     sodiumNeoForgeOuterJar(libs.sodium.neoforge)
     compileOnly(extractedSodiumNeoForgeModJar)
@@ -90,7 +86,7 @@ tasks.named<JarJar>("jarJar") {
         }
 
         val metadata = metadataLegacy
-            .let { input -> bundledMsdfgenNatives.fold(input) { result, classifier ->
+            .let { input -> msdfgenNatives.fold(input) { result, classifier ->
                 renameArtifact(result, "META-INF/jarjar/lwjgl-msdfgen-${libs.versions.lwjgl.get()}-$classifier.jar", "lwjgl-msdfgen-$classifier")
             } }
             .let { renameArtifact(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
@@ -111,7 +107,7 @@ fun fixJarJarMetadata(metadata: String): String {
         return input.substring(0, valueStart) + artifact + input.substring(valueEnd)
     }
     return metadata
-        .let { input -> bundledMsdfgenNatives.fold(input) { result, classifier ->
+        .let { input -> msdfgenNatives.fold(input) { result, classifier ->
             rename(result, "META-INF/jarjar/lwjgl-msdfgen-${libs.versions.lwjgl.get()}-$classifier.jar", "lwjgl-msdfgen-$classifier")
         } }
         .let { rename(it, "META-INF/jarjar/javacpp-1.5.10-windows-x86_64.jar", "javacpp-windows-x86_64") }
