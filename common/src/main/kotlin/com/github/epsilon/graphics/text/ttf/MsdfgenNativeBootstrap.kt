@@ -8,6 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import org.lwjgl.system.Configuration
 
@@ -91,13 +92,20 @@ internal object MsdfgenNativeBootstrap {
     }
 
     private fun extract(archive: File, abi: String, target: File) {
+        val prefix = "$abi/$LIB_NAME"
         ZipFile(archive).use { zip ->
-            val prefix = "$abi/$LIB_NAME"
-            val entry = zip.entries().asIterator().asSequence().firstOrNull {
-                !it.isDirectory && it.name == prefix
-            } ?: return
+            val iterator = zip.entries().asIterator()
+            var entry: ZipEntry? = null
+            while (iterator.hasNext()) {
+                val next = iterator.next()
+                if (!next.isDirectory && next.name == prefix) {
+                    entry = next
+                    break
+                }
+            }
+            val matched = entry ?: return
             Files.createDirectories(target.parentFile.toPath())
-            zip.getInputStream(entry).use { input ->
+            zip.getInputStream(matched).use { input ->
                 Files.copy(input, target.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
         }
