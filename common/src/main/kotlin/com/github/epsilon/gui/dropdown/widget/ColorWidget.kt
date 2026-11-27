@@ -75,10 +75,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
 
         val hueY = gradY + gradH + PICKER_TO_HUE_GAP
         val hueH = HUE_HEIGHT * t
-        for (i in 0 until gradW.toInt()) {
-            val c = Color.getHSBColor(i / gradW, 1.0f, 1.0f)
-            Rect(gradX + i, hueY, 1.0f, hueH, c)
-        }
+        drawHueBar(gradX, hueY, gradW, hueH)
         drawSliderPicker(gradX + gradW * hsb[0], hueY, hueH)
 
         color = visibleColor
@@ -144,6 +141,15 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         val pickerW = 3.0f
         Rect(centerX - pickerW * 0.5f - 1.0f, localY - 2.0f, pickerW + 2.0f, height + 4.0f, Color(0, 0, 0, 145))
         Rect(centerX - pickerW * 0.5f, localY - 1.0f, pickerW, height + 2.0f, Color.WHITE)
+    }
+
+    private fun UiScope.drawHueBar(x: Float, y: Float, width: Float, height: Float) {
+        var left = x
+        for (i in 1..HUE_STOPS.lastIndex) {
+            val right = x + width * (i.toFloat() / HUE_STOPS.lastIndex)
+            RectHorizontalGradient(left, y, right - left, height, HUE_STOPS[i - 1], HUE_STOPS[i], antialias = false)
+            left = right
+        }
     }
 
     private fun UiScope.drawChannelRows(
@@ -572,6 +578,7 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         private const val HUE_TO_CHANNEL_GAP = 6.0f
         private const val BOTTOM_PADDING = 2.0f
 
+        private val HUE_STOPS = arrayOf(Color.RED, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE, Color.MAGENTA, Color.RED)
         private val RGB_CHANNELS = arrayOf(Channel.RED, Channel.GREEN, Channel.BLUE)
         private val RGBA_CHANNELS = arrayOf(Channel.RED, Channel.GREEN, Channel.BLUE, Channel.ALPHA)
 

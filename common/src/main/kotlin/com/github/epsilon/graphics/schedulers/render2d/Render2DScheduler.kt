@@ -513,6 +513,7 @@ class Render2DScheduler : IRenderer {
         Render2DCommandKind.ROUND_RECT -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.ROUND_RECT_OUTLINE -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.RECT -> LuminRenderPipelines.UI_SHAPE
+        Render2DCommandKind.FLAT_RECT -> LuminRenderPipelines.RECTANGLE
         Render2DCommandKind.TRIANGLE -> LuminRenderPipelines.UI_SHAPE
         Render2DCommandKind.ARC -> LuminRenderPipelines.ARC
         Render2DCommandKind.TEXTURE -> LuminRenderPipelines.TEXTURE
@@ -551,10 +552,19 @@ class Render2DScheduler : IRenderer {
                 command.outlineWidth, command.color
             )
 
-            is Render2DCommand.Rect -> renderers.shapeRenderer().addOutlineGradient(
-                command.bounds.x, command.bounds.y, command.bounds.width, command.bounds.height,
-                0f, 0f, 0f, 0f, -1f, command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
-            )
+            is Render2DCommand.Rect -> {
+                val (x, y, width, height) = command.bounds
+                if (command.antialias) {
+                    renderers.shapeRenderer().addOutlineGradient(
+                        x, y, width, height,
+                        0f, 0f, 0f, 0f, -1f, command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
+                    )
+                } else {
+                    renderers.rectRenderer().addRectGradient(
+                        x, y, width, height, command.topLeft, command.bottomLeft, command.bottomRight, command.topRight
+                    )
+                }
+            }
 
             is Render2DCommand.Triangle -> renderers.shapeRenderer().addChevronTriangle(
                 command.centerX, command.centerY, command.size, command.progress, command.color
@@ -899,12 +909,13 @@ class Render2DScheduler : IRenderer {
         fun addRectGradient(
             x: Float, y: Float, width: Float, height: Float,
             topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color,
+            antialias: Boolean = true,
         ) {
             scheduler.add(
                 Render2DCommand.Rect(
                     layerIndex, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), currentScissor,
-                    topLeft, bottomLeft, bottomRight, topRight
+                    topLeft, bottomLeft, bottomRight, topRight, antialias
                 )
             )
         }
@@ -1181,6 +1192,8 @@ class Render2DScheduler : IRenderer {
 
         fun shapeRenderer(): RoundRectOutlineRenderer = renderer as RoundRectOutlineRenderer
 
+        fun rectRenderer(): RectRenderer = renderer as RectRenderer
+
         fun shadowRenderer(): ShadowRenderer = renderer as ShadowRenderer
 
         fun arcRenderer(): ArcRenderer = renderer as ArcRenderer
@@ -1240,6 +1253,7 @@ class Render2DScheduler : IRenderer {
                 Render2DCommandKind.ROUND_RECT -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.ROUND_RECT_OUTLINE -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.RECT -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
+                Render2DCommandKind.FLAT_RECT -> RendererBundle(kind, RectRenderer.create())
                 Render2DCommandKind.TRIANGLE -> RendererBundle(kind, RoundRectOutlineRenderer.createShape())
                 Render2DCommandKind.ARC -> RendererBundle(kind, ArcRenderer.create())
                 Render2DCommandKind.TEXTURE -> RendererBundle(kind, TextureRenderer.create())

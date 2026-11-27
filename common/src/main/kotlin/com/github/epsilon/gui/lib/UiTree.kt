@@ -443,7 +443,7 @@ class UiTree private constructor(
 
         fun rectGradient(
             x: Float, y: Float, width: Float, height: Float,
-            topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color
+            topLeft: Color, bottomLeft: Color, bottomRight: Color, topRight: Color, antialias: Boolean = true,
         ) {
             nodes.add(
                 RectGradientNode(
@@ -454,7 +454,8 @@ class UiTree private constructor(
                     topLeft,
                     bottomLeft,
                     bottomRight,
-                    topRight
+                    topRight,
+                    antialias
                 )
             )
         }
@@ -463,8 +464,10 @@ class UiTree private constructor(
             rectGradient(x, y, width, height, top, bottom, bottom, top)
         }
 
-        fun rectHorizontalGradient(x: Float, y: Float, width: Float, height: Float, left: Color, right: Color) {
-            rectGradient(x, y, width, height, left, left, right, right)
+        fun rectHorizontalGradient(
+            x: Float, y: Float, width: Float, height: Float, left: Color, right: Color, antialias: Boolean = true,
+        ) {
+            rectGradient(x, y, width, height, left, left, right, right, antialias)
         }
 
         fun outline(x: Float, y: Float, width: Float, height: Float, radius: Float, outlineWidth: Float, color: Color) {
@@ -1303,7 +1306,7 @@ class UiTree private constructor(
     data class RectGradientNode(
         val x: Float, val y: Float, val width: Float, val height: Float,
         val topLeft: Color, val bottomLeft: Color, val bottomRight: Color,
-        val topRight: Color,
+        val topRight: Color, val antialias: Boolean = true,
     ) : UiNode
 
     data class RectOutlineNode(

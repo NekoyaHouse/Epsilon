@@ -69,6 +69,15 @@ kotlin {
 }
 
 repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Chen Meng"
+                url = uri("https://slmpc.github.io/maven-repository/")
+            }
+        }
+        filter { includeModule("io.github.slmpc", "msdfgen-java") }
+    }
     mavenCentral()
     exclusiveContent {
         forRepository {

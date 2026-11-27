@@ -127,9 +127,11 @@ sealed interface Render2DCommand {
         val bottomLeft: Color,
         val bottomRight: Color,
         val topRight: Color,
+        val antialias: Boolean = true,
     ) : Render2DCommand {
 
-        override fun kind(): Render2DCommandKind = Render2DCommandKind.RECT
+        override fun kind(): Render2DCommandKind =
+            if (antialias) Render2DCommandKind.RECT else Render2DCommandKind.FLAT_RECT
 
     }
 

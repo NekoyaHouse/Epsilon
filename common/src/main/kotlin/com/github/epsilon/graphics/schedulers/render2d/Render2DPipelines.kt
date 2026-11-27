@@ -15,7 +15,8 @@ import java.util.*
 internal object Render2DPipelines {
     val sources: List<RenderPipeline>
         get() = listOf(
-            LuminRenderPipelines.UI_SHAPE, LuminRenderPipelines.SHADOW, LuminRenderPipelines.SEGMENTED_SHADOW,
+            LuminRenderPipelines.UI_SHAPE, LuminRenderPipelines.RECTANGLE,
+            LuminRenderPipelines.SHADOW, LuminRenderPipelines.SEGMENTED_SHADOW,
             LuminRenderPipelines.TRIANGLE, LuminRenderPipelines.ARC, LuminRenderPipelines.TEXTURE,
             LuminRenderPipelines.ITEM_TEXTURE,
             LuminRenderPipelines.TTF_FONT,

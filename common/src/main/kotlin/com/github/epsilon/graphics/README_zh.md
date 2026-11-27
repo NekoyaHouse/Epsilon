@@ -12,11 +12,10 @@ canvas API 替代旧 layer handle API。
 ## 核心特性
 
 * **SDF 圆角矩形**：通过片段着色器（Fragment Shader）计算平滑且抗锯齿的圆角。支持动态半径，无需改变顶点数据。
-* **MSDF TTF 渲染**：继续使用 STB_truetype 获取字体度量、轮廓及特效覆盖率，由 msdfgen 核心为直线、二次和三次曲线 着色并生成
-  RGB 多通道距离场，以线性 RGBA8 图集存储。着色器取 RGB 中值，并按八个图集像素的距离范围恢复覆盖率； 模糊和 glitch 继续使用独立
-  R8 覆盖率图集。字形在 CPU 工作线程生成，图集在渲染线程上传，缺字占位框也使用 MSDF。 Fabric 与 NeoForge 均内嵌 LWJGL
-  msdfgen 3.4.3 及 Windows/Linux/macOS 的 x64、ARM64 原生库；字体解析不调用 msdfgen 的 FreeType 扩展。 所有文本统一使用单点
-  `TTF_FONT` 管线（`ttf_font.fsh`），按屏幕空间距离重建像素覆盖率并保留一像素的边缘过渡。 字体抗锯齿开关与超采样分支已移除。
+* **MSDF TTF 渲染**：STB_truetype 提供字体度量、轮廓和特效覆盖率。纯 Java 的 `msdfgen-java` 为直线、二次和三次曲线着色并生成
+  RGB 多通道距离场，以线性 RGBA8 图集存储。着色器取 RGB 中值，并按八个图集像素的距离范围恢复覆盖率。模糊和 glitch 使用独立的
+  R8 覆盖率图集。字形在 CPU 工作线程生成，图集在渲染线程上传，缺字占位框也使用 MSDF。Fabric 与 NeoForge 均内嵌同一份 Java
+  JAR。文本使用单点 `TTF_FONT` 管线（`ttf_font.fsh`），按屏幕空间距离重建像素覆盖率并保留一像素的边缘过渡。
 
 ---
 
@@ -70,8 +69,8 @@ Composition → UiRenderNode → 局部 DisplayList → GeometryArena
 
 ### 顺序与提交
 
-每次 flush 内按显式 layer 升序绘制，同层保持声明顺序，子树在插入位置展开。视口遵循同样的规则，内容与滚动条进入宿主批次。图元种类、字体图集和纹理不会覆盖该顺序。矩形、圆角、描边与箭头三角形共用
-shape pipeline，文字、纹理与特效保留各自管线。只有相邻且 pipeline、几何页、资源、uniform 和 scissor 兼容的范围能够合批。普通
+每次 flush 内按显式 layer 升序绘制，同层保持声明顺序，子树在插入位置展开。视口遵循同样的规则，内容与滚动条进入宿主批次。图元种类、字体图集和纹理不会覆盖该顺序。抗锯齿矩形、圆角、描边与箭头三角形共用
+shape pipeline。`RectHorizontalGradient` 指定 `antialias = false` 时使用 `RectRenderer`，相邻渐变的共边不会做透明度过渡。文字、纹理与特效保留各自管线。只有相邻且 pipeline、几何页、资源、uniform 和 scissor 兼容的范围能够合批。普通
 AA/非 AA 文字允许一个批次绑定最多八组图集/sampler，每个范围通过实例属性选择图集并保留字形顺序；第九组另起批次。模糊/故障文字与普通纹理仍遵循各自资源边界。不做空间重排或全局重叠依赖图。
 
 Dropdown 模块行在每个面板预留的层区间内显式保留旧版透明叠加关系：按钮填充/描边、半透明行表面与 Hold
