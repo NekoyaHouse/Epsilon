@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
@@ -136,10 +137,11 @@ class TriangleRenderer private constructor() : IRenderer {
 
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             { "Triangle Draw" },
+            if (depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
             colorView, Optional.empty<Vector4fc>(),
             depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.TRIANGLE))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.TRIANGLE, pass.activeSubpass()))
             if (scissorEnabled) {
                 ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             }

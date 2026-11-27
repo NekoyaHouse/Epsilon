@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     `java-library`
     `maven-publish`
-    // 三个子项目统一启用 Kotlin；common/src/main/kotlin 是共享 Kotlin 源码目录。
+    // 各子项目统一启用 Kotlin；common/src/main/kotlin 是共享 Kotlin 源码目录。
     id("org.jetbrains.kotlin.jvm")
 }
 
@@ -135,6 +135,8 @@ tasks.named<ProcessResources>("processResources") {
         "group" to project.group,
         "minecraft_version" to minecraftVersion,
         "minecraft_version_range" to minecraftVersionRange,
+        // Fabric Loader normalizes Mojang's -pre-N to the SemVer suffix -pre.N.
+        "fabric_minecraft_version" to minecraftVersion.replace("-pre-", "-pre."),
         "fabric_version" to fabricVersion,
         "fabric_loader_version" to fabricLoaderVersion,
         "mod_name" to modName,

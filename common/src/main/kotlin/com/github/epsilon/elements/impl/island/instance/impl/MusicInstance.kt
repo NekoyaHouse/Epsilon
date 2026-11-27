@@ -5,6 +5,7 @@ import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.mojang.blaze3d.systems.RenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
@@ -13,7 +14,8 @@ import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.ffi.smtc.SmtcService
 import com.github.epsilon.kernel.ffi.smtc.SmtcSnapshot
 import com.mojang.blaze3d.platform.NativeImage
-import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.renderer.texture.ExternalTextureProvider
+import net.minecraft.client.renderer.texture.TextureResources
 import net.minecraft.resources.Identifier
 import java.awt.Color
 import java.awt.Graphics2D
@@ -37,7 +39,7 @@ class MusicInstance(
 
     private var snapshot: SmtcSnapshot = SmtcSnapshot.UNAVAILABLE
     private var coverRevision: Long = Long.MIN_VALUE
-    private var coverTexture: DynamicTexture? = null
+    private var coverTexture: TextureResources? = null
     private var coverAvailable: Boolean = false
     private var marqueeTitle: String = ""
     private var marqueeStartedAtNs: Long = System.nanoTime()
@@ -191,36 +193,26 @@ class MusicInstance(
         val thumbnail = next.thumbnail
         if (thumbnail == null || thumbnail.isEmpty()) return
 
-        var image: NativeImage? = null
-        var newTexture: DynamicTexture? = null
         try {
-            image = decodeThumbnail(thumbnail)
-            val existingTexture = coverTexture
-            if (existingTexture == null) {
-                newTexture = DynamicTexture({ "Epsilon SMTC album art" }, image)
-                image = null
-                mc.textureManager.register(COVER_TEXTURE, newTexture)
-                coverTexture = newTexture
-                newTexture = null
-            } else {
-                existingTexture.pixels = image
-                image = null
-                existingTexture.upload()
+            decodeThumbnail(thumbnail).use { image ->
+                val texture = coverTexture
+                if (texture == null) {
+                    val created = TextureResources.from2dImage({ "Epsilon SMTC album art" }, image)
+                    try {
+                        mc.textureManager.registerProvider(COVER_TEXTURE, ExternalTextureProvider(created))
+                        coverTexture = created
+                    } catch (e: RuntimeException) {
+                        created.close()
+                        throw e
+                    }
+                } else {
+                    image.writeToGpuTexture(RenderSystem.getDevice().createCommandEncoder(), texture.texture())
+                }
             }
             coverAvailable = true
         } catch (e: IOException) {
-            if (newTexture != null) {
-                newTexture.close()
-            } else if (image != null) {
-                image.close()
-            }
             Constants.LOGGER.warn("Failed to decode SMTC album art revision {}", coverRevision, e)
         } catch (e: RuntimeException) {
-            if (newTexture != null) {
-                newTexture.close()
-            } else if (image != null) {
-                image.close()
-            }
             Constants.LOGGER.warn("Failed to decode SMTC album art revision {}", coverRevision, e)
         }
     }
@@ -265,6 +257,7 @@ class MusicInstance(
     private fun releaseCoverTexture() {
         if (coverTexture != null) {
             mc.textureManager.release(COVER_TEXTURE)
+            coverTexture?.close()
             coverTexture = null
         }
         coverAvailable = false

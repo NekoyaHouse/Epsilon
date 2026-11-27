@@ -10,8 +10,6 @@ dependencies {
     minecraft(libs.minecraft)
     implementation(libs.fabric.loader)
     implementation(libs.fabric.api)
-    compileOnly(libs.sodium.fabric)
-    compileOnly(libs.iris.fabric)
     implementation(include("org.bytedeco:javacpp:1.5.10")!!)
     implementation(include("org.bytedeco:javacv:1.5.10")!!)
     implementation(include("org.bytedeco:ffmpeg:6.1.1-1.5.10")!!)

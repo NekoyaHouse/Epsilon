@@ -309,7 +309,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
     }
 
-    override fun extractBackground(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
+    override fun extractBackground(graphics: GuiGraphicsExtractor) {
+        val mouseX = graphics.mouseX()
+        val mouseY = graphics.mouseY()
         val minecraft = this.minecraft
         val window = minecraft.window
         if (backgroundRenderTarget == null) {
@@ -366,7 +368,9 @@ object MainMenuScreen : Screen(Component.literal("MainMenuScreen")) {
         }
     }
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
+    override fun extractRenderState(graphics: GuiGraphicsExtractor) {
+        val mouseX = graphics.mouseX()
+        val mouseY = graphics.mouseY()
         val minecraft = this.minecraft
         val window = minecraft.window
         if (uiRenderTarget == null) {

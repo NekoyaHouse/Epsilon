@@ -1,5 +1,7 @@
 package com.github.epsilon.graphics.shaders
 
+import net.minecraft.client.renderer.RenderPassLayouts
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -14,10 +16,9 @@ import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
 import net.minecraft.client.renderer.DynamicGpuDataStorage
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
@@ -31,7 +32,7 @@ object MotionBlurShader {
     private const val MAX_SAMPLES = 256
     private const val MAX_FRAME_TIME_SECONDS = 0.25
     private const val MAX_CAMERA_DELTA_SQUARED = 1024.0
-    private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
+
     private val FRAGMENT_SHADER: Identifier = ResourceLocationUtils.getIdentifier("motion_blur")
     private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
         .putMat4f()
@@ -153,10 +154,11 @@ object MotionBlurShader {
 
         encoder.createRenderPass(
             { "Epsilon Motion Blur" },
+            RenderPassLayouts.COLOR_ONLY,
             target.colorTextureView!!,
             Optional.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline!!))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline!!, pass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("MotionBlurData", uniforms)
             pass.setUniform(
@@ -176,10 +178,9 @@ object MotionBlurShader {
     private fun ensureProgram() {
         if (pipeline != null) return
 
-        pipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+        pipeline = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/motion_blur"))
             .withColorTargetState(ColorTargetState.DEFAULT)
-            .withVertexShader(VERTEX_SHADER)
             .withFragmentShader(FRAGMENT_SHADER)
             .withBindGroupLayout(LuminBindGroupLayouts.MOTION_BLUR_DATA)
             .withBindGroupLayout(LuminBindGroupLayouts.MOTION_BLUR_TEXTURES)

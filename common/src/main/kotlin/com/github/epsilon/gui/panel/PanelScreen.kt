@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel
 
+import net.minecraft.client.gui.GuiPipeline
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.lib.LuminUIScene
@@ -28,7 +29,6 @@ import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 
 /**
@@ -76,7 +76,10 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
      * 该方法会计算布局、推动动画、让各个子面板把 UI 编译进共享批次，
      * 最后在统一的 render 提交阶段执行 flush。
      */
-    override fun extractRenderState(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun extractRenderState(guiGraphics: GuiGraphicsExtractor) {
+        val mouseX = guiGraphics.mouseX()
+        val mouseY = guiGraphics.mouseY()
+        val partialTick = guiGraphics.partialTicks()
         val window = minecraft.window
         var target = renderTarget
         if (target == null) {
@@ -173,7 +176,7 @@ object PanelScreen : Screen(Component.literal("PanelGui")) {
                 )
                 pose.scale(entranceScale, entranceScale)
                 guiGraphics.blit(
-                    RenderPipelines.GUI_TEXTURED, target.getIdentifier(), 0, 0, 0.0f, window.height.toFloat(),
+                    GuiPipeline.TEXTURED, target.getIdentifier(), 0, 0, 0.0f, window.height.toFloat(),
                     window.guiScaledWidth, window.guiScaledHeight, window.width, -window.height,
                     window.width, window.height, ((entrance * 255).toInt() shl 24) or 0xFFFFFF
                 )

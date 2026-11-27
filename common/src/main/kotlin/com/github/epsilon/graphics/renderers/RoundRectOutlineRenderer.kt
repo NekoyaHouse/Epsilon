@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
@@ -8,7 +9,7 @@ import com.github.epsilon.managers.RendererManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.commands.RenderPass
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
 import org.lwjgl.system.MemoryUtil
@@ -210,10 +211,12 @@ class RoundRectOutlineRenderer private constructor(
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return
 
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-            { "Round Rect Outline Draw" }, colorView, Optional.empty<Vector4fc>(),
+            { "Round Rect Outline Draw" },
+            if (info.depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
+            colorView, Optional.empty<Vector4fc>(),
             info.depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline, pass.activeSubpass()))
             if (scissorEnabled) ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("DynamicTransforms", info.dynamicUniforms)

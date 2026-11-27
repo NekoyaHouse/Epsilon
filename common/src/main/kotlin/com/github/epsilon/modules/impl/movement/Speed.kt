@@ -12,7 +12,7 @@ import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.network.protocol.game.ClientboundAddEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
@@ -107,27 +107,23 @@ object Speed : Module("Speed", Category.MOVEMENT) {
                             }
                         }
                     }
-                } else if (packet is ClientboundExplodePacket) {
-                    if (explosions) {
-                        if (player.position().distanceTo(packet.center) < 15) {
-                            val knockback = packet.playerKnockback.orElse(Vec3.ZERO)
-                            val packetSpeed = hypot(knockback.x, knockback.z)
-                            this@Speed.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
-                                packetSpeed
-                            } else {
-                                packetSpeed - this@Speed.lastExp
-                            }
+                } else if (packet is ClientboundAddEntityMotionPacket && packet.id == player.id && explosions) {
+                    val impulse = packet.impulse
+                    val packetSpeed = hypot(impulse.x, impulse.z)
+                    this@Speed.lastExp = if (expTimer.passedMillise(coolDown.toLong())) {
+                        packetSpeed
+                    } else {
+                        packetSpeed - this@Speed.lastExp
+                    }
 
-                            if (this@Speed.lastExp > 0) {
-                                expTimer.reset()
+                    if (this@Speed.lastExp > 0) {
+                        expTimer.reset()
 
-                                this@Speed.speed += this@Speed.lastExp * multiplier
-                                this@Speed.distance += this@Speed.lastExp * multiplier
+                        this@Speed.speed += this@Speed.lastExp * multiplier
+                        this@Speed.distance += this@Speed.lastExp * multiplier
 
-                                if (player.deltaMovement.y > 0) {
-                                    setMotionY(player.deltaMovement.y * vertical)
-                                }
-                            }
+                        if (player.deltaMovement.y > 0) {
+                            setMotionY(player.deltaMovement.y * vertical)
                         }
                     }
                 }

@@ -88,7 +88,7 @@ public abstract class MixinItemInHandRenderer {
         }
     }
 
-    @Inject(method = "swingArm", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "swingArmWithItem", at = @At("HEAD"), cancellable = true)
     private void cancelSwingForBlocking(float animation, PoseStack poseStack, int invert, HumanoidArm arm, CallbackInfo ci) {
         if (epsilon$blocked) ci.cancel();
     }
@@ -104,12 +104,12 @@ public abstract class MixinItemInHandRenderer {
         }
     }
 
-    @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;renderPlayerArm(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;IFFLnet/minecraft/world/entity/HumanoidArm;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;)V"))
+    @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;submitPlayerArm(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;IFFLnet/minecraft/world/InteractionHand;Lnet/minecraft/world/entity/HumanoidArm;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;)V"))
     private void beforeRenderArm(PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         new ArmRenderEvent(hand, poseStack).post();
     }
 
-    @WrapOperation(method = "swingArm", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
+    @WrapOperation(method = "swingArmWithItem", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
     private void wrapSwingArmTranslate(PoseStack poseStack, float xo, float yo, float zo, Operation<Void> original) {
         HandView handView = HandView.INSTANCE;
         boolean skip = handView.isEnabled() && handView.getSwingMode() == HandView.SwingMode.Flux;

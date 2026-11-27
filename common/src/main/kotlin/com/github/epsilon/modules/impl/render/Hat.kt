@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render3DEvent
@@ -9,8 +10,8 @@ import com.github.epsilon.modules.Module
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
 import org.joml.Matrix4f
@@ -50,7 +51,7 @@ object Hat : Module("Hat", Category.RENDER) {
     private var lastSize = 0.0
 
     private val HAT_CONE_PIPELINE: RenderPipeline =
-        RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_cone"))
             .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
@@ -59,7 +60,7 @@ object Hat : Module("Hat", Category.RENDER) {
             .build()
 
     private val HAT_OUTLINE_PIPELINE: RenderPipeline =
-        RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+        RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_outline"))
             .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
             .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))

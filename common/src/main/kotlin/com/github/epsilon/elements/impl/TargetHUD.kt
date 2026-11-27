@@ -13,7 +13,6 @@ import com.github.epsilon.modules.impl.combat.KillAura
 import com.google.common.base.Suppliers
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.player.AbstractClientPlayer
-import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
@@ -277,9 +276,10 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         }
 
         if (target is AbstractClientPlayer) {
-            val abstractTexture: AbstractTexture = mc.textureManager.getTexture(target.skin.body().texturePath())
+            val texture = mc.textureManager.getTexture(target.skin.body().texturePath())
+            val view = texture.textureView()
             PlayerHead(
-                LuminTexture(abstractTexture.texture, abstractTexture.textureView, abstractTexture.sampler),
+                LuminTexture(view.texture(), view, texture.sampler(), false, false),
                 finalHeadX, finalHeadY, finalHeadSize, finalHeadRadius, headTintColor
             )
         }
@@ -369,9 +369,10 @@ object TargetHUD : HudModule("Target HUD", 0f, 0f, 180f, 80f) {
         val headY = panelY + 3.0f * scaled + (AKRIEN_HEAD_SIZE * scaled - headSize) / 2.0f
         val headColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale)
         if (target is AbstractClientPlayer) {
-            val texture: AbstractTexture = mc.textureManager.getTexture(target.skin.body().texturePath())
+            val texture = mc.textureManager.getTexture(target.skin.body().texturePath())
+            val view = texture.textureView()
             PlayerHead(
-                LuminTexture(texture.texture, texture.textureView, texture.sampler),
+                LuminTexture(view.texture(), view, texture.sampler(), false, false),
                 headX, headY, headSize, 0.0f, headColor
             )
         } else {

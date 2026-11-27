@@ -31,7 +31,7 @@ object HoverTotem : Module("Hover Totem", Category.COMBAT) {
         safeEventHandler<PlayerTickEvent.Pre> {
             val screen = mc.gui.screen()
             if (screen is InventoryScreen) {
-                val hoveredSlot = screen.hoveredSlot
+                val hoveredSlot = screen.getHoveredSlot()?.slot()
 
                 if (autoSwitch) {
                     val slotValue = slot.toInt()

@@ -10,6 +10,7 @@ import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.textures.AddressMode
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
+import net.minecraft.client.renderer.texture.ExternalTextureProvider
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import org.lwjgl.system.MemoryUtil
@@ -64,8 +65,8 @@ class TtfGlyphAtlas(atlasId: Int) {
         this.alphaTexture = LuminTexture(alphaTexture, alphaTextureView, alphaSampler)
         fillTexture(texture, 0x00.toByte())
         fillTexture(alphaTexture, 0x00.toByte())
-        mc.textureManager.register(this.textureId, this.texture)
-        mc.textureManager.register(this.alphaTextureId, this.alphaTexture)
+        mc.textureManager.registerProvider(textureId, ExternalTextureProvider(this.texture) { _, _ -> })
+        mc.textureManager.registerProvider(alphaTextureId, ExternalTextureProvider(this.alphaTexture) { _, _ -> })
     }
 
     /**
@@ -94,7 +95,7 @@ class TtfGlyphAtlas(atlasId: Int) {
         val glyphY = currentY + GLYPH_GUTTER
 
         uploadToTexture(
-            this.texture.getTexture(),
+            this.texture.texture,
             glyphData,
             glyphX, glyphY,
             glyph.width,
@@ -103,7 +104,7 @@ class TtfGlyphAtlas(atlasId: Int) {
         val alphaData = glyph.alphaData
         if (alphaData != null) {
             uploadToTexture(
-                this.alphaTexture.getTexture(),
+                this.alphaTexture.texture,
                 alphaData,
                 glyphX, glyphY,
                 glyph.width,
@@ -139,6 +140,8 @@ class TtfGlyphAtlas(atlasId: Int) {
     fun destroy() {
         mc.textureManager.release(this.textureId)
         mc.textureManager.release(this.alphaTextureId)
+        texture.close()
+        alphaTexture.close()
     }
 
     data class GlyphUV(val u0: Float, val v0: Float, val u1: Float, val v1: Float)

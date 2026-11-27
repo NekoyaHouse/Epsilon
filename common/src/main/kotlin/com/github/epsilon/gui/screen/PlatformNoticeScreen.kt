@@ -62,8 +62,8 @@ object PlatformNoticeScreen : Screen(Component.empty()) {
 
     override fun onClose() = DialogCard.close(this)
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) =
-        DialogCard.extractRenderState(this, graphics, mouseX, mouseY)
+    override fun extractRenderState(graphics: GuiGraphicsExtractor) =
+        DialogCard.extractRenderState(this, graphics, graphics.mouseX(), graphics.mouseY())
 
     override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean =
         DialogCard.mouseClicked(event, doubleClick)

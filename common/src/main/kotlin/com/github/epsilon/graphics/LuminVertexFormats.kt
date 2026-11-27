@@ -1,7 +1,7 @@
 package com.github.epsilon.graphics
 
 import com.mojang.renderpearl.api.GpuFormat
-import com.mojang.renderpearl.api.vertex.VertexFormat
+import com.mojang.blaze3d.vertex.VertexFormat
 
 object LuminVertexFormats {
 

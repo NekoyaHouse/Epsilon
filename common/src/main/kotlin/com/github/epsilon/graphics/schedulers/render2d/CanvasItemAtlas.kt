@@ -137,7 +137,6 @@ internal class CanvasItemAtlas(private val metrics: TextRenderer) : AutoCloseabl
                 result[command] = commands
             }
         } finally {
-            RenderSystem.disableScissorForRenderTypeDraws()
             modelView.popMatrix()
             if (projection != null) RenderSystem.setProjectionMatrix(projection, projectionType)
         }

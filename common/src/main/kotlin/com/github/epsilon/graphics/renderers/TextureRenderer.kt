@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
@@ -296,10 +297,11 @@ class TextureRenderer private constructor() : IRenderer {
         val ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount)
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             { "Rounded Texture Draws" },
+            RenderPassLayouts.COLOR_ONLY,
             colorView, Optional.empty<Vector4fc>(),
             null, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.TEXTURE))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.TEXTURE, pass.activeSubpass()))
             if (scissorEnabled) {
                 ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             }
@@ -357,13 +359,13 @@ class TextureRenderer private constructor() : IRenderer {
     private fun resolveTexture(key: TextureKey): PreparedTexture? {
         val texture = key.texture
         if (texture is Identifier) {
-            val abstractTexture = mc.textureManager.getTexture(texture)
+            val handle = mc.textureManager.getTexture(texture)
             val sampler = if (key.linearFilter) {
                 RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
             } else {
-                abstractTexture.sampler
+                handle.sampler()
             }
-            return PreparedTexture(abstractTexture.textureView, sampler)
+            return PreparedTexture(handle.textureView(), sampler)
         }
         if (texture is LuminTexture) {
             return PreparedTexture(texture.textureView, texture.sampler)

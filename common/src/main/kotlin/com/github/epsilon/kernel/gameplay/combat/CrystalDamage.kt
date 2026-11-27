@@ -41,7 +41,7 @@ object CrystalDamage {
             if (blocker.bypassedBy().map { it.contains(explosionType) }.orElse(false)) return false
             val direction = center.subtract(position).multiply(1.0, 0.0, 1.0).normalize()
             val angle = acos(direction.dot(facing).coerceIn(-1.0, 1.0))
-            return blocker.resolveBlockedDamage(source, 1.0f, angle) > 0.0f
+            return blocker.resolveBlockedDamage(source, 1.0f, angle).orElse(0.0f) > 0.0f
         }
     }
 

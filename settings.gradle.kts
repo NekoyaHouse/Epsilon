@@ -41,4 +41,5 @@ rootProject.name = "Epsilon"
 
 include("common")
 include("fabric")
-include("neoforge")
+// 26.4 预发布版暂时只构建 Fabric，待 NeoForge 支持后恢复。
+// include("neoforge")

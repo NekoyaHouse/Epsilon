@@ -99,7 +99,10 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
         }
     }
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun extractRenderState(graphics: GuiGraphicsExtractor) {
+        val mouseX = graphics.mouseX()
+        val mouseY = graphics.mouseY()
+        val partialTick = graphics.partialTicks()
         val minecraft = this.minecraft
         val window = minecraft.window
         var currentTarget = this.renderTarget

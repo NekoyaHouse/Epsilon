@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ParticleAtlas
 import com.github.epsilon.assets.resources.ParticleAtlas.Sprite
 import com.github.epsilon.assets.resources.ResourceLocationUtils
@@ -13,8 +14,8 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
@@ -63,21 +64,21 @@ object Particles : Module("Particles", Category.RENDER) {
     private val ripples = ArrayList<Ripple>()
     private val splashes = ArrayList<Splash>()
 
-    private val particlePipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+    private val particlePipeline = RenderPipeline.builder(LuminRenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/particles"))
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
         .withCull(false)
         .build()
 
-    private val translucentParticlePipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+    private val translucentParticlePipeline = RenderPipeline.builder(LuminRenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/particles_translucent"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
         .withCull(false)
         .build()
 
-    private val trailPipeline = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+    private val trailPipeline = RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/particle_trails"))
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))

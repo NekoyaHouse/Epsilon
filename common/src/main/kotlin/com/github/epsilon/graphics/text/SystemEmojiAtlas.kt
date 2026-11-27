@@ -151,7 +151,7 @@ object SystemEmojiAtlas : AutoCloseable {
                 val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
                 texture = LuminTexture(gpuTexture, view, sampler, true, false)
             }
-            RenderSystem.getDevice().createCommandEncoder().writeToTexture(texture!!.getTexture(), image)
+            image.writeToGpuTexture(RenderSystem.getDevice().createCommandEncoder(), texture!!.texture)
         }
     }
 

@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.schedulers.render2d
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.GeometryArena
 import com.github.epsilon.graphics.schedulers.render2d.Render2DDrawPlan.Binding
@@ -13,7 +14,8 @@ import com.mojang.renderpearl.api.commands.GpuQueryPool
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline
 import com.mojang.renderpearl.api.pipeline.IndexType
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPassLayout
 import com.mojang.renderpearl.api.textures.GpuSampler
 import com.mojang.renderpearl.api.textures.GpuTextureView
 import org.lwjgl.PointerBuffer
@@ -51,14 +53,17 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
 
     private fun executePrepared(draws: List<Draw>) {
         val color = LuminRenderSystem.resolveColorView() ?: return
+        val depth = LuminRenderSystem.resolveDepthView()
+        val layout = if (depth == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH
+        val subpass = layout.subpass(0)
         val resolved = draws.filter { it.prepare() }
         if (resolved.isEmpty()) return
         val features = RenderSystem.getDevice().deviceInfo.features()
         val useIndirect = features.multiDrawIndirect() && features.nonZeroFirstInstance()
         if (useIndirect) arena.compactGeometry()
         LuminRenderSystem.applyOrthoProjection()
-        val originals = Render2DPipelines.sources.associateBy { RenderSystem.getCompiledPipeline(it) }
-        val recorder = RecordingPass(originals)
+        val originals = Render2DPipelines.sources.associateBy { RenderSystem.getCompiledPipeline(it, subpass) }
+        val recorder = RecordingPass(layout, originals)
         resolved.forEachIndexed { index, draw ->
             recorder.source = draw.pipeline
             recorder.property = index
@@ -74,7 +79,7 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         if (plan.runs.isEmpty()) return
         updateProperties(plan.properties.map { Instance(resolved[it.source].properties, it.textureSlot) })
         val prepared = plan.runs.map { run ->
-            val compiled = RenderSystem.getCompiledPipeline(Render2DPipelines.variant(run.binding.pipeline))
+            val compiled = RenderSystem.getCompiledPipeline(Render2DPipelines.variant(run.binding.pipeline), subpass)
             val commands =
                 if (useIndirect && run.ranges.size > 1 && run.binding.indices != null) indirect(run.ranges) else null
             Triple(run, compiled, commands)
@@ -85,9 +90,10 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         try {
             RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 { "Lumin Ordered 2D" },
+                layout,
                 color,
                 Optional.empty(),
-                LuminRenderSystem.resolveDepthView(),
+                depth,
                 OptionalDouble.empty()
             ).use { pass ->
                 query?.let { pass.writeTimestamp(it, 0) }
@@ -206,8 +212,16 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
         resetCache(); queries.forEach { it.close() }; queries.clear()
     }
 
-    internal class RecordingPass(private val originals: Map<CompiledRenderPipeline, RenderPipeline>) :
+    internal class RecordingPass(
+        private val layout: RenderPassLayout,
+        private val originals: Map<CompiledRenderPipeline, RenderPipeline>,
+    ) :
         AbstractRecordingPass() {
+        override fun layout(): RenderPassLayout = layout
+        override fun activeSubpass(): RenderPassLayout.Subpass = layout.subpass(0)
+        override fun nextSubpass(): Unit = error("录制 pass 只包含一个子通道")
+        override fun setUniform(name: String, textureView: GpuTextureView?) = setUniform(name, textureView, null)
+
         lateinit var source: RenderPipeline
         private var cachedBinding: Binding? = null
         private var cachedIndexed = false
@@ -322,8 +336,6 @@ internal class Render2DExecutor(private val arena: GeometryArena, private val st
 
         override fun <T : Any> drawMultipleIndexed(
             draws: Collection<RenderPass.Draw<T>>,
-            defaultIndexBuffer: GpuBuffer?,
-            defaultIndexType: IndexType?,
             dynamicUniforms: Collection<String>,
             uniformArgument: T
         ): Unit = error("录制 pass 只接受基础 draw")

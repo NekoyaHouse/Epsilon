@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.hudeditor
 
+import net.minecraft.client.gui.GuiPipeline
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.renderers.TextRenderer
@@ -35,7 +36,6 @@ import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import java.awt.Color
 import kotlin.math.abs
@@ -113,7 +113,10 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
 
     private val luminView = LuminView()
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
+    override fun extractRenderState(graphics: GuiGraphicsExtractor) {
+        val mouseX = graphics.mouseX()
+        val mouseY = graphics.mouseY()
+        val a = graphics.partialTicks()
         try {
             luminView.render(
                 LuminRenderSystem.toEpsilonMouseX(mouseX),
@@ -155,7 +158,7 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
             graphics.setPreeditOverlay(overlay)
         }
         graphics.blit(
-            RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
+            GuiPipeline.TEXTURED_PREMULTIPLIED_ALPHA,
             target.getIdentifier(),
             0,
             0,
@@ -661,9 +664,9 @@ object HudEditorScreen : Screen(Component.literal("HudEditor")), ListSettingPopu
         preeditOverlay = null
     }
 
-    override fun extractBackground(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
+    override fun extractBackground(graphics: GuiGraphicsExtractor) {
         if (this.minecraft.level == null) {
-            this.extractPanorama(graphics, a)
+            extractPanorama(graphics)
         }
     }
 

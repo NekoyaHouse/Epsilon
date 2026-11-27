@@ -1,6 +1,6 @@
 plugins {
     id("multiloader-common")
-    alias(libs.plugins.neoforged.moddev)
+    alias(libs.plugins.fabric.loom)
     alias(libs.plugins.buildconfig)
     kotlin("kapt")
 }
@@ -19,15 +19,13 @@ tasks.named("generateBuildConfigClasses") {
         .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
-neoForge {
-    neoFormVersion = project.property("neo_form_version").toString()
-    val at = file("src/main/resources/META-INF/accesstransformer.cfg")
-    if (at.exists()) {
-        accessTransformers.from(at.absolutePath)
-    }
+loom {
+    // 预发布版通过 Loom 获取 Minecraft 与源码，共享代码仍只依赖 Minecraft API。
+    accessWidenerPath.set(file("src/main/resources/${project.property("mod_id")}.accesswidener"))
 }
 
 dependencies {
+    minecraft(libs.minecraft)
     implementation(libs.msdfgen)
     testImplementation(libs.kotlin.test)
     compileOnly(libs.mixin)

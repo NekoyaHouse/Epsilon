@@ -1,5 +1,6 @@
 package com.github.epsilon.kernel.render.effect
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
@@ -8,8 +9,8 @@ import com.github.epsilon.kernel.render.animation.Easing
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
@@ -31,7 +32,7 @@ object DeobfESP {
     private const val KILL_DURATION_MS = 1800L
     private const val CONTINUOUS_ROTATION_SPEED = 180.0f
 
-    private val PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+    private val PIPELINE = RenderPipeline.builder(LuminRenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_deobf_esp")
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))

@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
@@ -132,10 +133,12 @@ class RoundRectRenderer private constructor() : IRenderer {
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return
 
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-            { "Round Rect Draw" }, colorView, Optional.empty<Vector4fc>(),
+            { "Round Rect Draw" },
+            if (info.depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
+            colorView, Optional.empty<Vector4fc>(),
             info.depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.ROUND_RECT))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.ROUND_RECT, pass.activeSubpass()))
             if (scissorEnabled) ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("DynamicTransforms", info.dynamicUniforms)

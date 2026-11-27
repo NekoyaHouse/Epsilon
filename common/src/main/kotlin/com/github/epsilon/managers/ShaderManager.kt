@@ -1,5 +1,7 @@
 package com.github.epsilon.managers
 
+import net.minecraft.client.renderer.RenderPassLayouts
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -16,11 +18,11 @@ import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.pipeline.BlendFactor
 import com.mojang.renderpearl.api.pipeline.BlendFunction
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuSampler
 import net.minecraft.client.renderer.DynamicGpuDataStorage
-import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.renderer.pipeline.RenderPipelines
 import net.minecraft.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
@@ -95,7 +97,7 @@ object ShaderManager {
     private val chestOutlineRenderTypes = Util.memoize<Identifier, RenderType> { texture ->
         RenderType.create(
             "epsilon_chest_outline",
-            RenderSetup.builder(RenderPipelines.OUTLINE_NO_CULL)
+            RenderSetup.builder { stage -> if (stage == null) RenderPipelines.OUTLINE_NO_CULL else null }
                 .withTexture("Sampler0", texture)
                 .setOutline(RenderSetup.OutlineProperty.IS_OUTLINE)
                 .createRenderSetup()
@@ -146,7 +148,7 @@ object ShaderManager {
         }
 
         processOutlineTarget(outlineTarget, Shaders.entityShader)
-        outlineTarget.blitAndBlendToTexture(mainTarget.colorTextureView!!, mainTarget.depthTextureView!!)
+        outlineTarget.blitAndBlendToTexture(mainTarget.colorTextureView!!)
     }
 
     fun beginHandOutlineCapture(width: Int, height: Int) {
@@ -218,7 +220,7 @@ object ShaderManager {
             }
 
             processOutlineTarget(handTarget, Shaders.handsShader)
-            handTarget!!.blitAndBlendToTexture(mainTarget.colorTextureView!!, mainTarget.depthTextureView!!)
+            handTarget!!.blitAndBlendToTexture(mainTarget.colorTextureView!!)
         }
     }
 
@@ -259,7 +261,7 @@ object ShaderManager {
         }
 
         processOutlineTarget(chestTarget, Shaders.chestShader)
-        chestTarget!!.blitAndBlendToTexture(mainTarget.colorTextureView!!, mainTarget.depthTextureView!!)
+        chestTarget!!.blitAndBlendToTexture(mainTarget.colorTextureView!!)
 
         modelViewStack.popMatrix()
     }
@@ -267,6 +269,7 @@ object ShaderManager {
     private fun renderOutlinePass(name: String, target: RenderTarget, frame: FeatureRenderDispatcher.PreparedFrame) {
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             { name },
+            if (target.hasDepth()) RenderPassLayouts.COLOR_DEPTH else RenderPassLayouts.COLOR_ONLY,
             target.colorTextureView!!,
             Optional.empty(),
             target.depthTextureView,
@@ -291,10 +294,11 @@ object ShaderManager {
 
         encoder.createRenderPass(
             { name },
+            RenderPassLayouts.COLOR_ONLY,
             output.colorTextureView!!,
             Optional.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline, renderPass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(renderPass)
             if (shaderUniforms != null) {
                 renderPass.setUniform("ShaderParams", shaderUniforms.params!!)
@@ -341,10 +345,11 @@ object ShaderManager {
 
         encoder.createRenderPass(
             { "epsilon_shader_glow" },
+            RenderPassLayouts.COLOR_ONLY,
             output.colorTextureView!!,
             Optional.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(glowPipeline!!))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(glowPipeline!!, renderPass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("GlowConfig", glowUniforms!!)
             renderPass.setUniform("InputSampler", input.colorTextureView!!, sampler)
@@ -359,10 +364,11 @@ object ShaderManager {
 
         encoder.createRenderPass(
             { "epsilon_shader_glow_mask" },
+            RenderPassLayouts.COLOR_ONLY,
             output.colorTextureView!!,
             Optional.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(glowMaskPipeline!!))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(glowMaskPipeline!!, renderPass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform(
                 "InputSampler", input.colorTextureView!!,
@@ -458,18 +464,16 @@ object ShaderManager {
             gradientPipeline = pipeline("gradient", true)
             snowPipeline = pipeline("snow", true)
             fadePipeline = pipeline("fade", true)
-            glowPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            glowPipeline = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_glow"))
                 .withColorTargetState(ColorTargetState.DEFAULT)
-                .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_glow"))
                 .withBindGroupLayout(LuminBindGroupLayouts.GLOW_CONFIG)
                 .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                 .withCull(false)
                 .build()
-            glowMaskPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            glowMaskPipeline = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_glow_mask"))
-                .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_glow_mask"))
                 .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                 .withColorTargetState(
@@ -479,10 +483,9 @@ object ShaderManager {
                 )
                 .withCull(false)
                 .build()
-            copyPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            copyPipeline = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_copy"))
                 .withColorTargetState(ColorTargetState.DEFAULT)
-                .withVertexShader("core/screenquad")
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_copy"))
                 .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
                 .withCull(false)
@@ -535,10 +538,9 @@ object ShaderManager {
     }
 
     private fun pipeline(shader: String, useColors: Boolean): RenderPipeline {
-        val builder = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+        val builder = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_$shader"))
             .withColorTargetState(ColorTargetState.DEFAULT)
-            .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
             .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_$shader"))
             .withCull(false)
 

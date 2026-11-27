@@ -11,7 +11,8 @@ import com.github.epsilon.managers.AssetManager.ffmpegUrl
 import com.github.epsilon.modules.impl.ClientSetting
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
-import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.renderer.texture.ExternalTextureProvider
+import net.minecraft.client.renderer.texture.TextureResources
 import net.minecraft.resources.Identifier
 import java.io.IOException
 import java.nio.file.*
@@ -194,7 +195,7 @@ object AssetManager {
     private val tempDir: Path = rootDir.resolve(".tmp")
 
     private val declinedThisSession: MutableSet<Asset> = EnumSet.noneOf(Asset::class.java)
-    private val registeredTextures = LinkedHashMap<String, Identifier>()
+    private val registeredTextures = LinkedHashMap<String, Pair<Identifier, TextureResources>>()
 
     @Volatile
     private var activeJob: DownloadJob? = null
@@ -610,21 +611,27 @@ object AssetManager {
     private fun pngTexture(key: String, file: Path, resourcePath: String, label: String): Identifier? {
         val existing = registeredTextures[key]
         if (existing != null) {
-            return existing
+            return existing.first
         }
         if (!RenderSystem.isOnRenderThread()) {
             return null
         }
 
         try {
-            Files.newInputStream(file).use { input ->
-                val image = NativeImage.read(input)
-                val texture = DynamicTexture({ "Epsilon $label" }, image)
-                val identifier = Identifier.fromNamespaceAndPath("epsilon_assets", resourcePath)
-                mc.textureManager.register(identifier, texture)
-                registeredTextures[key] = identifier
-                return identifier
+            val identifier = Identifier.fromNamespaceAndPath("epsilon_assets", resourcePath)
+            val texture = Files.newInputStream(file).use { input ->
+                NativeImage.read(input).use { image ->
+                    TextureResources.from2dImage({ "Epsilon $label" }, image)
+                }
             }
+            try {
+                mc.textureManager.registerProvider(identifier, ExternalTextureProvider(texture))
+            } catch (e: RuntimeException) {
+                texture.close()
+                throw e
+            }
+            registeredTextures[key] = identifier to texture
+            return identifier
         } catch (e: IOException) {
             Constants.LOGGER.warn("[AssetManager] Failed to load {} texture from {}", label, file, e)
             return null
@@ -632,12 +639,16 @@ object AssetManager {
     }
 
     fun releaseRegisteredTextures() {
-        val registered = LinkedHashMap(registeredTextures)
-        registeredTextures.clear()
-        if (registered.isEmpty() || !RenderSystem.isOnRenderThread()) {
+        if (!RenderSystem.isOnRenderThread()) {
+            mc.execute(::releaseRegisteredTextures)
             return
         }
-        registered.values.forEach { identifier -> mc.textureManager.release(identifier) }
+        val registered = LinkedHashMap(registeredTextures)
+        registeredTextures.clear()
+        registered.values.forEach { (identifier, texture) ->
+            mc.textureManager.release(identifier)
+            texture.close()
+        }
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.github.epsilon.graphics.shaders
 
+import net.minecraft.client.renderer.RenderPassLayouts
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -13,11 +15,9 @@ import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
 import net.minecraft.client.renderer.DynamicGpuDataStorage
-import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
 import java.awt.Color
 import java.nio.ByteBuffer
@@ -25,7 +25,6 @@ import java.util.*
 
 object CustomSkyShader {
 
-    private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
     private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
         .putVec4()
         .putVec4()
@@ -70,10 +69,11 @@ object CustomSkyShader {
 
         encoder.createRenderPass(
             { "Epsilon Custom Sky" },
+            RenderPassLayouts.COLOR_ONLY,
             target.colorTextureView!!,
             Optional.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline, renderPass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("CustomSky", uniforms)
             if (mode == CustomSky.ShaderMode.Local) {
@@ -89,10 +89,9 @@ object CustomSkyShader {
 
     private fun getPipeline(mode: CustomSky.ShaderMode): RenderPipeline {
         return pipelines.computeIfAbsent(mode) { shaderMode ->
-            val builder: RenderPipeline.Builder = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            val builder: RenderPipeline.Builder = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipeline/custom_sky_" + shaderMode.name.lowercase()))
                 .withColorTargetState(ColorTargetState.DEFAULT)
-                .withVertexShader(VERTEX_SHADER)
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("custom_sky_" + shaderMode.name.lowercase()))
                 .withBindGroupLayout(LuminBindGroupLayouts.CUSTOM_SKY)
                 .withCull(false)

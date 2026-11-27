@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ParticleAtlas
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
@@ -11,9 +12,9 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
@@ -56,7 +57,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
 
     private val particles: MutableList<Particle> = ArrayList()
 
-    private val HIT_PARTICLE_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+    private val HIT_PARTICLE_PIPELINE: RenderPipeline = RenderPipeline.builder(LuminRenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_hit_particles")
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))

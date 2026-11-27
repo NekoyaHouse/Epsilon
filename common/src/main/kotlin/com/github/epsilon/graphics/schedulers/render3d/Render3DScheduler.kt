@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.schedulers.render3d
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
@@ -11,8 +12,7 @@ import com.github.epsilon.modules.impl.render.AntiAlias
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.pipeline.BlendFunction
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
-import net.minecraft.client.renderer.RenderPipelines
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -446,13 +446,13 @@ object Render3DScheduler : AlwaysListening {
 
     private data class LineCommand(val from: Vec3, val to: Vec3, val color: Int, val thickness: Float)
 
-    private val FILLED_BOX_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+    private val FILLED_BOX_PIPELINE: RenderPipeline = RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/filled_box"))
         .withDepthStencilState(Optional.empty())
         .withCull(false)
         .build()
 
-    private val LINES_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+    private val LINES_PIPELINE: RenderPipeline = RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/lines"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(Optional.empty())

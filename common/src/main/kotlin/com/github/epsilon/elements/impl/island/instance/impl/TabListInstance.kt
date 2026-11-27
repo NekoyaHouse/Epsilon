@@ -321,11 +321,11 @@ class TabListInstance(
 
     private fun flatten(component: Component, fallback: Color, renderer: TextRenderer): List<TextSegment> {
         val raw: MutableList<TextSegment> = ArrayList()
-        component.visit(
+        component.visitWithoutResult(
             { style: Style, text: String ->
                 val color = resolveStyleColor(style, fallback)
                 appendLegacySegments(raw, text, color, color, ROW_SCALE, renderer)
-                Optional.empty<Any>()
+                Optional.empty()
             },
             Style.EMPTY
         )
@@ -343,11 +343,11 @@ class TabListInstance(
 
         val lines: MutableList<MutableList<TextSegment>> = ArrayList()
         lines.add(ArrayList())
-        component.visit(
+        component.visitWithoutResult(
             { style: Style, text: String ->
                 val color = resolveStyleColor(style, fallback)
                 appendLegacyIntoLines(lines, text, color, color, scale, renderer)
-                Optional.empty<Any>()
+                Optional.empty()
             },
             Style.EMPTY
         )

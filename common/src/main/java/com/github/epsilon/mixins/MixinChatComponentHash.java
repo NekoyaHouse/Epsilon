@@ -12,7 +12,6 @@ import net.minecraft.client.multiplayer.chat.GuiMessageSource;
 import net.minecraft.client.multiplayer.chat.GuiMessageTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
-import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -74,8 +73,8 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
         this.epsilon$hashedMessages = new HashMap<>();
     }
 
-    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("HEAD"))
-    private void pushBetterChatScissor(GuiGraphicsExtractor graphics, Font font, int ticks, int mouseX, int mouseY, ChatComponent.DisplayMode displayMode, boolean changeCursorOnInsertions, CallbackInfo ci) {
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;ILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("HEAD"))
+    private void pushBetterChatScissor(GuiGraphicsExtractor graphics, Font font, int ticks, ChatComponent.DisplayMode displayMode, boolean changeCursorOnInsertions, CallbackInfo ci) {
         ScreenRectangle scissor = BetterChat.INSTANCE.getChatTextScissor();
         epsilon$chatScissorPushed = scissor != null;
         if (epsilon$chatScissorPushed) {
@@ -83,8 +82,8 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
         }
     }
 
-    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("RETURN"))
-    private void popBetterChatScissor(GuiGraphicsExtractor graphics, Font font, int ticks, int mouseX, int mouseY, ChatComponent.DisplayMode displayMode, boolean changeCursorOnInsertions, CallbackInfo ci) {
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;ILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("RETURN"))
+    private void popBetterChatScissor(GuiGraphicsExtractor graphics, Font font, int ticks, ChatComponent.DisplayMode displayMode, boolean changeCursorOnInsertions, CallbackInfo ci) {
         if (epsilon$chatScissorPushed) {
             graphics.disableScissor();
             epsilon$chatScissorPushed = false;
@@ -147,7 +146,7 @@ public abstract class MixinChatComponentHash implements ChatComponentAccessor {
     @Unique
     private float epsilon$calculateUnfocusedOpacity(GuiMessage.Line line, int currentTick) {
         double progress = 1.0 - (currentTick - line.addedTime()) / 200.0;
-        progress = Mth.clamp(progress * 10.0, 0.0, 1.0);
+        progress = Math.clamp(progress * 10.0, 0.0, 1.0);
         return (float) (progress * progress);
     }
 

@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
@@ -164,10 +165,12 @@ class ArcRenderer private constructor() : IRenderer {
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return
 
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-            { "Arc Draw" }, colorView, Optional.empty<Vector4fc>(),
+            { "Arc Draw" },
+            if (info.depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
+            colorView, Optional.empty<Vector4fc>(),
             info.depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.ARC))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.ARC, pass.activeSubpass()))
             if (scissorEnabled) ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("DynamicTransforms", info.dynamicUniforms)

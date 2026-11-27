@@ -1,5 +1,6 @@
 package com.github.epsilon.kernel.render
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
@@ -7,10 +8,10 @@ import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.impl.render.AntiAlias
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.model.Model
 import net.minecraft.client.model.`object`.crystal.EndCrystalModel
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.entity.EndCrystalRenderer
@@ -31,26 +32,26 @@ object WireframeEntityRenderer {
     private val submitNodeStorage = WireframeSubmitNodeStorage()
     private val vertexConsumer = WireframeVertexConsumer()
 
-    private val SIDES_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+    private val SIDES_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/wireframe_entity_sides"))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
 
-    private val LINES_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+    private val LINES_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/wireframe_entity_lines"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
 
-    private val SIDES_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+    private val SIDES_DEPTH_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/wireframe_entity_sides_depth"))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
         .withCull(false)
         .build()
 
-    private val LINES_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+    private val LINES_DEPTH_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/wireframe_entity_lines_depth"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))

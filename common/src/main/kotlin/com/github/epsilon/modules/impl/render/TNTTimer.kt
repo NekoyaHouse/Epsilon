@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
@@ -11,8 +12,8 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.item.PrimedTnt
 import org.joml.Matrix4f
@@ -38,7 +39,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
     private val pulseAmplitude by doubleSetting("Pulse Amplitude", 0.12, 0.0..0.5, 0.01)
     private val pulseSpeedHz by doubleSetting("Pulse Speed (Hz)", 2.0, 0.2..8.0, 0.1)
 
-    private val FILLED_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+    private val FILLED_PIPELINE: RenderPipeline = RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipelines/tnt_timer_filled"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
@@ -47,7 +48,7 @@ object TNTTimer : Module("TNT Timer", Category.RENDER) {
         .withCull(false)
         .build()
 
-    private val LINES_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+    private val LINES_PIPELINE: RenderPipeline = RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipelines/tnt_timer_lines"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))

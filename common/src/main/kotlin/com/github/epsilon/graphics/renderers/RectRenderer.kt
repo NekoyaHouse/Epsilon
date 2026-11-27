@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
@@ -136,10 +137,11 @@ class RectRenderer private constructor() : IRenderer {
 
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             { "Rect Draw" },
+            if (info.depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
             colorView, Optional.empty<Vector4fc>(),
             info.depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.RECTANGLE))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.RECTANGLE, pass.activeSubpass()))
             if (scissorEnabled) {
                 ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             }

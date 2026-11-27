@@ -24,7 +24,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult
-import java.util.*
+import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.atan2
 
@@ -143,17 +143,10 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             return
         }
 
-        if (explosion && packet is ClientboundExplodePacket && (!explosionOnlyBlock || isInBlock())) {
-            event.packet = ClientboundExplodePacket(
-                packet.center,
-                packet.radius,
-                packet.blockCount,
-                Optional.empty(),
-                packet.explosionParticle,
-                packet.explosionSound,
-                packet.blockParticles,
-                packet.playSound
-            )
+        if (explosion && packet is ClientboundAddEntityMotionPacket && packet.id == player.id &&
+            (!explosionOnlyBlock || isInBlock())
+        ) {
+            event.cancel()
         }
     }
 

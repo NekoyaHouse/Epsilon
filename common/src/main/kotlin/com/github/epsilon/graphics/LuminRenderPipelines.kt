@@ -1,13 +1,58 @@
 package com.github.epsilon.graphics
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
+import com.mojang.blaze3d.vertex.VertexFormat
 import com.mojang.renderpearl.api.pipeline.*
-import com.mojang.renderpearl.api.vertex.VertexFormat
+import net.minecraft.client.gui.GuiPipeline
 import net.minecraft.client.renderer.BindGroupLayouts
+import net.minecraft.client.renderer.pipeline.RenderPipelines
 import java.util.*
 
 object LuminRenderPipelines {
+
+    // Vanilla builds these pipelines from render variants in 26.4. Lumin supplies the state
+    // shared by its custom pipelines, whose topology and depth state can vary per effect.
+    val POST_PROCESSING_SNIPPET: RenderPipeline.Snippet = RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
+        .withVertexShader("core/screentriangle")
+        .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+        .buildSnippet()
+
+    val DEBUG_FILLED_SNIPPET: RenderPipeline.Snippet = RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
+        .withBindGroupLayout(BindGroupLayouts.PROJECTION)
+        .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+        .withVertexShader("core/position_color")
+        .withFragmentShader("core/position_color")
+        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+        .withPrimitiveTopology(PrimitiveTopology.QUADS)
+        .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+        .withCull(false)
+        .buildSnippet()
+
+    val LINES_SNIPPET: RenderPipeline.Snippet = RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
+        .withBindGroupLayout(BindGroupLayouts.PROJECTION)
+        .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+        .withBindGroupLayout(BindGroupLayouts.FOG)
+        .withVertexShader("core/rendertype_lines")
+        .withFragmentShader("core/rendertype_lines")
+        .withCull(false)
+        .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH)
+        .withPrimitiveTopology(PrimitiveTopology.LINES)
+        .withDepthStencilState(DepthStencilState.DEFAULT)
+        .buildSnippet()
+
+    val GUI_TEXTURED_SNIPPET: RenderPipeline.Snippet = RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
+        .withBindGroupLayout(BindGroupLayouts.PROJECTION)
+        .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+        .withBindGroupLayout(BindGroupLayouts.SAMPLER0)
+        .withVertexShader("core/position_tex_color")
+        .withFragmentShader("core/position_tex_color")
+        .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        .withPrimitiveTopology(PrimitiveTopology.QUADS)
+        .buildSnippet()
 
     private val NO_BLEND_DEPTH_SNIPPET: RenderPipeline.Snippet = RenderPipeline.builder()
         .withBindGroupLayout(BindGroupLayouts.GLOBALS)
@@ -16,8 +61,8 @@ object LuminRenderPipelines {
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .buildSnippet()
 
-    // 26.3 的 GUI 字体提交会直接使用 TextRenderable.guiPipeline()。
-    // 自定义 TTF shader 也读取 dynamictransforms/projection，因此这里必须和原版 GUI_TEXT 一样声明
+    // 26.4 的 GUI 字体通过 GuiPipeline 取得实际管线。
+    // 自定义 TTF shader 也读取 dynamictransforms/projection，因此这里必须和原版 GuiPipeline.TEXT 一样声明
     // GLOBALS、PROJECTION、DYNAMIC_TRANSFORMS、SAMPLER0 和 GUI 深度状态；否则 Vulkan 后端会按不完整的 bind group 渲染。
     private val GUI_TTF_FONT_SNIPPET: RenderPipeline.Snippet = RenderPipeline.builder()
         .withBindGroupLayout(BindGroupLayouts.GLOBALS)
@@ -41,6 +86,8 @@ object LuminRenderPipelines {
 
     val TTF_FONT: RenderPipeline =
         textPipeline("pipelines/ttf_font", "ttf_font", DefaultVertexFormat.POSITION_TEX_COLOR, null)
+
+    val GUI_TTF_FONT: GuiPipeline = GuiPipeline.of { TTF_FONT }
 
     val TTF_FONT_BLUR: RenderPipeline =
         textPipeline(

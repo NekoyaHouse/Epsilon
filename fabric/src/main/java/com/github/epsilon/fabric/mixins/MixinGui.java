@@ -12,10 +12,10 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(Gui.class)
 public class MixinGui {
 
-    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
-    private void extractDownloadJob(Screen screen, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, Operation<Void> original) {
-        original.call(screen, graphics, mouseX, mouseY, delta);
-        DownloadJobOverlay.INSTANCE.extractRenderState(screen, graphics, mouseX, mouseY);
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"))
+    private void extractDownloadJob(Screen screen, GuiGraphicsExtractor graphics, Operation<Void> original) {
+        original.call(screen, graphics);
+        DownloadJobOverlay.INSTANCE.extractRenderState(screen, graphics, graphics.mouseX(), graphics.mouseY());
     }
 
 }

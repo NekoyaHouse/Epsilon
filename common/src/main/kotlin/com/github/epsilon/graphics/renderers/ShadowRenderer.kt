@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
@@ -11,7 +12,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.RenderPass
-import com.mojang.renderpearl.backend.opengl.GlStateManager
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
@@ -224,17 +224,15 @@ class ShadowRenderer private constructor() : IRenderer {
     override fun draw() {
         if (!prepare(true)) return
 
-        try {
-            val info = sharedInfo ?: return
-            RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                { "Lumin Shadow Draw" }, info.colorView, Optional.empty<Vector4fc>(),
-                info.depthView, OptionalDouble.empty()
-            ).use { pass ->
-                RenderSystem.bindDefaultUniforms(pass)
-                drawPrepared(pass, info)
-            }
-        } finally {
-            GlStateManager._disableScissorTest()
+        val info = sharedInfo ?: return
+        RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+            { "Lumin Shadow Draw" },
+            if (info.depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
+            info.colorView, Optional.empty<Vector4fc>(),
+            info.depthView, OptionalDouble.empty()
+        ).use { pass ->
+            RenderSystem.bindDefaultUniforms(pass)
+            drawPrepared(pass, info)
         }
     }
 
@@ -274,7 +272,7 @@ class ShadowRenderer private constructor() : IRenderer {
             pass.setUniform("DynamicTransforms", info.dynamicUniforms)
             drawPrepared(pass, info)
         } finally {
-            GlStateManager._disableScissorTest()
+            pass.disableScissor()
         }
     }
 
@@ -293,12 +291,12 @@ class ShadowRenderer private constructor() : IRenderer {
         for (drawCall in draws) {
             if (drawCall.segmented) {
                 val shadow = preparedSegmentedShadows[drawCall.segmentedShadowIndex]
-                pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.SEGMENTED_SHADOW))
+                pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.SEGMENTED_SHADOW, pass.activeSubpass()))
                 pass.setVertexBuffer(0, segmentedBuffer.getGpuSlice())
                 pass.setUniform("SegmentedShadowUniforms", shadow.uniforms)
                 pass.drawIndexed(drawCall.indexCount, 1, drawCall.firstIndex, 0, 0)
             } else {
-                pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.SHADOW))
+                pass.setPipeline(RenderSystem.getCompiledPipeline(LuminRenderPipelines.SHADOW, pass.activeSubpass()))
                 pass.setVertexBuffer(0, buffer.getGpuSlice())
                 pass.drawIndexed(drawCall.indexCount, 1, drawCall.firstIndex, 0, 0)
             }

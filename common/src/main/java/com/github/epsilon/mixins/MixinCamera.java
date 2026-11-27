@@ -149,7 +149,7 @@ public class MixinCamera {
         return modifier;
     }
 
-    @Inject(method = "getFluidInCamera", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "calculateFogType", at = @At("HEAD"), cancellable = true)
     private void epsilon$hideLiquidOverlay(CallbackInfoReturnable<FogType> cir) {
         if (NoRender.INSTANCE.noLiquidOverlay()) cir.setReturnValue(FogType.NONE);
     }

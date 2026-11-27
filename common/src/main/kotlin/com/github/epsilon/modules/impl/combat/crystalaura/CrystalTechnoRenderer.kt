@@ -1,12 +1,13 @@
 package com.github.epsilon.modules.impl.combat.crystalaura
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import java.awt.Color
@@ -15,7 +16,7 @@ internal class CrystalTechnoRenderer {
     private val pulses = ArrayList<Int>()
     val hasPulses: Boolean get() = pulses.any { it >= 0 }
     private val texture = ResourceLocationUtils.getIdentifier("textures/crystalaura/techno.png")
-    private val pipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+    private val pipeline = RenderPipeline.builder(LuminRenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/crystal_techno"))
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))

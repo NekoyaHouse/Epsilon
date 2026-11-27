@@ -206,13 +206,16 @@ object TrollGuiScreen : Screen(Component.literal("TrollGui")), ListSettingPopupS
         configToggleBounds = UiRect(configX, y, TOGGLE_SIZE, TOGGLE_SIZE)
     }
 
-    override fun extractBackground(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
-        if (minecraft.level == null) extractPanorama(graphics, partialTick)
+    override fun extractBackground(graphics: GuiGraphicsExtractor) {
+        if (minecraft.level == null) extractPanorama(graphics)
     }
 
     private val luminView = LuminView()
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun extractRenderState(graphics: GuiGraphicsExtractor) {
+        val mouseX = graphics.mouseX()
+        val mouseY = graphics.mouseY()
+        val partialTick = graphics.partialTicks()
         luminView.render(
             LuminRenderSystem.toEpsilonMouseX(mouseX),
             LuminRenderSystem.toEpsilonMouseY(mouseY)

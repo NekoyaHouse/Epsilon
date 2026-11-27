@@ -1,5 +1,7 @@
 package com.github.epsilon.graphics.shaders
 
+import net.minecraft.client.renderer.RenderPassLayouts
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -7,10 +9,10 @@ import com.github.epsilon.graphics.LuminRenderSystem.LuminRenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.commands.RenderPassDescriptor
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTextureView
-import net.minecraft.client.renderer.RenderPipelines
 import java.util.*
 
 object OverlayAntiAlias {
@@ -33,9 +35,8 @@ object OverlayAntiAlias {
     }
 
     private fun createResolvePipeline(scale: Int): RenderPipeline {
-        return RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+        return RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_$scale"))
-            .withVertexShader("core/screenquad")
             .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa"))
             .withShaderDefine("SSAA_SCALE", scale)
             .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
@@ -47,7 +48,7 @@ object OverlayAntiAlias {
     private fun createDepthPipeline(scale: Int): RenderPipeline {
         return RenderPipeline.builder()
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/overlay_aa_depth_$scale"))
-            .withVertexShader("core/screenquad")
+            .withVertexShader("core/screentriangle")
             .withFragmentShader(ResourceLocationUtils.getIdentifier("overlay_aa_depth"))
             .withShaderDefine("SSAA_SCALE", scale)
             .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
@@ -96,10 +97,11 @@ object OverlayAntiAlias {
 
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             { "Epsilon Overlay AA Resolve" },
+            RenderPassLayouts.COLOR_ONLY,
             destination,
             Optional.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(if (scale == 4) RESOLVE_16 else RESOLVE_4))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(if (scale == 4) RESOLVE_16 else RESOLVE_4, pass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform(
                 "InputSampler",
@@ -112,16 +114,15 @@ object OverlayAntiAlias {
 
     private fun resampleDepth(sourceDepth: GpuTextureView, scale: Int) {
         val currentOverlay = overlay!!
-        val descriptor: RenderPassDescriptor = RenderPassDescriptor.builder { "Epsilon Overlay AA Depth" }
-            .withDepthAttachment(currentOverlay.depthView()!!)
-            .build()
-        RenderSystem.getDevice().createCommandEncoder().createRenderPass(descriptor).use { pass ->
+        val builder = RenderPassDescriptor.builder({ "Epsilon Overlay AA Depth" }, RenderPassLayouts.DEPTH_ONLY)
+        builder.withAttachment(currentOverlay.depthView()!!)
+        RenderSystem.getDevice().createCommandEncoder().createRenderPass(builder.build()).use { pass ->
             pass.setUniform(
                 "InputSampler",
                 sourceDepth,
                 RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
             )
-            pass.setPipeline(RenderSystem.getCompiledPipeline(if (scale == 4) DEPTH_16 else DEPTH_4))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(if (scale == 4) DEPTH_16 else DEPTH_4, pass.activeSubpass()))
             pass.draw(3, 1, 0, 0)
         }
     }

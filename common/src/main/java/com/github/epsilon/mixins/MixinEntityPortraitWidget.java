@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.GameAnimation;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.social.EntityPortraitWidget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -10,21 +11,12 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
-@Mixin(InventoryScreen.class)
-public class MixinInventoryScreen {
+@Mixin(EntityPortraitWidget.class)
+public class MixinEntityPortraitWidget {
 
-    @ModifyArgs(method = "extractEntityInInventoryFollowsMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;entity(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FLorg/joml/Vector3fc;Lorg/joml/Quaternionfc;Lorg/joml/Quaternionfc;IIII)V"), require = 0)
+    @ModifyArgs(method = "extractEntityInInventoryFollowsMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;entity(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FLorg/joml/Vector3fc;Lorg/joml/Quaternionfc;Lorg/joml/Quaternionfc;IIII)V"))
     private static void animateInventoryEntity(Args args) {
-        epsilon$scaleInventoryEntity(args);
-    }
-
-    @ModifyArgs(method = "renderEntityInInventoryFollowsAngle", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;entity(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FLorg/joml/Vector3fc;Lorg/joml/Quaternionfc;Lorg/joml/Quaternionfc;IIII)V"), require = 0)
-    private static void animateInventoryEntityNeoForge(Args args) {
-        epsilon$scaleInventoryEntity(args);
-    }
-
-    @Unique
-    private static void epsilon$scaleInventoryEntity(Args args) {
+        if (!(mc.gui.screen() instanceof InventoryScreen)) return;
         float animationScale = GameAnimation.INSTANCE.getCurrentInventoryScale();
         if (animationScale >= 1.0f) return;
 

@@ -1,12 +1,13 @@
 package com.github.epsilon.kernel.render.effect
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.jvm.runSafe
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import org.joml.Matrix4f
@@ -18,7 +19,7 @@ import kotlin.math.sin
 
 object CircleESP {
 
-    private val TRIANGLE_STRIP_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+    private val TRIANGLE_STRIP_NO_DEPTH_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/triangle_strip"))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
@@ -26,7 +27,7 @@ object CircleESP {
         .withPrimitiveTopology(PrimitiveTopology.TRIANGLE_STRIP)
         .build()
 
-    private val TRIANGLE_STRIP_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+    private val TRIANGLE_STRIP_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/triangle_strip"))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
         .withCull(false)
@@ -34,14 +35,14 @@ object CircleESP {
         .withPrimitiveTopology(PrimitiveTopology.TRIANGLE_STRIP)
         .build()
 
-    private val CIRCLE_LINES_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+    private val CIRCLE_LINES_NO_DEPTH_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/circle_lines"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
 
-    private val CIRCLE_LINES_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+    private val CIRCLE_LINES_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.LINES_SNIPPET)
         .withLocation(ResourceLocationUtils.getIdentifier("pipeline/circle_lines"))
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
+import net.minecraft.client.gui.GuiPipeline
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.Render2DEvent
 import com.github.epsilon.kernel.render.ColorUtils
@@ -10,7 +11,6 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
@@ -164,7 +164,7 @@ object Health : Module("Health", Category.RENDER) {
             }
 
             graphics.blitSprite(
-                RenderPipelines.GUI_TEXTURED,
+                GuiPipeline.TEXTURED,
                 HeartType.CONTAINER.getSprite(hardcore, false, blink),
                 x.toInt(), y.toInt(), HEART_SIZE, HEART_SIZE
             )
@@ -173,7 +173,7 @@ object Health : Module("Health", Category.RENDER) {
             if (blink && halves < displayHealth) {
                 val halfHeart = halves + 1 == displayHealth
                 graphics.blitSprite(
-                    RenderPipelines.GUI_TEXTURED,
+                    GuiPipeline.TEXTURED,
                     heartType.getSprite(hardcore, halfHeart, true),
                     x.toInt(), y.toInt(), HEART_SIZE, HEART_SIZE
                 )
@@ -182,7 +182,7 @@ object Health : Module("Health", Category.RENDER) {
             if (halves < currentHealth) {
                 val halfHeart = halves + 1 == currentHealth
                 graphics.blitSprite(
-                    RenderPipelines.GUI_TEXTURED,
+                    GuiPipeline.TEXTURED,
                     heartType.getSprite(hardcore, halfHeart, false),
                     x.toInt(), y.toInt(), HEART_SIZE, HEART_SIZE
                 )

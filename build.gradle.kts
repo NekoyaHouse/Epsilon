@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.fabric.loom) apply false
-    alias(libs.plugins.neoforged.moddev) apply false
 }
 
 val catalogJavaVersion = libs.versions.project.java.get()

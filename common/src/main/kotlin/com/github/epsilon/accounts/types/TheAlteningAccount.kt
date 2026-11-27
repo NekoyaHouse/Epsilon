@@ -11,6 +11,7 @@ import com.google.gson.annotations.SerializedName
 import com.mojang.authlib.Environment
 import com.mojang.authlib.services.MinecraftServicesDiscoveryService
 import com.mojang.util.UndashedUuid
+import net.minecraft.SharedConstants
 import net.minecraft.client.User
 import java.util.*
 
@@ -120,7 +121,7 @@ class TheAlteningAccount(token: String) : Account<TheAlteningAccount>(AccountTyp
         private val ENVIRONMENT = Environment("$API_HOST/discovery", "The Altening")
 
         private val SERVICE: MinecraftServicesDiscoveryService =
-            MinecraftServicesDiscoveryService.create(mc.proxy, true, ENVIRONMENT)
+            MinecraftServicesDiscoveryService.create(mc.proxy, true, ENVIRONMENT, SharedConstants.getCurrentVersion().id())
 
     }
 

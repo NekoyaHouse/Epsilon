@@ -7,9 +7,11 @@ import com.github.epsilon.modules.Module
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
 import com.mojang.renderpearl.api.pipeline.CompareOp
 import com.mojang.renderpearl.api.pipeline.DepthStencilState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.vertex.DefaultVertexFormat
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
 import net.minecraft.client.renderer.BindGroupLayouts
-import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.renderer.pipeline.RenderPipelines
 import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.resources.Identifier
@@ -36,19 +38,29 @@ object Chams : Module("Chams", Category.RENDER) {
 
     private var hasAlwaysOnTopSubmits = false
 
-    private val PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
+    private val PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
         .withLocation("pipeline/epsilon_entity_chams")
+        .withVertexShader("core/entity")
+        .withFragmentShader("core/entity")
+        .withVertexBinding(0, DefaultVertexFormat.ENTITY)
+        .withPrimitiveTopology(PrimitiveTopology.QUADS)
         .withColorTargetState(ColorTargetState.DEFAULT)
         .withShaderDefine("ALPHA_CUTOUT", 0.1f)
         .withShaderDefine("PER_FACE_LIGHTING")
+        .withBindGroupLayout(BindGroupLayouts.PROJECTION)
+        .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+        .withBindGroupLayout(BindGroupLayouts.FOG)
+        .withBindGroupLayout(BindGroupLayouts.LIGHTING)
+        .withBindGroupLayout(BindGroupLayouts.SAMPLER0)
         .withBindGroupLayout(BindGroupLayouts.SAMPLER1)
+        .withBindGroupLayout(BindGroupLayouts.SAMPLER2)
         .withCull(false)
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true))
         .build()
 
     private val TYPE: Function<Identifier, RenderType> = Util.memoize { texture ->
         RenderType.create(
-            "epsilon_entity_chams", RenderSetup.builder(PIPELINE)
+            "epsilon_entity_chams", RenderSetup.builder { stage -> if (stage == null) PIPELINE else null }
                 .withTexture("Sampler0", texture)
                 .useLightmap()
                 .useOverlay()
@@ -60,7 +72,7 @@ object Chams : Module("Chams", Category.RENDER) {
 
     fun getRenderType(texture: Identifier): RenderType = TYPE.apply(texture)
 
-    fun isChamsRenderType(renderType: RenderType): Boolean = renderType.pipeline() === PIPELINE
+    fun isChamsRenderType(renderType: RenderType): Boolean = renderType.nonOitPipeline === PIPELINE
 
     fun isSubmittingPlayer(): Boolean = submittingPlayer.get()
 

@@ -225,7 +225,7 @@ object MicrosoftLogin {
             if (name.isNotEmpty()) {
                 query.add(
                     DataFixerPair.of(
-                        urlDecode(name.toString()),
+                        urlDecode(name.toString()) ?: "",
                         urlDecode(value.toString()) ?: ""
                     )
                 )

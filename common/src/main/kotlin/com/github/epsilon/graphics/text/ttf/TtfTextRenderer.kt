@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.text.ttf
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.LuminTexture
@@ -14,7 +15,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.RenderPass
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import net.minecraft.client.renderer.DynamicGpuDataStorage
 import net.minecraft.util.ARGB
 import org.joml.Vector4fc
@@ -380,10 +381,11 @@ class TtfTextRenderer : ITextRenderer {
         val ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount)
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             { "Lumin TTF Draws" },
+            if (depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
             colorView, Optional.empty<Vector4fc>(),
             depthView, OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline()))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline(), pass.activeSubpass()))
             if (scissorEnabled) {
                 ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)
             }

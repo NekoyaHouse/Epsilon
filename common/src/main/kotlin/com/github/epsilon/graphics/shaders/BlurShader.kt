@@ -1,5 +1,7 @@
 package com.github.epsilon.graphics.shaders
 
+import net.minecraft.client.renderer.RenderPassLayouts
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -13,12 +15,12 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.CommandEncoder
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
 import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.minecraft.client.renderer.DynamicGpuDataStorage
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.AABB
 import org.joml.Matrix4f
@@ -56,7 +58,7 @@ object BlurShader {
 
     private fun ensureProgram(preserveAlpha: Boolean) {
         if (this.pipeline == null) {
-            this.pipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            this.pipeline = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipeline/blur"))
                 .withVertexShader(BLUR_PATH)
                 .withFragmentShader(BLUR_PATH)
@@ -67,7 +69,7 @@ object BlurShader {
                 .build()
         }
         if (preserveAlpha && alphaPreservingPipeline == null) {
-            alphaPreservingPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            alphaPreservingPipeline = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipeline/blur_preserve_alpha"))
                 .withVertexShader(BLUR_PATH)
                 .withFragmentShader(BLUR_PATH)
@@ -76,7 +78,6 @@ object BlurShader {
                 .withColorTargetState(
                     ColorTargetState(
                         Optional.empty(),
-                        GpuFormat.RGBA8_UNORM,
                         ColorTargetState.WRITE_COLOR
                     )
                 )
@@ -87,7 +88,7 @@ object BlurShader {
 
     private fun ensureBoxProgram() {
         if (this.boxPipeline == null) {
-            this.boxPipeline = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+            this.boxPipeline = RenderPipeline.builder(LuminRenderPipelines.DEBUG_FILLED_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipeline/blur_3d_box"))
                 .withVertexShader(BLUR_3D_BOX_PATH)
                 .withFragmentShader(BLUR_3D_BOX_PATH)
@@ -233,10 +234,11 @@ object BlurShader {
 
         encoder.createRenderPass(
             { "Lumin Blur" },
+            RenderPassLayouts.COLOR_ONLY,
             targetView,
             Optional.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(if (preserveAlpha) alphaPreservingPipeline!! else pipeline!!))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(if (preserveAlpha) alphaPreservingPipeline!! else pipeline!!, renderPass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("BlurUniforms", blurUniforms)
             renderPass.setUniform(

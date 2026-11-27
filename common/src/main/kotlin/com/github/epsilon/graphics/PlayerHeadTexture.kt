@@ -50,7 +50,7 @@ open class PlayerHeadTexture private constructor(uploaded: Uploaded) :
                 GpuFormat.RGBA8_UNORM,
                 image.width, image.height, 1, 1
             )
-            device.createCommandEncoder().writeToTexture(texture, image)
+            image.writeToGpuTexture(device.createCommandEncoder(), texture)
             val view: GpuTextureView = device.createTextureView(texture)
             val sampler: GpuSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
             image.close()

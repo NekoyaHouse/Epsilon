@@ -1,5 +1,7 @@
 package com.github.epsilon.graphics.shaders
 
+import net.minecraft.client.renderer.RenderPassLayouts
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -13,10 +15,9 @@ import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
 import net.minecraft.client.renderer.DynamicGpuDataStorage
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import java.nio.ByteBuffer
 import java.util.*
@@ -26,7 +27,6 @@ import java.util.*
  */
 object FXAAShader {
 
-    private val VERTEX_SHADER: Identifier = Identifier.withDefaultNamespace("core/screenquad")
     private val FRAGMENT_SHADER: Identifier = ResourceLocationUtils.getIdentifier("fxaa")
 
     private val UNIFORMS_SIZE: Int = Std140SizeCalculator()
@@ -38,10 +38,9 @@ object FXAAShader {
 
     private fun ensureProgram() {
         if (this.pipeline == null) {
-            this.pipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            this.pipeline = RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipeline/fxaa"))
                 .withColorTargetState(ColorTargetState.DEFAULT)
-                .withVertexShader(VERTEX_SHADER)
                 .withFragmentShader(FRAGMENT_SHADER)
                 .withBindGroupLayout(LuminBindGroupLayouts.FXAA_INFO)
                 .withBindGroupLayout(LuminBindGroupLayouts.INPUT_SAMPLER)
@@ -105,10 +104,11 @@ object FXAAShader {
 
         encoder.createRenderPass(
             { "Epsilon FXAA" },
+            RenderPassLayouts.COLOR_ONLY,
             framebuffer.colorTextureView!!,
             Optional.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(this.pipeline!!))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(this.pipeline!!, renderPass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setUniform("FxaaInfo", fxaaInfo)
             renderPass.setUniform(

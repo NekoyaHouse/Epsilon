@@ -8,10 +8,10 @@ import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
+import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(Hud.class)
 public class MixinHud {
 
-    @ModifyArg(method = "extractItemHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V", ordinal = 1), index = 2)
+    @ModifyArg(method = "extractItemHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lnet/minecraft/client/gui/GuiPipeline;Lnet/minecraft/resources/Identifier;IIII)V", ordinal = 1), index = 2)
     private int modifyHotbarSelectionX(int x) {
         return GameAnimation.INSTANCE.getHotbarSelectionX(x);
     }
@@ -35,7 +35,7 @@ public class MixinHud {
     }
 
     @Inject(method = "extractScoreboardSidebar", at = @At("HEAD"), cancellable = true)
-    private void onExtractScoreboardSidebar(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    private void onExtractScoreboardSidebar(CallbackInfo ci) {
         if (NoRender.INSTANCE.noScoreboard()) {
             ci.cancel();
             return;
@@ -61,9 +61,9 @@ public class MixinHud {
         original.call(graphics, font, text, x, y, color, dropShadow);
     }
 
-    @Inject(method = "extractTabList", at = @At("HEAD"), cancellable = true)
-    private void onExtractTabList(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (Island.INSTANCE.isEnabled()) ci.cancel();
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/PlayerTabOverlay;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"))
+    private void onExtractTabList(PlayerTabOverlay tabList, GuiGraphicsExtractor graphics, Operation<Void> original) {
+        if (!Island.INSTANCE.isEnabled()) original.call(tabList, graphics);
     }
 
     @Inject(method = "extractEffects", at = @At("HEAD"), cancellable = true)

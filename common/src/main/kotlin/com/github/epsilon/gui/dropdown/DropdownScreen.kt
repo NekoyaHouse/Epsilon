@@ -94,7 +94,10 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         }
     }
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun extractRenderState(graphics: GuiGraphicsExtractor) {
+        val mouseX = graphics.mouseX()
+        val mouseY = graphics.mouseY()
+        val partialTick = graphics.partialTicks()
         val window = minecraft.window
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("dropdown-gui", window.width, window.height)

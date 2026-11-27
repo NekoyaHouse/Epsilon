@@ -1,5 +1,7 @@
 package com.github.epsilon.graphics.shaders
 
+import net.minecraft.client.renderer.RenderPassLayouts
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminBindGroupLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
@@ -9,10 +11,9 @@ import com.mojang.blaze3d.buffers.Std140SizeCalculator
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.pipeline.ColorTargetState
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.minecraft.client.renderer.DynamicGpuDataStorage
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
 import java.nio.ByteBuffer
@@ -45,7 +46,7 @@ object GlslSandBox : AutoCloseable {
 
     private fun getOrCreatePipeline(fragmentShader: Identifier): RenderPipeline {
         return pipelines.computeIfAbsent(fragmentShader) { shader ->
-            RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            RenderPipeline.builder(LuminRenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(
                     Identifier.fromNamespaceAndPath(
                         shader.namespace,
@@ -53,7 +54,6 @@ object GlslSandBox : AutoCloseable {
                     )
                 )
                 .withColorTargetState(ColorTargetState.DEFAULT)
-                .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(shader)
                 .withBindGroupLayout(LuminBindGroupLayouts.GLSL_SANDBOX_INFO)
                 .withCull(false)
@@ -107,10 +107,11 @@ object GlslSandBox : AutoCloseable {
         val encoder = RenderSystem.getDevice().createCommandEncoder()
         encoder.createRenderPass(
             { "Lumin GLSL Sandbox" },
+            if (LuminRenderSystem.resolveDepthView() == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
             colorView, Optional.empty(),
             LuminRenderSystem.resolveDepthView(), OptionalDouble.empty()
         ).use { pass ->
-            pass.setPipeline(RenderSystem.getCompiledPipeline(getOrCreatePipeline(fragmentShader)))
+            pass.setPipeline(RenderSystem.getCompiledPipeline(getOrCreatePipeline(fragmentShader), pass.activeSubpass()))
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("GlslSandboxInfo", sandboxInfo)
             pass.draw(3, 1, 0, 0)

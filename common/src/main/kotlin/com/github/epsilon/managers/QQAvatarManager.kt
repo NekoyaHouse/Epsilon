@@ -4,7 +4,8 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.network.Http
 import com.mojang.blaze3d.platform.NativeImage
-import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.renderer.texture.ExternalTextureProvider
+import net.minecraft.client.renderer.texture.TextureResources
 import net.minecraft.resources.Identifier
 import java.awt.Graphics2D
 import java.awt.RenderingHints
@@ -31,7 +32,7 @@ object QQAvatarManager {
     private val QQ_DIRECTORY = Pattern.compile("([1-9][0-9]{5,11})")
     private const val TEXTURE_SIZE = 128
 
-    private var avatarTexture: DynamicTexture? = null
+    private var avatarTexture: TextureResources? = null
     private var state = State.UNINITIALIZED
     private var generation = 0L
 
@@ -62,6 +63,7 @@ object QQAvatarManager {
         state = State.UNINITIALIZED
         if (avatarTexture != null) {
             mc.textureManager.release(AVATAR_TEXTURE)
+            avatarTexture?.close()
             avatarTexture = null
         }
     }
@@ -84,22 +86,19 @@ object QQAvatarManager {
     private fun uploadAvatar(source: BufferedImage, requestGeneration: Long) {
         if (requestGeneration != generation || state != State.LOADING) return
 
-        var image: NativeImage? = null
-        var texture: DynamicTexture? = null
         try {
-            image = toNativeImage(source)
-            texture = DynamicTexture({ "Epsilon local QQ avatar" }, image)
-            image = null
-            mc.textureManager.register(AVATAR_TEXTURE, texture)
-            avatarTexture = texture
-            texture = null
+            toNativeImage(source).use { image ->
+                val texture = TextureResources.from2dImage({ "Epsilon local QQ avatar" }, image)
+                try {
+                    mc.textureManager.registerProvider(AVATAR_TEXTURE, ExternalTextureProvider(texture))
+                    avatarTexture = texture
+                } catch (e: RuntimeException) {
+                    texture.close()
+                    throw e
+                }
+            }
             state = State.READY
         } catch (_: RuntimeException) {
-            if (texture != null) {
-                texture.close()
-            } else if (image != null) {
-                image.close()
-            }
             fail(requestGeneration)
         }
     }

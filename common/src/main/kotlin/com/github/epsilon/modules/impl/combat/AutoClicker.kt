@@ -2,10 +2,12 @@ package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
+import com.github.epsilon.kernel.client.KeybindUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.math.MathUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import kotlin.math.pow
 
@@ -132,7 +134,8 @@ object AutoClicker : Module("Auto Clicker", Category.COMBAT) {
     }
 
     private fun isButtonPressed(clickButton: ClickButton): Boolean {
-        return if (clickButton == ClickButton.LEFT) mc.mouseHandler.isLeftPressed else mc.mouseHandler.isRightPressed
+        val button = if (clickButton == ClickButton.LEFT) InputConstants.MOUSE_BUTTON_LEFT else InputConstants.MOUSE_BUTTON_RIGHT
+        return KeybindUtils.isPressed(KeybindUtils.encodeMouseButton(button))
     }
 
     private fun performClick(clickButton: ClickButton) {

@@ -14,12 +14,12 @@ import java.util.List;
 @Mixin(MapRenderer.class)
 public abstract class MixinMapRenderer {
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
     private void epsilon$hideMap(CallbackInfo ci) {
         if (NoRender.INSTANCE.noMapContents()) ci.cancel();
     }
 
-    @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/MapRenderState;decorations:Ljava/util/List;"))
+    @ModifyExpressionValue(method = "submit", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/MapRenderState;decorations:Ljava/util/List;"))
     private List<MapRenderState.MapDecorationRenderState> epsilon$hideMapMarkers(List<MapRenderState.MapDecorationRenderState> original) {
         return NoRender.INSTANCE.noMapMarkers() ? List.of() : original;
     }

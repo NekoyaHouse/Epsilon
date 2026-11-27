@@ -1,10 +1,11 @@
 [versions]
 project-java = "25"
-project-minecraft = "26.3"
-project-minecraft-range = "[26.3]"
+# NeoForge 停用期间保留其 26.3 依赖，恢复构建时一并升级。
+project-minecraft = "26.4-pre-2"
+project-minecraft-range = "[26.4-pre-2]"
 project-neoform = "26.3-1"
-project-fabric-api = "0.160.7+26.3"
-project-fabric-loader = "0.19.5"
+project-fabric-api = "0.167.1+26.4"
+project-fabric-loader = "0.20.1"
 project-neoforge = "26.3.0.4-beta"
 project-neoforge-loader-range = "[4,)"
 fabric-loom = "1.15.5"

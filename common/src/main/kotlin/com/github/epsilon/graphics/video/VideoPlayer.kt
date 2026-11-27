@@ -3,9 +3,13 @@ package com.github.epsilon.graphics.video
 import com.github.epsilon.Constants
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.commands.CommandEncoder
 import com.mojang.renderpearl.api.textures.GpuTextureView
-import net.minecraft.client.renderer.texture.DynamicTexture
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
+import net.minecraft.client.renderer.texture.ExternalTextureProvider
+import net.minecraft.client.renderer.texture.TextureResources
 import net.minecraft.resources.Identifier
 import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_RGBA
 import org.bytedeco.javacv.FFmpegFrameGrabber
@@ -26,7 +30,7 @@ object VideoPlayer {
 
     private val GUI_TEXTURE_ID: Identifier = Identifier.fromNamespaceAndPath("video_mainmenu_epsilon", "video")
 
-    private var registeredTexture: DynamicTexture? = null
+    private var registeredTexture: TextureResources? = null
 
     private var grabber: FFmpegFrameGrabber? = null
 
@@ -213,7 +217,7 @@ object VideoPlayer {
         if (texture == null) return null
 
         if (registeredTexture !== texture) {
-            mc.textureManager.register(GUI_TEXTURE_ID, texture)
+            mc.textureManager.registerProvider(GUI_TEXTURE_ID, ExternalTextureProvider(texture))
             registeredTexture = texture
         }
 
@@ -339,32 +343,25 @@ object VideoPlayer {
 
     private class VideoGpuTexture {
 
-        private var tex: DynamicTexture? = null
+        private var tex: TextureResources? = null
         private var w = -1
         private var h = -1
 
         fun close() {
-            val tex = tex
-            if (tex != null) {
-                if (registeredTexture === tex) {
-                    releaseGuiTexture()
-                } else {
-                    try {
-                        tex.close()
-                    } catch (_: Throwable) {
-                    }
-                }
-                this.tex = null
+            if (registeredTexture === tex) {
+                releaseGuiTexture()
             }
+            tex?.close()
+            tex = null
             w = -1
             h = -1
         }
 
         fun view(): GpuTextureView? {
-            return tex?.textureView
+            return tex?.textureView()
         }
 
-        fun texture(): DynamicTexture? {
+        fun texture(): TextureResources? {
             return tex
         }
 
@@ -380,7 +377,12 @@ object VideoPlayer {
             if (tex != null && w == newW && h == newH) return
 
             close()
-            tex = DynamicTexture("video", newW, newH, true)
+            val device = RenderSystem.getDevice()
+            val texture = device.createTexture(
+                "video", GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
+                GpuFormat.RGBA8_UNORM, newW, newH, 1, 1,
+            )
+            tex = TextureResources(texture, device.createTextureView(texture), RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST))
             w = newW
             h = newH
         }
@@ -393,7 +395,7 @@ object VideoPlayer {
 
             val enc: CommandEncoder = RenderSystem.getDevice().createCommandEncoder()
             enc.writeToTexture(
-                tex!!.texture,
+                tex!!.texture(),
                 src,
                 0,
                 0,

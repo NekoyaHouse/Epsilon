@@ -4,10 +4,10 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils
 import com.github.epsilon.graphics.LuminRenderPipelines
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.ShaderType
 import com.mojang.renderpearl.api.pipeline.UniformType
-import com.mojang.renderpearl.api.vertex.VertexFormat
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.renderer.BindGroupLayouts
 import java.util.*
 

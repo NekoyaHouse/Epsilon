@@ -2,8 +2,8 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.GameAnimation;
 import com.github.epsilon.modules.impl.render.NoRender;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -29,23 +29,34 @@ public class MixinScreen {
         }
     }
 
-    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("HEAD"))
-    private void pushInventoryAnimation(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (!((Screen) (Object) this instanceof AbstractContainerScreen<?>)) return;
+    @WrapMethod(method = "extractRenderStateWithTooltipAndSubtitles")
+    private void extractWithInventoryAnimation(GuiGraphicsExtractor graphics, Operation<Void> original) {
+        if (!((Screen) (Object) this instanceof AbstractContainerScreen<?>)) {
+            original.call(graphics);
+            return;
+        }
 
         epsilon$inventoryScale = GameAnimation.INSTANCE.getInventoryScale();
-        if (epsilon$inventoryScale >= 1.0f) return;
+        if (epsilon$inventoryScale >= 1.0f) {
+            original.call(graphics);
+            return;
+        }
 
+        int mouseX = graphics.mouseX;
+        int mouseY = graphics.mouseY;
         epsilon$inventoryTransform = true;
         epsilon$scaleAroundCenter(graphics, epsilon$inventoryScale);
-    }
-
-    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("RETURN"))
-    private void popInventoryAnimation(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (!epsilon$inventoryTransform) return;
-
-        graphics.pose().popMatrix();
-        epsilon$inventoryTransform = false;
+        // Since 26.4 both screen rendering and deferred tooltips read the cursor from the extractor.
+        graphics.mouseX = epsilon$transformMouse(mouseX, graphics.guiWidth());
+        graphics.mouseY = epsilon$transformMouse(mouseY, graphics.guiHeight());
+        try {
+            original.call(graphics);
+        } finally {
+            graphics.mouseX = mouseX;
+            graphics.mouseY = mouseY;
+            graphics.pose().popMatrix();
+            epsilon$inventoryTransform = false;
+        }
     }
 
     @Inject(method = "extractTransparentBackground", at = @At("HEAD"), cancellable = true)
@@ -64,21 +75,6 @@ public class MixinScreen {
         if (epsilon$inventoryTransform) graphics.pose().popMatrix();
     }
 
-    @WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
-    private void transformBackgroundMouse(Screen screen, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, Operation<Void> original) {
-        original.call(screen, graphics, epsilon$mouseX(graphics, mouseX), epsilon$mouseY(graphics, mouseY), delta);
-    }
-
-    @WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
-    private void transformContentMouse(Screen screen, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, Operation<Void> original) {
-        original.call(screen, graphics, epsilon$mouseX(graphics, mouseX), epsilon$mouseY(graphics, mouseY), delta);
-    }
-
-    @WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;extractDeferredElements(IIF)V"))
-    private void transformDeferredMouse(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, Operation<Void> original) {
-        original.call(graphics, epsilon$mouseX(graphics, mouseX), epsilon$mouseY(graphics, mouseY), delta);
-    }
-
     @Unique
     private void epsilon$scaleAroundCenter(GuiGraphicsExtractor graphics, float scale) {
         graphics.pose().pushMatrix();
@@ -88,17 +84,9 @@ public class MixinScreen {
     }
 
     @Unique
-    private int epsilon$mouseX(GuiGraphicsExtractor graphics, int mouseX) {
-        if (!epsilon$inventoryTransform) return mouseX;
-        float centerX = graphics.guiWidth() / 2.0f;
-        return Math.round(centerX + (mouseX - centerX) / epsilon$inventoryScale);
-    }
-
-    @Unique
-    private int epsilon$mouseY(GuiGraphicsExtractor graphics, int mouseY) {
-        if (!epsilon$inventoryTransform) return mouseY;
-        float centerY = graphics.guiHeight() / 2.0f;
-        return Math.round(centerY + (mouseY - centerY) / epsilon$inventoryScale);
+    private int epsilon$transformMouse(int coordinate, int size) {
+        float center = size / 2.0f;
+        return Math.round(center + (coordinate - center) / epsilon$inventoryScale);
     }
 
 }

@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.rendertype.TextureTransform
 import net.minecraft.client.renderer.state.WindowRenderState
+import net.minecraft.client.renderer.texture.ExternalTextureProvider
 import net.minecraft.resources.Identifier
 import org.joml.*
 import java.util.*
@@ -357,7 +358,7 @@ object LuminRenderSystem {
 
             this.colorTexture = LuminTexture(colorTexture, colorView, sampler)
 
-            mc.textureManager.register(identifier, getColorTexture())
+            mc.textureManager.registerProvider(identifier, ExternalTextureProvider(getColorTexture()) { _, _ -> })
         }
 
         fun resize(newWidth: Int, newHeight: Int) {
@@ -417,6 +418,7 @@ object LuminRenderSystem {
             }
             closed = true
             mc.textureManager.release(identifier)
+            colorTexture?.close()
             depthView?.close()
             depthTexture?.close()
             colorTexture = null

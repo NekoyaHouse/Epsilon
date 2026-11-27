@@ -3,7 +3,6 @@
   "package": "com.github.epsilon.fabric.mixins",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "iris.MixinIrisHandRenderer",
     "sodium.MixinSodiumAbstractBlockRenderContext",
     "MixinGui",
     "MixinMinecraftFabric"

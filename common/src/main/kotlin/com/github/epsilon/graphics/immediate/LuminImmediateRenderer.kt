@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.immediate
 
+import net.minecraft.client.renderer.RenderPassLayouts
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.buffer.LuminRingBuffer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
@@ -10,12 +11,12 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.GpuTextureView
-import com.mojang.renderpearl.api.vertex.VertexFormat
-import com.mojang.renderpearl.api.vertex.VertexFormatElement
+import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.blaze3d.vertex.VertexFormatElement
 import net.minecraft.client.renderer.rendertype.TextureTransform
-import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.client.renderer.texture.TextureHandle
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
 import org.joml.Matrix4f
@@ -314,21 +315,22 @@ object LuminImmediateRenderer {
                 )
 
                 val texture = this.texture
-                val textureObject: AbstractTexture? =
+                val textureObject: TextureHandle? =
                     if (texture == null) null else mc.textureManager.getTexture(texture)
 
                 RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                     { "Lumin Immediate Draw" },
+                    if (depthView == null) RenderPassLayouts.COLOR_ONLY else RenderPassLayouts.COLOR_DEPTH,
                     colorView, Optional.empty<Vector4fc>(),
                     depthView, OptionalDouble.empty()
                 ).use { pass ->
-                    pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline!!))
+                    pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline!!, pass.activeSubpass()))
                     RenderSystem.bindDefaultUniforms(pass)
                     pass.setUniform("DynamicTransforms", dynamicUniforms)
                     pass.setVertexBuffer(0, ringBuffer.getGpuBuffer().slice())
 
                     if (textureObject != null) {
-                        pass.setUniform("Sampler0", textureObject.textureView, textureObject.sampler)
+                        pass.setUniform("Sampler0", textureObject.textureView(), textureObject.sampler())
                     }
 
                     val passConfigurer = this.passConfigurer

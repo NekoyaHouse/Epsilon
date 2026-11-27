@@ -1,5 +1,6 @@
 package com.github.epsilon.kernel.render
 
+import net.minecraft.client.gui.GuiPipeline
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.ProjectionType
@@ -8,7 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.logging.LogUtils
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.renderpearl.api.commands.RenderPass
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.textures.FilterMode
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.minecraft.SharedConstants
@@ -85,7 +86,7 @@ class EpsilonGuiRenderer(
         firstDrawIndexAfterBlur = Int.MAX_VALUE
         clearUnusedOversizedItemRenderers()
         if (SharedConstants.DEBUG_SHUFFLE_UI_RENDERING_ORDER) {
-            RenderPipeline.updateSortKeySeed()
+        GuiPipeline.updateSortKeySeed()
             TextureSetup.updateSortKeySeed()
         }
 
@@ -171,6 +172,7 @@ class EpsilonGuiRenderer(
             .createCommandEncoder()
             .createRenderPass(
                 label,
+                if (mainRenderTarget.hasDepth()) RenderPassLayouts.COLOR_DEPTH else RenderPassLayouts.COLOR_ONLY,
                 mainRenderTarget.colorTextureView!!,
                 Optional.empty(),
                 if (mainRenderTarget.hasDepth()) mainRenderTarget.depthTextureView else null,
@@ -187,7 +189,7 @@ class EpsilonGuiRenderer(
     }
 
     private fun addElementToMesh(elementState: GuiElementRenderState) {
-        val pipeline = elementState.pipeline()
+        val pipeline = elementState.pipeline().pipeline()
         val textureSetup = elementState.textureSetup()
         val scissorArea = elementState.scissorArea()
         if (previousDraw == null
@@ -269,7 +271,7 @@ class EpsilonGuiRenderer(
     private fun submitBlitFromItemAtlas(itemState: GuiItemRenderState, slotView: GuiItemAtlas.SlotView) {
         renderState.addBlitToCurrentLayer(
             BlitRenderState(
-                RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
+                GuiPipeline.TEXTURED_PREMULTIPLIED_ALPHA,
                 TextureSetup.singleTexture(
                     slotView.textureView(),
                     RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
@@ -343,7 +345,7 @@ class EpsilonGuiRenderer(
         val executeInfo = vertexBuffer.getExecuteInfo(draw.draw)
         if (executeInfo != null) {
             val pipeline = draw.pipeline
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline))
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline, renderPass.activeSubpass()))
             renderPass.setVertexBuffer(0, executeInfo.vertexBuffer().slice())
             val scissorArea = draw.scissorArea
             if (scissorArea != null) {

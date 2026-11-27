@@ -10,6 +10,7 @@ import com.mojang.authlib.minecraft.UserApiService
 import com.mojang.authlib.services.FriendsService
 import com.mojang.authlib.services.MinecraftServicesDiscoveryService
 import com.mojang.authlib.services.ServicesKeyType
+import net.minecraft.SharedConstants
 import net.minecraft.client.User
 import net.minecraft.client.gui.screens.social.PlayerSocialManager
 import net.minecraft.client.gui.screens.social.RemoteFriendListUpdateHandler
@@ -34,7 +35,7 @@ abstract class Account<T : Account<T>>(
     abstract fun fetchInfo(): Boolean
 
     open fun login(): Boolean {
-        applyLoginEnvironment(MinecraftServicesDiscoveryService.create(mc.proxy))
+        applyLoginEnvironment(MinecraftServicesDiscoveryService.create(mc.proxy, SharedConstants.getCurrentVersion().id()))
         return true
     }
 
@@ -66,7 +67,7 @@ abstract class Account<T : Account<T>>(
         fun setSession(session: User) {
             mc.user = session
 
-            val discoveryService = MinecraftServicesDiscoveryService.create(mc.proxy)
+            val discoveryService = MinecraftServicesDiscoveryService.create(mc.proxy, SharedConstants.getCurrentVersion().id())
 
             val apiService: UserApiService = discoveryService.createUserApiService(session.accessToken)
             val friendsService: FriendsService = discoveryService.createFriendsService(session.accessToken)

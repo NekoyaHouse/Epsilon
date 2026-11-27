@@ -1,14 +1,15 @@
 package com.github.epsilon.kernel.render.effect
 
+import com.github.epsilon.graphics.LuminRenderPipelines
 import com.github.epsilon.assets.resources.ParticleAtlas
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.ColorUtils
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import org.joml.Matrix4f
@@ -26,14 +27,14 @@ object FireflyESP {
 
     private val FIREFLY_SPRITE = ParticleAtlas.Sprite.FIREFLY
 
-    private val TARGET_ICON_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+    private val TARGET_ICON_NO_DEPTH_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_firefly_no_depth")
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
         .withCull(false)
         .build()
 
-    private val TARGET_ICON_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+    private val TARGET_ICON_PIPELINE = RenderPipeline.builder(LuminRenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_firefly")
         .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
         .withDepthStencilState(DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))

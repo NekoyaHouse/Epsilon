@@ -6,7 +6,7 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader
 import com.github.epsilon.graphics.text.ttf.TtfGlyphAtlas
 import com.mojang.blaze3d.font.GlyphInfo
 import com.mojang.blaze3d.vertex.VertexConsumer
-import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import net.minecraft.client.gui.GuiPipeline
 import com.mojang.renderpearl.api.textures.GpuSampler
 import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.minecraft.client.gui.Font
@@ -69,7 +69,7 @@ class EpsilonFontGlyph private constructor(
         return RENDER_TYPES.getOrPut(descriptor.atlas) {
             RenderType.create(
                 "epsilon_ttf_text",
-                RenderSetup.builder(LuminRenderPipelines.TTF_FONT)
+                RenderSetup.builder { stage -> if (stage == null) LuminRenderPipelines.TTF_FONT else null }
                     .withTexture("Sampler0", descriptor.atlas.getTextureId()) {
                         descriptor.atlas.getTexture().sampler
                     }
@@ -218,8 +218,8 @@ class EpsilonFontGlyph private constructor(
             return descriptor.atlas.getTexture().sampler
         }
 
-        override fun guiPipeline(): RenderPipeline {
-            return LuminRenderPipelines.TTF_FONT
+        override fun guiPipeline(): GuiPipeline {
+            return LuminRenderPipelines.GUI_TTF_FONT
         }
 
         override fun style(): Style {

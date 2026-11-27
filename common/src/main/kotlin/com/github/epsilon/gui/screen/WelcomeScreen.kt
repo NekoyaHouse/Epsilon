@@ -110,7 +110,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
         )
     }
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun extractRenderState(graphics: GuiGraphicsExtractor) {
         val font = this.font
         val fade = ((Util.getMillis() - openedAtMs) / 250.0f).coerceIn(0.0f, 1.0f)
         val alpha = (255.0f * fade).roundToInt()
@@ -145,7 +145,7 @@ object WelcomeScreen : Screen(Component.literal(TITLE)) {
             textY += BODY_BLOCK_GAP
         }
 
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick)
+        super.extractRenderState(graphics)
     }
 
     override fun shouldCloseOnEsc(): Boolean {
