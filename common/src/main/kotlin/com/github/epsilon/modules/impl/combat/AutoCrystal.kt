@@ -700,7 +700,8 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         if (!RotationManager.setRotationsExact(request, RotationPriority.High)) return false
         rotationRequest = request
         if (immediate) connection.send(
-            ServerboundMovePlayerPacket.Rot(
+            ServerboundMovePlayerPacket.PosRot(
+                player.x, player.y, player.z,
                 request.yaw,
                 request.pitch,
                 player.onGround(),
