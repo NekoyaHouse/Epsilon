@@ -2,6 +2,8 @@ package com.github.epsilon.elements.impl.island
 
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.island.instance.LandController
+import com.github.epsilon.elements.impl.island.instance.impl.MusicInstance
+import com.github.epsilon.kernel.media.SmtcService
 import com.github.epsilon.elements.impl.island.instance.impl.BalanceInstance
 import com.github.epsilon.elements.impl.island.instance.impl.ScaffoldBlocksInstance
 import com.github.epsilon.elements.impl.island.instance.impl.TabListInstance
@@ -61,20 +63,20 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     private var frameVisible: Boolean = false
 
     init {
-        onEnable {
-        }
-
         onDisable {
             LandController.removeInstances(TargetInstance::class.java)
             LandController.removeInstances(ScaffoldBlocksInstance::class.java)
             LandController.removeInstances(BalanceInstance::class.java)
             LandController.removeInstances(TabListInstance::class.java)
+            LandController.removeInstances(MusicInstance::class.java)
+            SmtcService.setEnabled(false)
             target = null
         }
     }
 
     override fun measure(deltaTracker: DeltaTracker) {
         frameVisible = false
+        updateMusicInstance()
         runSafe {
             landRenderer.setTextRenderer(textRendererSupplier.get())
             landRenderer.update()
@@ -83,7 +85,6 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             updateBlockInstance()
             updateBalanceInstance()
             updateTabListInstance()
-            updateMusicInstance()
 
             setBounds(landRenderer.width, landRenderer.height)
             landRenderer.syncPosition(x, y)
@@ -183,8 +184,19 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
     }
 
     private fun updateMusicInstance() {
-        if (music && ClientPlatform.isWindowsX64()) {
-
+        val enabled = music && ClientPlatform.isWindowsX64()
+        SmtcService.setEnabled(enabled)
+        if (!enabled || SmtcService.snapshot()?.playing() != true) {
+            LandController.removeInstances(MusicInstance::class.java)
+            return
+        }
+        if (LandController.getInstance(MusicInstance::class.java) == null) {
+            LandController.post(
+                MusicInstance(
+                    { SmtcService.snapshot() }, textRendererSupplier,
+                    CheckPattern { !music || SmtcService.snapshot()?.playing() != true }
+                )
+            )
         }
     }
 }

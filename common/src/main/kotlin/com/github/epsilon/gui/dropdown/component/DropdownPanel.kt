@@ -6,7 +6,7 @@ interface DropdownPanel {
 
     val id: String
 
-    fun startIntro()
+    fun startIntro(durationMs: Long? = null)
 
     fun beginRenderFrame(frameId: Int) {
     }

@@ -489,7 +489,12 @@
         "animated chat prefix": "Animated Chat Prefix",
         "chat prefix color start": "Chat Prefix Color Start",
         "chat prefix color end": "Chat Prefix Color End",
-        "chat prefix gradient speed": "Chat Prefix Gradient Speed"
+        "chat prefix gradient speed": "Chat Prefix Gradient Speed",
+        "dropdown entrance duration": "Entrance Duration (ms)",
+        "dropdown entrance stagger": "Panel Stagger (ms)",
+        "dropdown entrance distance": "Entrance Distance",
+        "dropdown entrance scale": "Initial Scale (%)",
+        "dropdown entrance bounce": "Bounce Strength (%)"
       },
       "gui setting": {
         "_value": "Gui Setting",

@@ -3,7 +3,6 @@ package com.github.epsilon.gui.dropdown
 import com.github.epsilon.assets.i18n.EpsilonTranslations
 import com.github.epsilon.graphics.LuminRenderSystem
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTransform
-import com.github.epsilon.graphics.shaders.BlurShader
 import com.github.epsilon.gui.dropdown.component.*
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField
 import com.github.epsilon.gui.lib.*
@@ -49,6 +48,13 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
     private val entranceAnim: LuminAnimatable = LuminAnimatable(0.0f, Easing.EASE_OUT_CUBIC, 360L)
     private var entranceMode = ClientSetting.DropdownEntranceAnimation.Focus
     private var entranceStarted = false
+    private var entranceDuration = 420
+    private var entranceStagger = 55
+    private var entranceDistance = 18
+    private var entranceScale = 94
+    private var entranceBounce = 12
+    private var entranceOrder: Map<String, Int> = emptyMap()
+    private var entranceSlots = 0
     private val searchField: DropdownTextField = DropdownTextField(64)
     private val reisaCompanion: ReisaDropdownCompanion = ReisaDropdownCompanion()
     private var visiblePanelIds: Set<String> by mutableStateOf(emptySet())
@@ -80,6 +86,16 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             entranceStarted = true
             currentSessionId++
             entranceMode = ClientSetting.dropdownEntranceAnimation
+            entranceDuration = ClientSetting.dropdownEntranceDuration.coerceIn(100, 1500)
+            entranceStagger = ClientSetting.dropdownEntranceStagger.coerceIn(0, 200)
+            entranceDistance = ClientSetting.dropdownEntranceDistance.coerceIn(0, 60)
+            entranceScale = ClientSetting.dropdownEntranceScale.coerceIn(80, 100)
+            entranceBounce = ClientSetting.dropdownEntranceBounce.coerceIn(0, 30)
+            entranceOrder = panels.filter { it.isVisible }.sortedBy { if (it.id == "main") 0 else 1 }.mapIndexed { index, panel -> panel.id to index }.toMap()
+            entranceSlots = entranceOrder.size
+            entranceAnim.easing = Easing.LINEAR
+            entranceAnim.duration = entranceDuration.toLong() +
+                if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus) entranceSlots * entranceStagger else 0
             val initial = if (entranceMode == ClientSetting.DropdownEntranceAnimation.None) 1.0f else 0.0f
             scrimAnim.snapTo(initial)
             scrimAnim.target = 1.0f
@@ -87,7 +103,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             entranceAnim.snapTo(initial)
             entranceAnim.target = 1.0f
             entranceAnim.reset()
-            for (panel in panels) panel.startIntro()
+            for (panel in panels) panel.startIntro(entranceDuration.toLong())
             if (isReisaCompanionEnabled()) {
                 reisaCompanion.open(currentSessionId)
             }
@@ -106,27 +122,22 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         prepareLuminDataSources()
         scene.beginFrame()
         try {
-
             val epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX)
             val epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY)
-            val entrance = entranceAnim.value
             drawGui(graphics, epsilonMouseX, epsilonMouseY, partialTick)
             scene.endFrame()
 
-            if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus && entrance > 0.0f && entrance < 1.0f) {
-                BlurShader.render(
-                    target, 0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(),
-                    0.0f, (1.0f - entrance) * 12.0f, preserveAlpha = true
-                )
-            }
             LuminRenderSystem.setActiveTarget(null)
             val overlay = preeditOverlay
             if (overlay != null) {
-                val transform = if (popupHost.activePopup == null) {
-                    entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f))
-                } else Render2DTransform.IDENTITY
                 val cursorX = IMEFocusHelper.activeCursorX
                 val cursorY = IMEFocusHelper.activeCursorY
+                val cursorPanel = panels.lastOrNull {
+                    it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(cursorX.toDouble(), cursorY.toDouble())
+                }
+                val transform = if (popupHost.activePopup == null) {
+                    entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f), cursorPanel?.id)
+                } else Render2DTransform.IDENTITY
                 overlay.updateInputPosition(
                     (transform.mapX(
                         cursorX,
@@ -168,7 +179,6 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         updateVisiblePanelIds()
         beginPanelFrames()
 
-        // 遮罩层：只有淡入进度变化时才重建。
         dropdownContent(screenBounds, "scrim") {
             val scrim = DropdownTheme.scrim()
             val scrimAlpha = scrimAnim.value
@@ -179,8 +189,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         }
 
         val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
-        val popupHovered = popupHost.activePopup != null &&
-                popupHost.activePopup!!.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())
+        val popupHovered = popupHost.activePopup != null && popupHost.activePopup!!.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())
         val backgroundMouseX = if (popupHovered) Int.MIN_VALUE else mouseX
         val backgroundMouseY = if (popupHovered) Int.MIN_VALUE else mouseY
         val inverseEntrance = inverseEntranceTransform()
@@ -192,8 +201,11 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             for (i in panels.indices.reversed()) {
                 val p = panels[i]
                 if (!p.isVisible) continue
-                val ph = p.panelHeight
-                if (contentMouseX >= p.x && contentMouseX <= p.x + p.width && contentMouseY >= p.y && contentMouseY <= p.y + ph) {
+                if (entranceOpacity(p.id) < 0.01f) continue
+                val inverse = entranceTransform(screenBounds, p.id).inverse()!!
+                val px = inverse.mapX(mouseX.toFloat(), mouseY.toFloat())
+                val py = inverse.mapY(mouseX.toFloat(), mouseY.toFloat())
+                if (UiRect(p.x, p.y, p.width, p.panelHeight).contains(px.toDouble(), py.toDouble())) {
                     topmostHovered = p
                     break
                 }
@@ -202,7 +214,6 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
 
         if (isReisaCompanionEnabled()) {
             reisaCompanion.open(currentSessionId)
-            // 立绘由本地时间驱动（眨眼、脉冲、漂浮），几乎每帧都不同，保持立即模式。
             dropdownContentImmediate(screenBounds) {
                 reisaCompanion.draw(
                     this,
@@ -220,7 +231,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
                 if (panel === topmostHovered) backgroundMouseX else -1,
                 if (panel === topmostHovered) backgroundMouseY else -1
             ) {
-                if (!panel.isVisible) return@render
+                if (!panel.isVisible || entranceOpacity(panel.id) < 0.01f) return@render
                 val intro =
                     if (entranceMode == ClientSetting.DropdownEntranceAnimation.Classic) panel.introValue else 1.0f
                 if (intro < 0.001f) return@render
@@ -233,7 +244,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
                 val revealedH = panelH * intro
 
                 val panelBounds = UiRect(panel.x, panel.y, panel.width, panelH)
-                // 背景层：位置、高度、展开/淡入进度、滚动平滑位置任一变化才重建。
+
                 dropdownContent(
                     panelBounds,
                     panel.id to "background"
@@ -254,12 +265,14 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
                 val revealedBottom = panel.y + revealedH
                 val actualClipH = minOf(clipH, revealedBottom - clipY)
                 if (actualClipH > 0.5f) {
-                    val hoverMouseX = if (panel === topmostHovered) backgroundMouseX else -1
-                    val hoverMouseY = if (panel === topmostHovered) backgroundMouseY else -1
+                    val inverse = entranceTransform(screenBounds, panel.id).inverse()!!
+                    val hoverMouseX = if (panel === topmostHovered)
+                        inverse.mapX(backgroundMouseX.toFloat(), backgroundMouseY.toFloat()).toInt() else -1
+                    val hoverMouseY = if (panel === topmostHovered)
+                        inverse.mapY(backgroundMouseX.toFloat(), backgroundMouseY.toFloat()).toInt() else -1
                     val requiresContentScissor = intro < 1.0f || panel.requiresContentScissor()
                     val contentBounds = UiRect(panel.x, clipY, panel.width, actualClipH)
 
-                    // 内部重复项再通过 LuminUIItem 逐项缓存。
                     dropdownContent(
                         contentBounds,
                         panel.id to "content"
@@ -311,67 +324,78 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         popupHost.flush()
     }
 
-    /**
-     * 以 recompose 模式在当前批次上追加一层内容。
-     *
-     * 每个绘制 pass 占用一个相对 layer；层内坐标相对 [bounds] 解析，稳定 [key] 维持身份。
-     */
     private fun dropdownContent(bounds: UiRect, key: Any, content: UiScope.() -> Unit) {
         dropdownLayer += 10
         dropdownBatch!!.LuminUIScene(
             bounds,
             dropdownLayer,
             key,
-            // Focus 入场时缩放的中心固定在屏幕上，移动面板后需要重新计算变换原点。
+            // 回弹围绕各面板自身中心，动画结束后才允许复用位置缓存。
             retainPosition = key is Pair<*, *> && key.second == "background" &&
                     (entranceMode != ClientSetting.DropdownEntranceAnimation.Focus || entranceAnim.isFinished),
         ) {
-            if (key == "scrim") content() else entranceContent(content)
+            if (key == "scrim") content() else entranceContent((key as? Pair<*, *>)?.first as? String, content)
         }
     }
 
-    /** 立即模式的绘制 pass（每帧重建）。 */
     private fun dropdownContentImmediate(bounds: UiRect, content: UiScope.() -> Unit) {
         dropdownLayer += 10
-        dropdownBatch!!.LuminUISceneImmediate(bounds, dropdownLayer) { entranceContent(content) }
+        dropdownBatch!!.LuminUISceneImmediate(bounds, dropdownLayer) { entranceContent(content = content) }
     }
 
-    private fun entranceTransform(bounds: UiRect): Render2DTransform {
-        val remaining = 1.0f - entranceAnim.value
+    private fun entranceProgress(panelId: String? = null): Float {
+        if (entranceMode != ClientSetting.DropdownEntranceAnimation.Focus) return entranceAnim.value
+        val slot = if (panelId == null) entranceSlots else entranceOrder[panelId] ?: return 1.0f
+        return DropdownEntranceMotion.progress(
+            entranceAnim.value * entranceAnim.duration, slot * entranceStagger, entranceDuration
+        )
+    }
+
+    private fun entranceOpacity(panelId: String? = null): Float =
+        if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus) DropdownEntranceMotion.opacity(entranceProgress(panelId)) else 1.0f
+
+    private fun entranceTransform(bounds: UiRect, panelId: String? = null): Render2DTransform {
+        val progress = entranceProgress(panelId)
         return when (entranceMode) {
             ClientSetting.DropdownEntranceAnimation.Focus -> {
-                val scale = 1.0f - remaining * 0.06f
+                val remaining = 1.0f - DropdownEntranceMotion.settle(progress, entranceBounce)
+                val scale = 1.0f - remaining * (1.0f - entranceScale / 100.0f)
+                val panel = panels.firstOrNull { it.id == panelId }
+                val centerX = panel?.let { it.x + it.width * 0.5f } ?: (LuminRenderSystem.getScaledWidth() * 0.5f)
+                val centerY = panel?.let { it.y + it.panelHeight * 0.5f } ?: (LuminRenderSystem.getScaledHeight() * 0.5f)
                 Render2DTransform(
                     m00 = scale, m11 = scale,
-                    x = (LuminRenderSystem.getScaledWidth() * 0.5f - bounds.x) * (1.0f - scale),
-                    y = (LuminRenderSystem.getScaledHeight() * 0.5f - bounds.y) * (1.0f - scale)
+                    x = (centerX - bounds.x) * (1.0f - scale),
+                    y = (centerY - bounds.y) * (1.0f - scale) + remaining * entranceDistance
                 )
             }
-
-            ClientSetting.DropdownEntranceAnimation.Slide -> Render2DTransform.translation(0.0f, remaining * 28.0f)
+            ClientSetting.DropdownEntranceAnimation.Slide -> {
+                val remaining = 1.0f - Easing.EASE_OUT_CUBIC.function.apply(progress)
+                Render2DTransform.translation(0.0f, remaining * 28.0f)
+            }
             else -> Render2DTransform.IDENTITY
         }
     }
 
-    private fun inverseEntranceTransform(): Render2DTransform =
-        entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f)).inverse()!!
+    private fun inverseEntranceTransform(): Render2DTransform = entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f)).inverse()!!
 
-    /** 将 Epsilon 屏幕坐标换算为入场变换前的布局坐标。 */
-    internal fun toContentCoordinates(event: MouseButtonEvent): Pair<Float, Float> {
-        val inverse = inverseEntranceTransform()
+    internal fun toContentCoordinates(event: MouseButtonEvent, panelId: String? = null): Pair<Float, Float> {
+        val inverse = entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f), panelId).inverse()!!
         val x = event.x().toFloat()
         val y = event.y().toFloat()
         return inverse.mapX(x, y) to inverse.mapY(x, y)
     }
 
-    private fun UiScope.entranceContent(content: UiScope.() -> Unit) {
+    private fun UiScope.entranceContent(panelId: String? = null, content: UiScope.() -> Unit) {
         if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus || entranceMode == ClientSetting.DropdownEntranceAnimation.Slide) {
-            Transform({ entranceTransform(origin) }) {
-                Paint({ Color(255, 255, 255, (entranceAnim.value * 255).toInt()) }, content)
+            Transform({ entranceTransform(origin, panelId) }) {
+                Paint({
+                    val alpha = if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus)
+                        entranceOpacity(panelId) else Easing.EASE_OUT_CUBIC.function.apply(entranceAnim.value)
+                    Color(255, 255, 255, (alpha.coerceIn(0.0f, 1.0f) * 255).toInt())
+                }, content)
             }
-        } else {
-            content()
-        }
+        } else content()
     }
 
     private fun UiScope.drawHints() {
@@ -410,12 +434,10 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         if (popupHost.activePopup != null) return popupHost.mouseClicked(mouse, isDoubleClick)
         val handled = scene.input.mouseClicked(mouse, isDoubleClick)
         if (handled) {
-            val (contentMouseX, contentMouseY) = toContentCoordinates(mouse)
             val panel = panels.lastOrNull {
-                it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(
-                    contentMouseX.toDouble(),
-                    contentMouseY.toDouble()
-                )
+                val (px, py) = toContentCoordinates(mouse, it.id)
+                it.isVisible && entranceOpacity(it.id) >= 0.01f &&
+                    UiRect(it.x, it.y, it.width, it.panelHeight).contains(px.toDouble(), py.toDouble())
             }
             if (panel != null) {
                 panels.remove(panel); panels.add(panel)
@@ -490,6 +512,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
     override fun removed() {
         super.removed()
         entranceStarted = false
+        entranceOrder = emptyMap()
         entranceAnim.close()
         scrimAnim.close()
         panelViews.values.forEach { it.close() }
@@ -673,7 +696,6 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         )
     }
 
-    /** 当前界面会话 id，供输入状态去重。 */
     fun getSessionId(): Int {
         return currentSessionId
     }

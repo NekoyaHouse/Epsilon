@@ -489,7 +489,12 @@
         "animated chat prefix": "聊天前缀动画",
         "chat prefix color start": "聊天前缀起始颜色",
         "chat prefix color end": "聊天前缀结束颜色",
-        "chat prefix gradient speed": "聊天前缀渐变速度"
+        "chat prefix gradient speed": "聊天前缀渐变速度",
+        "dropdown entrance duration": "入场时长（毫秒）",
+        "dropdown entrance stagger": "逐个入场间隔（毫秒）",
+        "dropdown entrance distance": "入场位移",
+        "dropdown entrance scale": "初始缩放（%）",
+        "dropdown entrance bounce": "回弹强度（%）"
       },
       "gui setting": {
         "_value": "界面设置",
