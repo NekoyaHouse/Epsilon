@@ -2,12 +2,7 @@ package com.github.epsilon.elements.impl.island
 
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.island.instance.LandController
-import com.github.epsilon.elements.impl.island.instance.impl.MusicInstance
-import com.github.epsilon.kernel.media.SmtcService
-import com.github.epsilon.elements.impl.island.instance.impl.BalanceInstance
-import com.github.epsilon.elements.impl.island.instance.impl.ScaffoldBlocksInstance
-import com.github.epsilon.elements.impl.island.instance.impl.TabListInstance
-import com.github.epsilon.elements.impl.island.instance.impl.TargetInstance
+import com.github.epsilon.elements.impl.island.instance.impl.*
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiScope
@@ -18,6 +13,7 @@ import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.kernel.jvm.runSafeOrFalse
+import com.github.epsilon.kernel.media.SmtcService
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.modules.impl.movement.Scaffold
 import com.github.epsilon.modules.impl.player.Timer

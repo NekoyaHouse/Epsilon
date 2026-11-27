@@ -40,7 +40,6 @@ import java.awt.Color
 import java.util.*
 
 object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPopupScreen {
-
     private val panels: MutableList<DropdownPanel> = ArrayList()
     private val scene: UiScene = UiScene(EpsilonUiTheme)
     private val popupHost: PanelPopupHost = PanelPopupHost { scene.input }
@@ -91,11 +90,12 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             entranceDistance = ClientSetting.dropdownEntranceDistance.coerceIn(0, 60)
             entranceScale = ClientSetting.dropdownEntranceScale.coerceIn(80, 100)
             entranceBounce = ClientSetting.dropdownEntranceBounce.coerceIn(0, 30)
-            entranceOrder = panels.filter { it.isVisible }.sortedBy { if (it.id == "main") 0 else 1 }.mapIndexed { index, panel -> panel.id to index }.toMap()
+            entranceOrder = panels.filter { it.isVisible }.sortedBy { if (it.id == "main") 0 else 1 }
+                .mapIndexed { index, panel -> panel.id to index }.toMap()
             entranceSlots = entranceOrder.size
             entranceAnim.easing = Easing.LINEAR
             entranceAnim.duration = entranceDuration.toLong() +
-                if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus) entranceSlots * entranceStagger else 0
+                    if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus) entranceSlots * entranceStagger else 0
             val initial = if (entranceMode == ClientSetting.DropdownEntranceAnimation.None) 1.0f else 0.0f
             scrimAnim.snapTo(initial)
             scrimAnim.target = 1.0f
@@ -133,7 +133,10 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
                 val cursorX = IMEFocusHelper.activeCursorX
                 val cursorY = IMEFocusHelper.activeCursorY
                 val cursorPanel = panels.lastOrNull {
-                    it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(cursorX.toDouble(), cursorY.toDouble())
+                    it.isVisible && UiRect(it.x, it.y, it.width, it.panelHeight).contains(
+                        cursorX.toDouble(),
+                        cursorY.toDouble()
+                    )
                 }
                 val transform = if (popupHost.activePopup == null) {
                     entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f), cursorPanel?.id)
@@ -189,7 +192,8 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         }
 
         val shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f
-        val popupHovered = popupHost.activePopup != null && popupHost.activePopup!!.getBounds().contains(mouseX.toDouble(), mouseY.toDouble())
+        val popupHovered = popupHost.activePopup != null && popupHost.activePopup!!.getBounds()
+            .contains(mouseX.toDouble(), mouseY.toDouble())
         val backgroundMouseX = if (popupHovered) Int.MIN_VALUE else mouseX
         val backgroundMouseY = if (popupHovered) Int.MIN_VALUE else mouseY
         val inverseEntrance = inverseEntranceTransform()
@@ -352,7 +356,9 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
     }
 
     private fun entranceOpacity(panelId: String? = null): Float =
-        if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus) DropdownEntranceMotion.opacity(entranceProgress(panelId)) else 1.0f
+        if (entranceMode == ClientSetting.DropdownEntranceAnimation.Focus) DropdownEntranceMotion.opacity(
+            entranceProgress(panelId)
+        ) else 1.0f
 
     private fun entranceTransform(bounds: UiRect, panelId: String? = null): Render2DTransform {
         val progress = entranceProgress(panelId)
@@ -362,22 +368,26 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
                 val scale = 1.0f - remaining * (1.0f - entranceScale / 100.0f)
                 val panel = panels.firstOrNull { it.id == panelId }
                 val centerX = panel?.let { it.x + it.width * 0.5f } ?: (LuminRenderSystem.getScaledWidth() * 0.5f)
-                val centerY = panel?.let { it.y + it.panelHeight * 0.5f } ?: (LuminRenderSystem.getScaledHeight() * 0.5f)
+                val centerY =
+                    panel?.let { it.y + it.panelHeight * 0.5f } ?: (LuminRenderSystem.getScaledHeight() * 0.5f)
                 Render2DTransform(
                     m00 = scale, m11 = scale,
                     x = (centerX - bounds.x) * (1.0f - scale),
                     y = (centerY - bounds.y) * (1.0f - scale) + remaining * entranceDistance
                 )
             }
+
             ClientSetting.DropdownEntranceAnimation.Slide -> {
                 val remaining = 1.0f - Easing.EASE_OUT_CUBIC.function.apply(progress)
                 Render2DTransform.translation(0.0f, remaining * 28.0f)
             }
+
             else -> Render2DTransform.IDENTITY
         }
     }
 
-    private fun inverseEntranceTransform(): Render2DTransform = entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f)).inverse()!!
+    private fun inverseEntranceTransform(): Render2DTransform =
+        entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f)).inverse()!!
 
     internal fun toContentCoordinates(event: MouseButtonEvent, panelId: String? = null): Pair<Float, Float> {
         val inverse = entranceTransform(UiRect(0.0f, 0.0f, 0.0f, 0.0f), panelId).inverse()!!
@@ -437,7 +447,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             val panel = panels.lastOrNull {
                 val (px, py) = toContentCoordinates(mouse, it.id)
                 it.isVisible && entranceOpacity(it.id) >= 0.01f &&
-                    UiRect(it.x, it.y, it.width, it.panelHeight).contains(px.toDouble(), py.toDouble())
+                        UiRect(it.x, it.y, it.width, it.panelHeight).contains(px.toDouble(), py.toDouble())
             }
             if (panel != null) {
                 panels.remove(panel); panels.add(panel)
@@ -699,5 +709,4 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
     fun getSessionId(): Int {
         return currentSessionId
     }
-
 }

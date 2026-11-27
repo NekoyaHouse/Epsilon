@@ -3,13 +3,15 @@ package com.github.epsilon.elements.impl.island.instance.impl
 import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
-import com.github.epsilon.graphics.renderers.TextRenderer
-import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.graphics.LuminTexture
+import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
-import com.github.epsilon.kernel.media.MediaArtwork
+import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.MinecraftWrapper.mc
+import com.github.epsilon.kernel.media.MediaArtwork
+import com.github.epsilon.kernel.media.MediaSessionSnapshot
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
@@ -17,8 +19,6 @@ import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
 import com.mojang.renderpearl.api.textures.GpuTextureView
 import java.awt.Color
-import com.github.epsilon.gui.lib.*
-import com.github.epsilon.kernel.media.MediaSessionSnapshot
 import java.util.function.Supplier
 import kotlin.math.sin
 
@@ -55,13 +55,23 @@ class MusicInstance(
         NativeImage(MediaArtwork.SIZE, MediaArtwork.SIZE, false).use { image ->
             image.pixelBytes.put(artwork.pixels()).rewind()
             val device = RenderSystem.getDevice()
-            val texture = device.createTexture("epsilon/island_music_cover", GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.RGBA8_UNORM, image.width, image.height, 1, 1)
+            val texture = device.createTexture(
+                "epsilon/island_music_cover",
+                GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
+                GpuFormat.RGBA8_UNORM,
+                image.width,
+                image.height,
+                1,
+                1
+            )
             var view: GpuTextureView? = null
             try {
                 device.createCommandEncoder().writeToTexture(texture, image)
                 view = device.createTextureView(texture)
-                coverTexture = LuminTexture(texture, view,
-                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR), true, false)
+                coverTexture = LuminTexture(
+                    texture, view,
+                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR), true, false
+                )
             } catch (_: Exception) {
                 view?.close()
                 texture.close()
@@ -105,56 +115,108 @@ class MusicInstance(
         val contentRight = width - PADDING
         val titleViewport = maxOf(1f, contentRight - WAVE_WIDTH - TITLE_STATUS_GAP - textX)
         val titleY = PADDING + 1f
+
         drawMarqueeTitle(scope, renderer, data.title(), textX, titleY, titleViewport)
         drawPlaybackWave(scope, contentRight - WAVE_WIDTH, titleY + 1f)
 
         val artistY = titleY + renderer.getHeight(TITLE_SCALE) + 3f
-        drawIconText(scope, renderer, IconChars.ARTIST, data.artist().ifBlank { sourceName(data.source()) },
-            textX, artistY, maxOf(1f, contentRight - textX), ARTIST_SCALE, IslandPalette.TEXT_SECONDARY)
+        drawIconText(
+            scope, renderer, IconChars.ARTIST, data.artist().ifBlank { sourceName(data.source()) },
+            textX, artistY, maxOf(1f, contentRight - textX), ARTIST_SCALE, IslandPalette.TEXT_SECONDARY, marquee = true
+        )
         val metaY = height - PADDING - renderer.getHeight(META_SCALE) - 1f
-        drawIconText(scope, renderer, IconChars.AUDIO_FILE, sourceName(data.source()),
-            textX, metaY, maxOf(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED)
+        drawIconText(
+            scope, renderer, IconChars.AUDIO_FILE, sourceName(data.source()),
+            textX, metaY, maxOf(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED
+        )
     }
 
     private fun drawCover(scope: UiScope) {
         val cover = coverTexture
         if (cover != null) {
-            scope.RoundedTexture(cover, PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0f, 0f, 1f, 1f, fade(Color.WHITE))
+            scope.RoundedTexture(
+                cover,
+                PADDING,
+                PADDING,
+                COVER_SIZE,
+                COVER_SIZE,
+                COVER_RADIUS,
+                0f,
+                0f,
+                1f,
+                1f,
+                fade(Color.WHITE)
+            )
         } else {
-            scope.RoundRectHorizontalGradient(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, fade(Color(75, 88, 116)), fade(Color(67, 125, 122)))
+            scope.RoundRectHorizontalGradient(
+                PADDING,
+                PADDING,
+                COVER_SIZE,
+                COVER_SIZE,
+                COVER_RADIUS,
+                fade(Color(75, 88, 116)),
+                fade(Color(67, 125, 122))
+            )
             val renderer = textRendererSupplier.get()
             val iconScale = 1.35f
             val iconWidth = renderer.getWidth(IconChars.ALBUM, iconScale, StaticFontLoader.ICONS)
             val iconHeight = renderer.getHeight(iconScale, StaticFontLoader.ICONS)
-            scope.Text(IconChars.ALBUM, PADDING + (COVER_SIZE - iconWidth) * 0.5f, PADDING + (COVER_SIZE - iconHeight) * 0.5f, iconScale, fade(IslandPalette.TEXT_PRIMARY), StaticFontLoader.ICONS)
+            scope.Text(
+                IconChars.ALBUM,
+                PADDING + (COVER_SIZE - iconWidth) * 0.5f,
+                PADDING + (COVER_SIZE - iconHeight) * 0.5f,
+                iconScale,
+                fade(IslandPalette.TEXT_PRIMARY),
+                StaticFontLoader.ICONS
+            )
         }
         scope.Outline(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0.75f, fade(IslandPalette.OUTLINE))
     }
 
     private fun drawMarqueeTitle(scope: UiScope, renderer: TextRenderer, title: String, x: Float, y: Float, viewportWidth: Float) {
-        val textWidth = renderer.getWidth(title, TITLE_SCALE)
+        drawMarqueeText(scope, renderer, title, x, y, viewportWidth, TITLE_SCALE, IslandPalette.TEXT_PRIMARY)
+    }
+
+    private fun drawMarqueeText(scope: UiScope, renderer: TextRenderer, text: String, x: Float, y: Float, viewportWidth: Float, scale: Float, color: Color) {
+        val textWidth = renderer.getWidth(text, scale)
         if (textWidth <= viewportWidth) {
-            scope.Text(title, x, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+            scope.Text(text, x, y, scale, fade(color))
             return
         }
         val seconds = (System.nanoTime() - marqueeStartedAtNs).coerceAtLeast(0L) / 1_000_000_000.0
         val cycle = textWidth + MARQUEE_GAP
         val offset = -((seconds - MARQUEE_START_HOLD_SECONDS).coerceAtLeast(0.0) * MARQUEE_SPEED % cycle).toFloat()
-        scope.Clip(x, y - 1f, viewportWidth, renderer.getHeight(TITLE_SCALE) + 2f) {
-            Text(title, x + offset, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
-            Text(title, x + offset + cycle, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+        scope.Clip(x, y - 1f, viewportWidth, renderer.getHeight(scale) + 2f) {
+            Text(text, x + offset, y, scale, fade(color))
+            Text(text, x + offset + cycle, y, scale, fade(color))
         }
     }
 
-    private fun iconRowWidth(icon: String, text: String, scale: Float, renderer: TextRenderer): Float = renderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS) + 3f + renderer.getWidth(text, scale)
+    private fun iconRowWidth(icon: String, text: String, scale: Float, renderer: TextRenderer): Float =
+        renderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS) + 3f + renderer.getWidth(text, scale)
 
-    private fun drawIconText(scope: UiScope, renderer: TextRenderer, icon: String, text: String, x: Float, y: Float, viewportWidth: Float, scale: Float, color: Color) {
+    private fun drawIconText(
+        scope: UiScope,
+        renderer: TextRenderer,
+        icon: String,
+        text: String,
+        x: Float,
+        y: Float,
+        viewportWidth: Float,
+        scale: Float,
+        color: Color, marquee: Boolean = false
+    ) {
         val iconWidth = renderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS)
         val iconY = y + (renderer.getHeight(scale) - renderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
         scope.Text(icon, x, iconY, ICON_SCALE, fade(IslandPalette.ACCENT), StaticFontLoader.ICONS)
         val textX = x + iconWidth + 3f
-        scope.Clip(textX, y - 1f, maxOf(1f, viewportWidth - iconWidth - 3f), renderer.getHeight(scale) + 2f) {
-            Text(text, textX, y, scale, fade(color))
+        val textViewport = maxOf(1f, viewportWidth - iconWidth - 3f)
+        if (marquee) {
+            drawMarqueeText(scope, renderer, text, textX, y, textViewport, scale, color)
+        } else {
+            scope.Clip(textX, y - 1f, textViewport, renderer.getHeight(scale) + 2f) {
+                Text(text, textX, y, scale, fade(color))
+            }
         }
     }
 
@@ -165,11 +227,19 @@ class MusicInstance(
         repeat(4) { index ->
             val amplitude = 0.28f + 0.72f * ((sin(time * 4.8 + index * 1.7) + 1.0) * 0.5).toFloat()
             val barHeight = maxOf(2f, 9f * amplitude)
-            scope.RoundRect(x + index * (barWidth + gap), y + (9f - barHeight) * 0.5f, barWidth, barHeight, 1f, fade(if (index < 2) IslandPalette.ACCENT else IslandPalette.ACCENT_ALT))
+            scope.RoundRect(
+                x + index * (barWidth + gap),
+                y + (9f - barHeight) * 0.5f,
+                barWidth,
+                barHeight,
+                1f,
+                fade(if (index < 2) IslandPalette.ACCENT else IslandPalette.ACCENT_ALT)
+            )
         }
     }
 
-    private fun sourceName(source: String): String = source.substringAfterLast('!').replace(Regex("\\.exe$", RegexOption.IGNORE_CASE), "")
+    private fun sourceName(source: String): String =
+        source.substringAfterLast('!').replace(Regex("\\.exe$", RegexOption.IGNORE_CASE), "")
 
     private companion object {
         const val PADDING = 7f
