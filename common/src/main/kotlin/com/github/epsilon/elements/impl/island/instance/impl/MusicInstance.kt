@@ -5,6 +5,9 @@ import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.LuminTexture
+import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.graphics.text.IconChars
+import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.kernel.media.MediaArtwork
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.mojang.blaze3d.platform.NativeImage
@@ -27,6 +30,8 @@ class MusicInstance(
     private var frame: MediaSessionSnapshot? = null
     private var uploadedArtwork: MediaArtwork? = null
     private var coverTexture: LuminTexture? = null
+    private var marqueeTrack = ""
+    private var marqueeStartedAtNs = System.nanoTime()
 
     private fun retire(texture: LuminTexture?) {
         if (texture == null) return
@@ -50,22 +55,16 @@ class MusicInstance(
         NativeImage(MediaArtwork.SIZE, MediaArtwork.SIZE, false).use { image ->
             image.pixelBytes.put(artwork.pixels()).rewind()
             val device = RenderSystem.getDevice()
-            val texture = device.createTexture(
-                "epsilon/island_music_cover", GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
-                GpuFormat.RGBA8_UNORM, image.width, image.height, 1, 1
-            )
+            val texture = device.createTexture("epsilon/island_music_cover", GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.RGBA8_UNORM, image.width, image.height, 1, 1)
             var view: GpuTextureView? = null
             try {
                 device.createCommandEncoder().writeToTexture(texture, image)
                 view = device.createTextureView(texture)
                 coverTexture = LuminTexture(texture, view,
                     RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR), true, false)
-            } catch (failure: Exception) {
+            } catch (_: Exception) {
                 view?.close()
                 texture.close()
-                // A cover upload failure should leave a placeholder, not suppress the whole HUD.
-                System.getLogger("Epsilon-Island-Music").log(System.Logger.Level.WARNING,
-                    "Unable to upload SMTC cover", failure)
             }
         }
     }
@@ -73,89 +72,120 @@ class MusicInstance(
     override fun update() {
         frame = snapshotSupplier.get()?.takeIf { it.playing() }
         val data = frame ?: return
+        val track = data.source() + "\u0000" + data.title() + "\u0000" + data.artist()
+        if (track != marqueeTrack) {
+            marqueeTrack = track
+            marqueeStartedAtNs = System.nanoTime()
+        }
+
         val renderer = textRendererSupplier.get()
-        targetRadius = 0.8f
-        targetWidth = (renderer.getWidth(data.title(), TITLE_SCALE) + 114f).coerceIn(252f, 328f)
-        targetHeight = 88f
+        val artist = data.artist().ifBlank { sourceName(data.source()) }
+        val desiredContent = maxOf(
+            renderer.getWidth(data.title(), TITLE_SCALE) + WAVE_WIDTH + TITLE_STATUS_GAP,
+            iconRowWidth(IconChars.ARTIST, artist, ARTIST_SCALE, renderer),
+            iconRowWidth(IconChars.AUDIO_FILE, sourceName(data.source()), META_SCALE, renderer)
+        )
+        val screenMaxWidth = maxOf(MIN_WIDTH, LuminRenderSystem.getScaledWidthInt() - 50f)
+        targetWidth = (PADDING * 2f + COVER_SIZE + COVER_GAP + desiredContent)
+            .coerceIn(MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
+        targetHeight = PADDING * 2f + COVER_SIZE
+        targetRadius = 0.42f
     }
 
-    override val maxContainerRadius: Float get() = 16f
+    override val maxContainerRadius: Float get() = 12f
 
     override fun draw(scope: UiScope, width: Float, height: Float) {
         val data = frame ?: return
-        if (width < 110f || height < 64f) return
+        if (width < 100f || height < 28f) return
         syncCover(data.artwork())
+        drawCover(scope)
+
         val renderer = textRendererSupplier.get()
-        val textX = 84f
-        val textWidth = (width - textX - 30f).coerceAtLeast(1f)
-        val secondary = data.artist().ifBlank { data.source() }
+        val textX = PADDING + COVER_SIZE + COVER_GAP
+        val contentRight = width - PADDING
+        val titleViewport = maxOf(1f, contentRight - WAVE_WIDTH - TITLE_STATUS_GAP - textX)
+        val titleY = PADDING + 1f
+        drawMarqueeTitle(scope, renderer, data.title(), textX, titleY, titleViewport)
+        drawPlaybackWave(scope, contentRight - WAVE_WIDTH, titleY + 1f)
+
+        val artistY = titleY + renderer.getHeight(TITLE_SCALE) + 3f
+        drawIconText(scope, renderer, IconChars.ARTIST, data.artist().ifBlank { sourceName(data.source()) },
+            textX, artistY, maxOf(1f, contentRight - textX), ARTIST_SCALE, IslandPalette.TEXT_SECONDARY)
+        val metaY = height - PADDING - renderer.getHeight(META_SCALE) - 1f
+        drawIconText(scope, renderer, IconChars.AUDIO_FILE, sourceName(data.source()),
+            textX, metaY, maxOf(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED)
+    }
+
+    private fun drawCover(scope: UiScope) {
         val cover = coverTexture
-        scope.RoundRect(9f, 9f, 66f, 66f, 12f, fade(IslandPalette.TRACK))
         if (cover != null) {
-            scope.RoundedTexture(cover, 9f, 9f, 66f, 66f, 12f, 0f, 0f, 1f, 1f, fade(Color.WHITE))
+            scope.RoundedTexture(cover, PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0f, 0f, 1f, 1f, fade(Color.WHITE))
         } else {
-            // Neutral record silhouette when the player does not publish artwork.
-            scope.Circle(42f, 42f, 23f, 1f, fade(IslandPalette.TRACK))
-            scope.Circle(42f, 42f, 9f, 1f, fade(IslandPalette.ACCENT_ALT))
-            scope.Circle(42f, 42f, 3f, 1f, fade(IslandPalette.TEXT_PRIMARY))
+            scope.RoundRectHorizontalGradient(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, fade(Color(75, 88, 116)), fade(Color(67, 125, 122)))
+            val renderer = textRendererSupplier.get()
+            val iconScale = 1.35f
+            val iconWidth = renderer.getWidth(IconChars.ALBUM, iconScale, StaticFontLoader.ICONS)
+            val iconHeight = renderer.getHeight(iconScale, StaticFontLoader.ICONS)
+            scope.Text(IconChars.ALBUM, PADDING + (COVER_SIZE - iconWidth) * 0.5f, PADDING + (COVER_SIZE - iconHeight) * 0.5f, iconScale, fade(IslandPalette.TEXT_PRIMARY), StaticFontLoader.ICONS)
         }
-        scope.Outline(9f, 9f, 66f, 66f, 12f, 0.7f, fade(IslandPalette.OUTLINE))
-        scope.Text(ellipsize(data.title(), textWidth, TITLE_SCALE, renderer), textX, 12f,
-            TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
-        scope.Text(ellipsize(secondary, width - textX - 12f, DETAIL_SCALE, renderer), textX, 30f,
-            DETAIL_SCALE, fade(IslandPalette.TEXT_SECONDARY))
-
-        // Compact status glyph aligned with the title, leaving the actual cover unobstructed.
-        if (data.playing()) {
-            val phase = (System.nanoTime() % 10_000_000_000L) / 1_000_000_000.0
-            repeat(3) { index ->
-                val barHeight = 4f + ((sin(phase * 5.0 + index * 1.8) + 1.0) * 4.0).toFloat()
-                scope.RoundRect(width - 24f + index * 4f, 20f - barHeight / 2f, 2f, barHeight, 1f,
-                    fade(IslandPalette.ACCENT))
-            }
-        } else {
-            repeat(2) { scope.RoundRect(width - 23f + it * 6f, 15f, 3f, 10f, 1f, fade(IslandPalette.TEXT_MUTED)) }
-        }
-        val barWidth = (width - textX - 12f).coerceAtLeast(1f)
-        val barY = 55f
-        scope.RoundRect(textX, barY, barWidth, 3f, 1.5f, fade(IslandPalette.TRACK))
-        val duration = data.durationMillis()
-        val position = data.positionAt(System.nanoTime())
-        if (duration > 0L) {
-            val progress = (position.toDouble() / duration).toFloat().coerceIn(0f, 1f)
-            if (progress > 0f) scope.RoundRectHorizontalGradient(textX, barY, barWidth * progress, 3f, 1.5f,
-                fade(IslandPalette.ACCENT), fade(IslandPalette.ACCENT_ALT))
-        }
-        val elapsed = if (duration > 0L) timestamp(position) else "--:--"
-        val total = if (duration > 0L) timestamp(duration) else "--:--"
-        scope.Text(elapsed, textX, barY + 9f, DETAIL_SCALE, fade(IslandPalette.TEXT_MUTED))
-        scope.Text(total, width - 12f - renderer.getWidth(total, DETAIL_SCALE), barY + 9f,
-            DETAIL_SCALE, fade(IslandPalette.TEXT_MUTED))
+        scope.Outline(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0.75f, fade(IslandPalette.OUTLINE))
     }
 
-    private fun ellipsize(text: String, width: Float, scale: Float, renderer: TextRenderer): String {
-        if (renderer.getWidth(text, scale) <= width) return text
-        val suffix = "…"
-        if (renderer.getWidth(suffix, scale) > width) return ""
-        // Code-point boundaries avoid splitting surrogate pairs in titles from native UTF-16 strings.
-        val points = text.codePoints().toArray()
-        var low = 0
-        var high = points.size
-        while (low < high) {
-            val mid = (low + high + 1) / 2
-            if (renderer.getWidth(String(points, 0, mid) + suffix, scale) <= width) low = mid
-            else high = mid - 1
+    private fun drawMarqueeTitle(scope: UiScope, renderer: TextRenderer, title: String, x: Float, y: Float, viewportWidth: Float) {
+        val textWidth = renderer.getWidth(title, TITLE_SCALE)
+        if (textWidth <= viewportWidth) {
+            scope.Text(title, x, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+            return
         }
-        return String(points, 0, low) + suffix
+        val seconds = (System.nanoTime() - marqueeStartedAtNs).coerceAtLeast(0L) / 1_000_000_000.0
+        val cycle = textWidth + MARQUEE_GAP
+        val offset = -((seconds - MARQUEE_START_HOLD_SECONDS).coerceAtLeast(0.0) * MARQUEE_SPEED % cycle).toFloat()
+        scope.Clip(x, y - 1f, viewportWidth, renderer.getHeight(TITLE_SCALE) + 2f) {
+            Text(title, x + offset, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+            Text(title, x + offset + cycle, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+        }
     }
 
-    private fun timestamp(millis: Long): String {
-        val seconds = millis.coerceAtLeast(0L) / 1000L
-        return "${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')}"
+    private fun iconRowWidth(icon: String, text: String, scale: Float, renderer: TextRenderer): Float = renderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS) + 3f + renderer.getWidth(text, scale)
+
+    private fun drawIconText(scope: UiScope, renderer: TextRenderer, icon: String, text: String, x: Float, y: Float, viewportWidth: Float, scale: Float, color: Color) {
+        val iconWidth = renderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS)
+        val iconY = y + (renderer.getHeight(scale) - renderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
+        scope.Text(icon, x, iconY, ICON_SCALE, fade(IslandPalette.ACCENT), StaticFontLoader.ICONS)
+        val textX = x + iconWidth + 3f
+        scope.Clip(textX, y - 1f, maxOf(1f, viewportWidth - iconWidth - 3f), renderer.getHeight(scale) + 2f) {
+            Text(text, textX, y, scale, fade(color))
+        }
     }
 
-    companion object {
-        private const val TITLE_SCALE = 1f
-        private const val DETAIL_SCALE = 0.8f
+    private fun drawPlaybackWave(scope: UiScope, x: Float, y: Float) {
+        val barWidth = 2f
+        val gap = (WAVE_WIDTH - 4f * barWidth) / 3f
+        val time = (System.nanoTime() % 60_000_000_000L) / 1_000_000_000.0
+        repeat(4) { index ->
+            val amplitude = 0.28f + 0.72f * ((sin(time * 4.8 + index * 1.7) + 1.0) * 0.5).toFloat()
+            val barHeight = maxOf(2f, 9f * amplitude)
+            scope.RoundRect(x + index * (barWidth + gap), y + (9f - barHeight) * 0.5f, barWidth, barHeight, 1f, fade(if (index < 2) IslandPalette.ACCENT else IslandPalette.ACCENT_ALT))
+        }
+    }
+
+    private fun sourceName(source: String): String = source.substringAfterLast('!').replace(Regex("\\.exe$", RegexOption.IGNORE_CASE), "")
+
+    private companion object {
+        const val PADDING = 7f
+        const val COVER_SIZE = 42f
+        const val COVER_RADIUS = 8f
+        const val COVER_GAP = 8f
+        const val MIN_WIDTH = 216f
+        const val MAX_WIDTH = 286f
+        const val TITLE_SCALE = 1f
+        const val ARTIST_SCALE = 0.78f
+        const val META_SCALE = 0.68f
+        const val ICON_SCALE = 0.78f
+        const val WAVE_WIDTH = 18f
+        const val TITLE_STATUS_GAP = 8f
+        const val MARQUEE_SPEED = 22f
+        const val MARQUEE_START_HOLD_SECONDS = 1.25
+        const val MARQUEE_GAP = 28f
     }
 }
