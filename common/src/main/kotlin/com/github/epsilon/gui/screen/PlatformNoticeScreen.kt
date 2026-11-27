@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.screen
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations
+import com.github.epsilon.gui.dropdown.DropdownScreen
 import com.github.epsilon.gui.lib.UiTree
 import com.github.epsilon.gui.screen.DialogCard.BODY_SCALE
 import com.github.epsilon.gui.screen.DialogCard.CARD_PADDING
@@ -60,7 +61,9 @@ object PlatformNoticeScreen : Screen(Component.empty()) {
 
     override fun isPauseScreen(): Boolean = false
 
-    override fun onClose() = DialogCard.close(this)
+    override fun onClose() = DialogCard.close(this, beforeReturn = { parent ->
+        if (parent === DropdownScreen) DropdownScreen.resumeWithoutEntrance()
+    })
 
     override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) =
         DialogCard.extractRenderState(this, graphics, mouseX, mouseY)

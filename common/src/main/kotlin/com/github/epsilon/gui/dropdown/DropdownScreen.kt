@@ -52,6 +52,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
     private var entranceDistance = 18
     private var entranceScale = 94
     private var entranceBounce = 12
+    private var panelEntranceRanks: Map<String, Int> = emptyMap()
     private var entranceOrder: Map<String, Int> = emptyMap()
     private var entranceSlots = 0
     private val searchField: DropdownTextField = DropdownTextField(64)
@@ -90,7 +91,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
             entranceDistance = ClientSetting.dropdownEntranceDistance.coerceIn(0, 60)
             entranceScale = ClientSetting.dropdownEntranceScale.coerceIn(80, 100)
             entranceBounce = ClientSetting.dropdownEntranceBounce.coerceIn(0, 30)
-            entranceOrder = panels.filter { it.isVisible }.sortedBy { if (it.id == "main") 0 else 1 }
+            entranceOrder = panels.filter { it.isVisible }.sortedBy { panelEntranceRanks[it.id] ?: Int.MAX_VALUE }
                 .mapIndexed { index, panel -> panel.id to index }.toMap()
             entranceSlots = entranceOrder.size
             entranceAnim.easing = Easing.LINEAR
@@ -519,6 +520,15 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         return true
     }
 
+    internal fun resumeWithoutEntrance() {
+        entranceStarted = true
+        entranceMode = ClientSetting.DropdownEntranceAnimation.None
+        entranceOrder = emptyMap()
+        entranceSlots = 0
+        entranceAnim.snapTo(1.0f)
+        scrimAnim.snapTo(1.0f)
+    }
+
     override fun removed() {
         super.removed()
         entranceStarted = false
@@ -564,6 +574,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         y += DropdownTheme.PANEL_HEADER_HEIGHT + DropdownTheme.PANEL_GAP
         panels.add(createSubPanel(ConfigDropdownPanel(index), x, y))
 
+        panelEntranceRanks = panels.mapIndexed { rank, panel -> panel.id to rank }.toMap()
         DropdownLayoutState.load(panels)
     }
 

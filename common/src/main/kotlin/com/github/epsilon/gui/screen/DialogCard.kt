@@ -98,11 +98,12 @@ internal object DialogCard {
 
     fun title(screen: Screen): Component? = current?.takeIf { it.screen === screen }?.content?.screenTitle
 
-    fun close(screen: Screen, action: Runnable? = null) {
+    fun close(screen: Screen, action: Runnable? = null, beforeReturn: ((Screen?) -> Unit)? = null) {
         val session = current?.takeIf { it.screen === screen } ?: return
         action?.run()
         if (current !== session) return
         session.content.onClose()
+        beforeReturn?.invoke(session.parent)
         switchTo(session.parent, session.previous)
     }
 
