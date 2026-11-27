@@ -13,11 +13,6 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.modules.impl.combat.*
-import com.github.epsilon.modules.impl.combat.crystalaura.CrystalAura
-import com.github.epsilon.modules.impl.combat.elytra_combat.ElytraCombat
-import com.github.epsilon.modules.impl.combat.trap.AutoTrap
-import com.github.epsilon.modules.impl.combat.trap.FeetTrap
-import com.github.epsilon.modules.impl.combat.trap.SelfTrap
 import com.github.epsilon.modules.impl.movement.*
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.modules.impl.player.*
@@ -54,30 +49,12 @@ object ModuleManager : AlwaysListening {
 
         // Combat
         addModule(AimBot)
-        addModule(AnchorAura)
-        addModule(AutoClicker)
-        addModule(AutoDtap)
         addModule(AutoMend)
-        addModule(AutoMine)
-        addModule(AutoThrow)
         addModule(AutoTotem)
-        addModule(AutoTrap)
-        addModule(AutoWeapon)
         addModule(Criticals)
-        addModule(CrystalAura)
-        addModule(FeetTrap)
-        addModule(SelfTrap)
-        addModule(ElytraCombat)
-        addModule(HoverTotem)
         addModule(KillAura)
-        addModule(SpearAura)
         addModule(KeyPearl)
-        addModule(MaceAura)
-        addModule(MultiAura)
-        addModule(PacketMine)
         addModule(SilentAim)
-        addModule(SpearKill)
-        addModule(TriggerBot)
 
         // Player
         addModule(AutoArmor)

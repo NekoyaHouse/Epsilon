@@ -578,7 +578,8 @@ class ColorWidget(setting: ColorSetting) : SettingWidget<ColorSetting>(setting) 
         private const val HUE_TO_CHANNEL_GAP = 6.0f
         private const val BOTTOM_PADDING = 2.0f
 
-        private val HUE_STOPS = arrayOf(Color.RED, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE, Color.MAGENTA, Color.RED)
+        private val HUE_STOPS =
+            arrayOf(Color.RED, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE, Color.MAGENTA, Color.RED)
         private val RGB_CHANNELS = arrayOf(Channel.RED, Channel.GREEN, Channel.BLUE)
         private val RGBA_CHANNELS = arrayOf(Channel.RED, Channel.GREEN, Channel.BLUE, Channel.ALPHA)
 

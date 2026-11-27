@@ -8,10 +8,6 @@ import net.minecraft.network.protocol.Packet
 
 open class PacketEvent {
 
-    class Apply(val packet: Packet<*>) : IEvent, IPosting by Companion {
-        companion object : EventBus()
-    }
-
     class Send(var packet: Packet<*>) : Cancellable(), IEvent, IPosting by Companion {
         companion object : EventBus()
     }
