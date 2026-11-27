@@ -105,112 +105,109 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         Silent
     }
 
-    private var place by boolSetting("Place", true).group(settingGroup("Place"))
-    private var placeDelay by intSetting("Place Delay", 0, 0..1000, 1, { place }).group(settingGroup("Place"))
-    private var placeRange by doubleSetting("Place Range", 4.0, 0.0..6.0, 0.1, { place }).group(settingGroup("Place"))
+    private val sgPlace = settingGroup("Place")
+    private val sgBreak = settingGroup("Break")
+    private val sgBasePlace = settingGroup("Base Place")
+    private val sgRotate = settingGroup("Rotate")
+    private val sgFacePlace = settingGroup("Face Place")
+    private val sgExtrapolation = settingGroup("Extrapolation")
+    private val sgRender = settingGroup("Render")
+    private val sgPause = settingGroup("Pause")
+    private val sgTargeting = settingGroup("Targeting")
+    private val sgMisc = settingGroup("Misc")
+
+    private var place by boolSetting("Place", true).group(sgPlace)
+    private var placeDelay by intSetting("Place Delay", 0, 0..1000, 1, { place }).group(sgPlace)
+    private var placeRange by doubleSetting("Place Range", 4.0, 0.0..6.0, 0.1, { place }).group(sgPlace)
     private var placeWallRange by doubleSetting(
         "Place Wall Range",
         4.0,
         0.0..6.0,
         0.1,
-        { place }).group(settingGroup("Place"))
+        { place }).group(sgPlace)
     private var minPlaceDamage by doubleSetting(
         "Place Min Damage",
         6.0,
         0.1..20.1,
         0.1,
-        { place }).group(settingGroup("Place"))
-    private var maxPlaceSelfDamage by doubleSetting("Place Max Self Damage", 20.0, 0.0..20.0, 0.1, { place }).group(
-        settingGroup("Place")
-    )
-    private var placeDamageRatio by doubleSetting("Place Damage Ratio", 1.8, 0.5..2.0, 0.1, { place }).group(
-        settingGroup("Place")
-    )
-    private var sequential by enumSetting("Place Sequential", Sequential.Strong, { place }).group(settingGroup("Place"))
-    private var requireUpperAir by boolSetting("Place 1.12", false, { place }).group(settingGroup("Place"))
-    private var strictDirection by boolSetting("Place Strict Direction", false, { place }).group(settingGroup("Place"))
-    private var lowerHitBox by boolSetting("Place Lower Hit Box", false, { place }).group(settingGroup("Place"))
-    private var mineIgnore by boolSetting("Place Mine Ignore", false, { place }).group(settingGroup("Place"))
-    private var alwaysIgnoreMining by boolSetting("Place Always", true, { place }).group(settingGroup("Place"))
+        { place }).group(sgPlace)
+    private var maxPlaceSelfDamage by doubleSetting("Place Max Self Damage", 20.0, 0.0..20.0, 0.1, { place }).group(sgPlace)
+    private var placeDamageRatio by doubleSetting("Place Damage Ratio", 1.8, 0.5..2.0, 0.1, { place }).group(sgPlace)
+    private var sequential by enumSetting("Place Sequential", Sequential.Strong, { place }).group(sgPlace)
+    private var requireUpperAir by boolSetting("Place 1.12", false, { place }).group(sgPlace)
+    private var strictDirection by boolSetting("Place Strict Direction", false, { place }).group(sgPlace)
+    private var lowerHitBox by boolSetting("Place Lower Hit Box", false, { place }).group(sgPlace)
+    private var mineIgnore by boolSetting("Place Mine Ignore", false, { place }).group(sgPlace)
+    private var alwaysIgnoreMining by boolSetting("Place Always", true, { place }).group(sgPlace)
     private var miningIgnoreThreshold by intSetting(
         "Place Threshold",
         1,
         1..5,
         1,
-        { place }).group(settingGroup("Place"))
-    private var breaking by boolSetting("Break", true).group(settingGroup("Break"))
-    private var breakDelay by intSetting("Break Delay", 0, 0..1000, 1, { breaking }).group(settingGroup("Break"))
-    private var attackFactor by intSetting("Break Factor", 1, 1..5, 1, { breaking }).group(settingGroup("Break"))
+        { place }).group(sgPlace)
+    private var breaking by boolSetting("Break", true).group(sgBreak)
+    private var breakDelay by intSetting("Break Delay", 0, 0..1000, 1, { breaking }).group(sgBreak)
+    private var attackFactor by intSetting("Break Factor", 1, 1..5, 1, { breaking }).group(sgBreak)
     private var breakRange by doubleSetting(
         "Break Range",
         4.0,
         0.0..6.0,
         0.1,
-        { breaking }).group(settingGroup("Break"))
+        { breaking }).group(sgBreak)
     private var breakWallRange by doubleSetting(
         "Break Wall Range",
         4.0,
         0.0..6.0,
         0.1,
-        { breaking }).group(settingGroup("Break"))
-    private var minBreakDamage by doubleSetting("Break Min Damage", 3.0, 0.1..20.0, 0.1, { breaking }).group(
-        settingGroup("Break")
-    )
-    private var maxBreakSelfDamage by doubleSetting("Break Max Self Damage", 12.0, 0.0..20.0, 0.1, { breaking }).group(
-        settingGroup("Break")
-    )
-    private var antiSuicide by boolSetting("Break Anti Suicide", false, { breaking }).group(settingGroup("Break"))
-    private var instant by enumSetting("Break Instant", Instant.Always, { breaking }).group(settingGroup("Break"))
-    private var await by boolSetting("Break Await", false, { breaking }).group(settingGroup("Break"))
+        { breaking }).group(sgBreak)
+    private var minBreakDamage by doubleSetting("Break Min Damage", 3.0, 0.1..20.0, 0.1, { breaking }).group(sgBreak)
+    private var maxBreakSelfDamage by doubleSetting("Break Max Self Damage", 12.0, 0.0..20.0, 0.1, { breaking }).group(sgBreak)
+    private var antiSuicide by boolSetting("Break Anti Suicide", false, { breaking }).group(sgBreak)
+    private var instant by enumSetting("Break Instant", Instant.Always, { breaking }).group(sgBreak)
+    private var await by boolSetting("Break Await", false, { breaking }).group(sgBreak)
     private var ticksExisted by intSetting(
         "Break Ticks Existed",
         1,
         0..40,
         1,
-        { breaking }).group(settingGroup("Break"))
-    private var weakness by enumSetting("Break Weakness", Weakness.Silent, { breaking }).group(settingGroup("Break"))
-    private var basePlace by boolSetting("Base Place", true).group(settingGroup("Base Place"))
+        { breaking }).group(sgBreak)
+    private var weakness by enumSetting("Break Weakness", Weakness.Silent, { breaking }).group(sgBreak)
+    private var basePlace by boolSetting("Base Place", true).group(sgBasePlace)
     private var basePlaceDelay by intSetting(
         "Base Place Delay",
         800,
         0..1000,
         1,
-        { basePlace }).group(settingGroup("Base Place"))
-    private var basePlaceAir by boolSetting("Base Place Air", false, { basePlace }).group(settingGroup("Base Place"))
-    private var rotate by boolSetting("Rotate", true).group(settingGroup("Rotate"))
-    private var rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(settingGroup("Rotate"))
-    private var rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(settingGroup("Rotate"))
-    private var facePlace by boolSetting("Face Place", true).group(settingGroup("Face Place"))
-    private var facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(
-        settingGroup("Face Place")
-    )
-    private var facePlaceArmorThreshold by intSetting("Face Place Armor Threshold", 26, 0..100, 1, { facePlace }).group(
-        settingGroup("Face Place")
-    )
-    private var facePlaceShieldBreaker by boolSetting("Face Place Shield Breaker", false, { facePlace }).group(
-        settingGroup("Face Place")
-    )
+        { basePlace }).group(sgBasePlace)
+    private var basePlaceAir by boolSetting("Base Place Air", false, { basePlace }).group(sgBasePlace)
+    private var rotate by boolSetting("Rotate", true).group(sgRotate)
+    private var rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(sgRotate)
+    private var rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(sgRotate)
+    private var facePlace by boolSetting("Face Place", true).group(sgFacePlace)
+    private var facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(sgFacePlace)
+    private var facePlaceArmorThreshold by intSetting("Face Place Armor Threshold", 26, 0..100, 1, { facePlace }).group(sgFacePlace)
+    private var facePlaceShieldBreaker by boolSetting("Face Place Shield Breaker", false, { facePlace }).group(sgFacePlace)
     private var damageSync by boolSetting(
         "Face Place Damage Sync",
         true,
-        { facePlace }).group(settingGroup("Face Place"))
-    private var prediction by boolSetting("Extrapolation", true).group(settingGroup("Extrapolation"))
+        { facePlace }).group(sgFacePlace)
+    private var prediction by boolSetting("Extrapolation", true).group(sgExtrapolation)
     private var predictionTicks by intSetting(
         "Extrapolation Ticks",
         3,
         1..8,
         1,
-        { prediction }).group(settingGroup("Extrapolation"))
+        { prediction }).group(sgExtrapolation)
     private var drawPrediction by boolSetting(
         "Extrapolation Draw",
         false,
-        { prediction }).group(settingGroup("Extrapolation"))
-    private var render by boolSetting("Render", true).group(settingGroup("Render"))
+        { prediction }).group(sgExtrapolation)
+    private var render by boolSetting("Render", true).group(sgRender)
     private var fill by colorSetting(
         "Render Fill",
         Color(148, 161, 244, 32),
         true,
-        { render }).group(settingGroup("Render"))
+        { render }).group(sgRender)
     private var outline by colorSetting("Render Outline", Color(148, 161, 244, 255), true, { render }).group(
         settingGroup(
             "Render"
@@ -221,56 +218,56 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         1.0,
         0.1..3.0,
         0.1,
-        { render }).group(settingGroup("Render"))
-    private var renderDamage by boolSetting("Render Damage", false, { render }).group(settingGroup("Render"))
-    private var fade by boolSetting("Render Fade", true, { render }).group(settingGroup("Render"))
-    private var multiFade by boolSetting("Render Multi Fade", false, { render }).group(settingGroup("Render"))
+        { render }).group(sgRender)
+    private var renderDamage by boolSetting("Render Damage", false, { render }).group(sgRender)
+    private var fade by boolSetting("Render Fade", true, { render }).group(sgRender)
+    private var multiFade by boolSetting("Render Multi Fade", false, { render }).group(sgRender)
     private var fadeTime by doubleSetting(
         "Render Fade Time",
         0.5,
         0.1..1.5,
         0.1,
-        { render }).group(settingGroup("Render"))
-    private var pauseMining by boolSetting("Pause Mining", false).group(settingGroup("Pause"))
-    private var pauseEating by boolSetting("Pause Eating", true).group(settingGroup("Pause"))
-    private var pauseMending by boolSetting("Pause Mending", false).group(settingGroup("Pause"))
+        { render }).group(sgRender)
+    private var pauseMining by boolSetting("Pause Mining", false).group(sgPause)
+    private var pauseEating by boolSetting("Pause Eating", true).group(sgPause)
+    private var pauseMending by boolSetting("Pause Mending", false).group(sgPause)
     private var targetRange by doubleSetting(
         "Targeting Target Range",
         16.0,
         1.0..16.0,
         0.1
-    ).group(settingGroup("Targeting"))
+    ).group(sgTargeting)
     private var crystalRange by doubleSetting(
         "Targeting Crystal Range",
         6.0,
         0.1..12.0,
         0.1
-    ).group(settingGroup("Targeting"))
-    private var antiFriendKill by boolSetting("Targeting Anti Friend Kill", false).group(settingGroup("Targeting"))
-    private var antiQuiver by boolSetting("Targeting Anti Quiver", true).group(settingGroup("Targeting"))
-    private var ignoreNakeds by boolSetting("Targeting Ignore Nakeds", false).group(settingGroup("Targeting"))
-    private var assumeBestArmor by boolSetting("Targeting Assume Best Armor", true).group(settingGroup("Targeting"))
-    private var bosses by boolSetting("Targeting Bosses", false).group(settingGroup("Targeting"))
-    private var forceSuicide by boolSetting("Targeting Force Suicide", false).group(settingGroup("Targeting"))
-    private var forceSuicideNoArmor by boolSetting("Targeting No Armor", false).group(settingGroup("Targeting"))
+    ).group(sgTargeting)
+    private var antiFriendKill by boolSetting("Targeting Anti Friend Kill", false).group(sgTargeting)
+    private var antiQuiver by boolSetting("Targeting Anti Quiver", true).group(sgTargeting)
+    private var ignoreNakeds by boolSetting("Targeting Ignore Nakeds", false).group(sgTargeting)
+    private var assumeBestArmor by boolSetting("Targeting Assume Best Armor", true).group(sgTargeting)
+    private var bosses by boolSetting("Targeting Bosses", false).group(sgTargeting)
+    private var forceSuicide by boolSetting("Targeting Force Suicide", false).group(sgTargeting)
+    private var forceSuicideNoArmor by boolSetting("Targeting No Armor", false).group(sgTargeting)
     private var assumeInvincibility by boolSetting(
         "Targeting Assume Invincibility",
         false
-    ).group(settingGroup("Targeting"))
-    private var assumeSelfInvincibility by boolSetting("Targeting Self", true).group(settingGroup("Targeting"))
+    ).group(sgTargeting)
+    private var assumeSelfInvincibility by boolSetting("Targeting Self", true).group(sgTargeting)
     private var invincibilityTimeout by doubleSetting(
         "Targeting Timeout",
         1.8,
         0.0..4.0,
         0.1
-    ).group(settingGroup("Targeting"))
-    private var autoSwap by enumSetting("Misc Auto Swap", SwapMode.Silent).group(settingGroup("Misc"))
-    private var silent by enumSetting("Misc Silent", Silent.Normal).group(settingGroup("Misc"))
-    private var swapBack by boolSetting("Misc Swap Back", true).group(settingGroup("Misc"))
-    private var strictTiming by boolSetting("Misc Strict Timing", false).group(settingGroup("Misc"))
-    private var swapDelay by doubleSetting("Misc Swap Delay", 0.0, 0.0..10.0, 0.1).group(settingGroup("Misc"))
-    private var swapPenalty by doubleSetting("Misc Swap Penalty", 0.0, 0.0..10.0, 0.1).group(settingGroup("Misc"))
-    private var multipoint by boolSetting("Misc Multipoint", true).group(settingGroup("Misc"))
+    ).group(sgTargeting)
+    private var autoSwap by enumSetting("Misc Auto Swap", SwapMode.Silent).group(sgMisc)
+    private var silent by enumSetting("Misc Silent", Silent.Normal).group(sgMisc)
+    private var swapBack by boolSetting("Misc Swap Back", true).group(sgMisc)
+    private var strictTiming by boolSetting("Misc Strict Timing", false).group(sgMisc)
+    private var swapDelay by doubleSetting("Misc Swap Delay", 0.0, 0.0..10.0, 0.1).group(sgMisc)
+    private var swapPenalty by doubleSetting("Misc Swap Penalty", 0.0, 0.0..10.0, 0.1).group(sgMisc)
+    private var multipoint by boolSetting("Misc Multipoint", true).group(sgMisc)
 
     private data class Placement(
         val base: BlockPos,

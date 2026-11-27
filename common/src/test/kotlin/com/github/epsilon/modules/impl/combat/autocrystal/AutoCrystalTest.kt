@@ -35,6 +35,8 @@ class AutoCrystalTest {
         val module = AutoCrystal
         module.initI18n(Key("epsilon.modules.auto crystal"))
         assertEquals(70, module.settings.size)
+        assertEquals(listOf("Place", "Break", "Base Place", "Rotate", "Face Place", "Extrapolation", "Render", "Pause", "Targeting", "Misc"), module.settingGroups.map { it.name })
+        assertTrue(module.settings.all { setting -> module.settingGroups.any { it === setting.groupRef } })
         assertEquals(module.settings.size, module.settings.map { it.name.lowercase() }.distinct().size)
         assertEquals(0, module.settings.first { it.name == "Place Delay" }.value)
         assertEquals("Strong", module.settings.first { it.name == "Place Sequential" }.value.toString())
