@@ -37,8 +37,46 @@ class AutoCrystalTest {
         assertEquals(70, module.settings.size)
         assertEquals(module.settings.size, module.settings.map { it.name.lowercase() }.distinct().size)
         assertEquals(0, module.settings.first { it.name == "Place Delay" }.value)
-        assertEquals("Strict", module.settings.first { it.name == "Place Sequential" }.value.toString())
+        assertEquals("Strong", module.settings.first { it.name == "Place Sequential" }.value.toString())
         assertEquals("Always", module.settings.first { it.name == "Break Instant" }.value.toString())
+        val presetDefaults: Map<String, Any> = mapOf(
+            "Place Range" to 4.0,
+            "Place Wall Range" to 4.0,
+            "Place Max Self Damage" to 20.0,
+            "Place Damage Ratio" to 1.8,
+            "Place Mine Ignore" to false,
+            "Place Always" to true,
+            "Break Range" to 4.0,
+            "Break Wall Range" to 4.0,
+            "Break Max Self Damage" to 12.0,
+            "Break Anti Suicide" to false,
+            "Break Await" to false,
+            "Break Ticks Existed" to 1,
+            "Break Weakness" to "Silent",
+            "Base Place" to true,
+            "Base Place Delay" to 800,
+            "Rotate" to true,
+            "Face Place" to true,
+            "Face Place Health" to 36.0,
+            "Face Place Armor Threshold" to 26,
+            "Face Place Damage Sync" to true,
+            "Extrapolation Ticks" to 3,
+            "Render Fill" to java.awt.Color(148, 161, 244, 32),
+            "Render Outline" to java.awt.Color(148, 161, 244, 255),
+            "Render Fade Time" to 0.5,
+            "Pause Eating" to true,
+            "Targeting Target Range" to 16.0,
+            "Targeting Crystal Range" to 6.0,
+            "Targeting Anti Quiver" to true,
+            "Targeting Assume Best Armor" to true,
+            "Targeting Timeout" to 1.8,
+            "Misc Auto Swap" to "Silent",
+            "Misc Multipoint" to true,
+        )
+        for ((name, expectedValue) in presetDefaults) {
+            val value = module.settings.first { it.name == name }.value
+            assertEquals(expectedValue, if (expectedValue is String) value.toString() else value, name)
+        }
         val root = JsonObject()
         I18NJson.addTranslation(root, module.translateComponent!!.getFullKey(), "")
         for (group in module.settingGroups) I18NJson.addTranslation(root, group.translateComponent!!.getFullKey(), "")
