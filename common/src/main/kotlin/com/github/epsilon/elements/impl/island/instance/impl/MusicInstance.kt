@@ -1,329 +1,261 @@
 package com.github.epsilon.elements.impl.island.instance.impl
 
-import com.github.epsilon.Constants
 import com.github.epsilon.elements.impl.island.IslandPalette
 import com.github.epsilon.elements.impl.island.instance.LandInstance
 import com.github.epsilon.elements.impl.island.pattern.LCPattern
 import com.github.epsilon.graphics.LuminRenderSystem
+import com.github.epsilon.graphics.LuminTexture
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.graphics.text.IconChars
 import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.gui.lib.*
 import com.github.epsilon.kernel.MinecraftWrapper.mc
-import com.github.epsilon.kernel.ffi.smtc.SmtcService
-import com.github.epsilon.kernel.ffi.smtc.SmtcSnapshot
+import com.github.epsilon.kernel.media.MediaArtwork
+import com.github.epsilon.kernel.media.MediaSessionSnapshot
 import com.mojang.blaze3d.platform.NativeImage
-import net.minecraft.client.renderer.texture.DynamicTexture
-import net.minecraft.resources.Identifier
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import java.awt.Color
-import java.awt.Graphics2D
-import java.awt.RenderingHints
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.IOException
-import java.util.*
 import java.util.function.Supplier
-import javax.imageio.ImageIO
 import kotlin.math.sin
 
-/**
- * 将 Windows SMTC 当前媒体会话绘制为 Island 内容。
- */
 class MusicInstance(
-    private val service: SmtcService,
+    private val snapshotSupplier: Supplier<MediaSessionSnapshot?>,
     private val textRendererSupplier: Supplier<TextRenderer>,
     pattern: LCPattern,
 ) : LandInstance(pattern, 1) {
+    private var frame: MediaSessionSnapshot? = null
+    private var uploadedArtwork: MediaArtwork? = null
+    private var coverTexture: LuminTexture? = null
+    private var marqueeTrack = ""
+    private var marqueeStartedAtNs = System.nanoTime()
 
-    private var snapshot: SmtcSnapshot = SmtcSnapshot.UNAVAILABLE
-    private var coverRevision: Long = Long.MIN_VALUE
-    private var coverTexture: DynamicTexture? = null
-    private var coverAvailable: Boolean = false
-    private var marqueeTitle: String = ""
-    private var marqueeStartedAtNs: Long = System.nanoTime()
+    private fun retire(texture: LuminTexture?) {
+        if (texture == null) return
+        mc.execute { RenderSystem.queueFencedTask { texture.close() } }
+    }
+
+    override fun onRemoved() {
+        retire(coverTexture)
+        coverTexture = null
+        uploadedArtwork = null
+        frame = null
+    }
+
+    private fun syncCover(artwork: MediaArtwork?) {
+        if (uploadedArtwork === artwork) return
+        RenderSystem.assertOnRenderThread()
+        retire(coverTexture)
+        coverTexture = null
+        uploadedArtwork = artwork
+        if (artwork == null) return
+        NativeImage(MediaArtwork.SIZE, MediaArtwork.SIZE, false).use { image ->
+            image.pixelBytes.put(artwork.pixels()).rewind()
+            val device = RenderSystem.getDevice()
+            val texture = device.createTexture(
+                "epsilon/island_music_cover",
+                GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
+                GpuFormat.RGBA8_UNORM,
+                image.width,
+                image.height,
+                1,
+                1
+            )
+            var view: GpuTextureView? = null
+            try {
+                device.createCommandEncoder().writeToTexture(texture, image)
+                view = device.createTextureView(texture)
+                coverTexture = LuminTexture(
+                    texture, view,
+                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR), true, false
+                )
+            } catch (_: Exception) {
+                view?.close()
+                texture.close()
+            }
+        }
+    }
 
     override fun update() {
-        snapshot = service.snapshot()
-        updateCoverTexture(snapshot)
-
-        val nextTitle = title(snapshot)
-        if (nextTitle != marqueeTitle) {
-            marqueeTitle = nextTitle
+        frame = snapshotSupplier.get()?.takeIf { it.playing() }
+        val data = frame ?: return
+        val track = data.source() + "\u0000" + data.title() + "\u0000" + data.artist()
+        if (track != marqueeTrack) {
+            marqueeTrack = track
             marqueeStartedAtNs = System.nanoTime()
         }
 
-        targetRadius = 0.42f
-        targetHeight = PADDING * 2f + COVER_SIZE
-
-        val textRenderer = textRendererSupplier.get()
-        val title = title(snapshot)
-        val artist = artist(snapshot)
-        val metadata = metadata(snapshot)
+        val renderer = textRendererSupplier.get()
+        val artist = data.artist().ifBlank { sourceName(data.source()) }
         val desiredContent = maxOf(
-            textRenderer.getWidth(title, TITLE_SCALE) + WAVE_WIDTH + TITLE_STATUS_GAP,
-            maxOf(textRenderer.getWidth(artist, ARTIST_SCALE), textRenderer.getWidth(metadata, META_SCALE))
+            renderer.getWidth(data.title(), TITLE_SCALE) + WAVE_WIDTH + TITLE_STATUS_GAP,
+            iconRowWidth(IconChars.ARTIST, artist, ARTIST_SCALE, renderer),
+            iconRowWidth(IconChars.AUDIO_FILE, sourceName(data.source()), META_SCALE, renderer)
         )
-        val desiredWidth = PADDING * 2f + COVER_SIZE + COVER_GAP + desiredContent
         val screenMaxWidth = maxOf(MIN_WIDTH, LuminRenderSystem.getScaledWidthInt() - 50f)
-        targetWidth = desiredWidth.coerceIn(MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
+        targetWidth = (PADDING * 2f + COVER_SIZE + COVER_GAP + desiredContent)
+            .coerceIn(MIN_WIDTH, minOf(MAX_WIDTH, screenMaxWidth))
+        targetHeight = PADDING * 2f + COVER_SIZE
+        targetRadius = 0.42f
     }
 
-    override fun draw(scope: UiScope, width: Float, height: Float) {
-        if (!snapshot.available) return
+    override val maxContainerRadius: Float get() = 12f
 
+    override fun draw(scope: UiScope, width: Float, height: Float) {
+        val data = frame ?: return
+        if (width < 100f || height < 28f) return
+        syncCover(data.artwork())
         drawCover(scope)
 
-        val textRenderer = textRendererSupplier.get()
+        val renderer = textRendererSupplier.get()
         val textX = PADDING + COVER_SIZE + COVER_GAP
         val contentRight = width - PADDING
-        val titleRight = contentRight - WAVE_WIDTH - TITLE_STATUS_GAP
-        val titleViewport = maxOf(1f, titleRight - textX)
-
+        val titleViewport = maxOf(1f, contentRight - WAVE_WIDTH - TITLE_STATUS_GAP - textX)
         val titleY = PADDING + 1f
-        drawMarqueeTitle(scope, textRenderer, title(snapshot), textX, titleY, titleViewport)
-        drawPlaybackWave(scope, contentRight - WAVE_WIDTH, titleY + 1f, WAVE_WIDTH, 9f)
 
-        val artistY = titleY + textRenderer.getHeight(TITLE_SCALE) + 3f
+        drawMarqueeTitle(scope, renderer, data.title(), textX, titleY, titleViewport)
+        drawPlaybackWave(scope, contentRight - WAVE_WIDTH, titleY + 1f)
+
+        val artistY = titleY + renderer.getHeight(TITLE_SCALE) + 3f
         drawIconText(
-            scope, IconChars.ARTIST, artist(snapshot), textX, artistY,
-            maxOf(1f, contentRight - textX), ARTIST_SCALE, IslandPalette.TEXT_SECONDARY
+            scope, renderer, IconChars.ARTIST, data.artist().ifBlank { sourceName(data.source()) },
+            textX, artistY, maxOf(1f, contentRight - textX), ARTIST_SCALE, IslandPalette.TEXT_SECONDARY, marquee = true
         )
-
-        val metaY = height - PADDING - textRenderer.getHeight(META_SCALE) - 1f
+        val metaY = height - PADDING - renderer.getHeight(META_SCALE) - 1f
         drawIconText(
-            scope, if (snapshot.albumTitle.isBlank()) IconChars.AUDIO_FILE else IconChars.ALBUM,
-            metadata(snapshot), textX, metaY, maxOf(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED
+            scope, renderer, IconChars.AUDIO_FILE, sourceName(data.source()),
+            textX, metaY, maxOf(1f, contentRight - textX), META_SCALE, IslandPalette.TEXT_MUTED
         )
     }
 
     private fun drawCover(scope: UiScope) {
-        scope.Outline(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0.75f, fade(Color(255, 255, 255, 48)))
-
-        if (coverAvailable) {
+        val cover = coverTexture
+        if (cover != null) {
             scope.RoundedTexture(
-                COVER_TEXTURE, PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS,
-                0f, 0f, 1f, 1f, fade(Color.WHITE), linearFilter = true
+                cover,
+                PADDING,
+                PADDING,
+                COVER_SIZE,
+                COVER_SIZE,
+                COVER_RADIUS,
+                0f,
+                0f,
+                1f,
+                1f,
+                fade(Color.WHITE)
             )
         } else {
             scope.RoundRectHorizontalGradient(
-                PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS,
-                fade(Color(75, 88, 116)), fade(Color(67, 125, 122))
+                PADDING,
+                PADDING,
+                COVER_SIZE,
+                COVER_SIZE,
+                COVER_RADIUS,
+                fade(Color(75, 88, 116)),
+                fade(Color(67, 125, 122))
             )
+            val renderer = textRendererSupplier.get()
             val iconScale = 1.35f
-            val textRenderer = textRendererSupplier.get()
-            val iconWidth = textRenderer.getWidth(IconChars.ALBUM, iconScale, StaticFontLoader.ICONS)
-            val iconHeight = textRenderer.getHeight(iconScale, StaticFontLoader.ICONS)
+            val iconWidth = renderer.getWidth(IconChars.ALBUM, iconScale, StaticFontLoader.ICONS)
+            val iconHeight = renderer.getHeight(iconScale, StaticFontLoader.ICONS)
             scope.Text(
-                IconChars.ALBUM, PADDING + (COVER_SIZE - iconWidth) * 0.5f, PADDING + (COVER_SIZE - iconHeight) * 0.5f,
-                iconScale, fade(IslandPalette.TEXT_PRIMARY), StaticFontLoader.ICONS
+                IconChars.ALBUM,
+                PADDING + (COVER_SIZE - iconWidth) * 0.5f,
+                PADDING + (COVER_SIZE - iconHeight) * 0.5f,
+                iconScale,
+                fade(IslandPalette.TEXT_PRIMARY),
+                StaticFontLoader.ICONS
             )
         }
+        scope.Outline(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0.75f, fade(IslandPalette.OUTLINE))
     }
 
-    private fun drawMarqueeTitle(
-        scope: UiScope,
-        textRenderer: TextRenderer,
-        title: String,
-        x: Float,
-        y: Float,
-        viewportWidth: Float,
-    ) {
-        val textWidth = textRenderer.getWidth(title, TITLE_SCALE)
+    private fun drawMarqueeTitle(scope: UiScope, renderer: TextRenderer, title: String, x: Float, y: Float, viewportWidth: Float) {
+        drawMarqueeText(scope, renderer, title, x, y, viewportWidth, TITLE_SCALE, IslandPalette.TEXT_PRIMARY)
+    }
+
+    private fun drawMarqueeText(scope: UiScope, renderer: TextRenderer, text: String, x: Float, y: Float, viewportWidth: Float, scale: Float, color: Color) {
+        val textWidth = renderer.getWidth(text, scale)
         if (textWidth <= viewportWidth) {
-            scope.Text(title, x, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+            scope.Text(text, x, y, scale, fade(color))
             return
         }
-
-        val elapsedSeconds = (System.nanoTime() - marqueeStartedAtNs) / 1_000_000_000.0f
-        val scrollSeconds = maxOf(0f, elapsedSeconds - MARQUEE_START_HOLD_SECONDS)
+        val seconds = (System.nanoTime() - marqueeStartedAtNs).coerceAtLeast(0L) / 1_000_000_000.0
         val cycle = textWidth + MARQUEE_GAP
-        val offset = -(scrollSeconds * MARQUEE_SPEED % cycle)
-        scope.Clip(x, y - 1f, viewportWidth, textRenderer.getHeight(TITLE_SCALE) + 2f) {
-            Text(title, x + offset, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
-            Text(title, x + offset + cycle, y, TITLE_SCALE, fade(IslandPalette.TEXT_PRIMARY))
+        val offset = -((seconds - MARQUEE_START_HOLD_SECONDS).coerceAtLeast(0.0) * MARQUEE_SPEED % cycle).toFloat()
+        scope.Clip(x, y - 1f, viewportWidth, renderer.getHeight(scale) + 2f) {
+            Text(text, x + offset, y, scale, fade(color))
+            Text(text, x + offset + cycle, y, scale, fade(color))
         }
     }
+
+    private fun iconRowWidth(icon: String, text: String, scale: Float, renderer: TextRenderer): Float =
+        renderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS) + 3f + renderer.getWidth(text, scale)
 
     private fun drawIconText(
         scope: UiScope,
+        renderer: TextRenderer,
         icon: String,
         text: String,
         x: Float,
         y: Float,
         viewportWidth: Float,
-        textScale: Float,
-        color: Color,
+        scale: Float,
+        color: Color, marquee: Boolean = false
     ) {
-        val textRenderer = textRendererSupplier.get()
-        val iconWidth = textRenderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS)
-        val iconY =
-            y + (textRenderer.getHeight(textScale) - textRenderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
+        val iconWidth = renderer.getWidth(icon, ICON_SCALE, StaticFontLoader.ICONS)
+        val iconY = y + (renderer.getHeight(scale) - renderer.getHeight(ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f
         scope.Text(icon, x, iconY, ICON_SCALE, fade(IslandPalette.ACCENT), StaticFontLoader.ICONS)
-
         val textX = x + iconWidth + 3f
         val textViewport = maxOf(1f, viewportWidth - iconWidth - 3f)
-        scope.Clip(textX, y - 1f, textViewport, textRenderer.getHeight(textScale) + 2f) {
-            Text(text, textX, y, textScale, fade(color))
+        if (marquee) {
+            drawMarqueeText(scope, renderer, text, textX, y, textViewport, scale, color)
+        } else {
+            scope.Clip(textX, y - 1f, textViewport, renderer.getHeight(scale) + 2f) {
+                Text(text, textX, y, scale, fade(color))
+            }
         }
     }
 
-    private fun drawPlaybackWave(scope: UiScope, x: Float, y: Float, width: Float, height: Float) {
-        val bars = 4
+    private fun drawPlaybackWave(scope: UiScope, x: Float, y: Float) {
         val barWidth = 2f
-        val gap = (width - bars * barWidth) / (bars - 1)
-        val time = System.nanoTime() / 1_000_000_000.0
-
-        for (index in 0 until bars) {
+        val gap = (WAVE_WIDTH - 4f * barWidth) / 3f
+        val time = (System.nanoTime() % 60_000_000_000L) / 1_000_000_000.0
+        repeat(4) { index ->
             val amplitude = 0.28f + 0.72f * ((sin(time * 4.8 + index * 1.7) + 1.0) * 0.5).toFloat()
-            val barHeight = maxOf(2f, height * amplitude)
-            val barX = x + index * (barWidth + gap)
-            val barY = y + (height - barHeight) * 0.5f
-            val color = if (index < 2) IslandPalette.ACCENT else IslandPalette.ACCENT_ALT
-            scope.RoundRect(barX, barY, barWidth, barHeight, barWidth * 0.5f, fade(color))
+            val barHeight = maxOf(2f, 9f * amplitude)
+            scope.RoundRect(
+                x + index * (barWidth + gap),
+                y + (9f - barHeight) * 0.5f,
+                barWidth,
+                barHeight,
+                1f,
+                fade(if (index < 2) IslandPalette.ACCENT else IslandPalette.ACCENT_ALT)
+            )
         }
     }
 
-    private fun updateCoverTexture(next: SmtcSnapshot) {
-        if (next.thumbnailRevision == coverRevision) return
-
-        coverRevision = next.thumbnailRevision
-        coverAvailable = false
-        val thumbnail = next.thumbnail
-        if (thumbnail == null || thumbnail.isEmpty()) return
-
-        var image: NativeImage? = null
-        var newTexture: DynamicTexture? = null
-        try {
-            image = decodeThumbnail(thumbnail)
-            val existingTexture = coverTexture
-            if (existingTexture == null) {
-                newTexture = DynamicTexture({ "Epsilon SMTC album art" }, image)
-                image = null
-                mc.textureManager.register(COVER_TEXTURE, newTexture)
-                coverTexture = newTexture
-                newTexture = null
-            } else {
-                existingTexture.pixels = image
-                image = null
-                existingTexture.upload()
-            }
-            coverAvailable = true
-        } catch (e: IOException) {
-            if (newTexture != null) {
-                newTexture.close()
-            } else if (image != null) {
-                image.close()
-            }
-            Constants.LOGGER.warn("Failed to decode SMTC album art revision {}", coverRevision, e)
-        } catch (e: RuntimeException) {
-            if (newTexture != null) {
-                newTexture.close()
-            } else if (image != null) {
-                image.close()
-            }
-            Constants.LOGGER.warn("Failed to decode SMTC album art revision {}", coverRevision, e)
-        }
-    }
-
-    /**
-     * SMTC 封面可能是 JPEG；Minecraft 26.3 的 NativeImage.read 会先强制校验 PNG。
-     * 这里先通过 ImageIO 解码并裁成方形，再显式写入 NativeImage。
-     */
-    private fun decodeThumbnail(thumbnail: ByteArray): NativeImage {
-        val source: BufferedImage? = ImageIO.read(ByteArrayInputStream(thumbnail))
-        if (source == null || source.width <= 0 || source.height <= 0) {
-            throw IOException("Unsupported SMTC thumbnail image format")
-        }
-
-        val cropSize = minOf(source.width, source.height)
-        val cropX = (source.width - cropSize) / 2
-        val cropY = (source.height - cropSize) / 2
-        val normalized = BufferedImage(COVER_TEXTURE_SIZE, COVER_TEXTURE_SIZE, BufferedImage.TYPE_INT_ARGB)
-        val graphics: Graphics2D = normalized.createGraphics()
-        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
-        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-        graphics.drawImage(
-            source, 0, 0, COVER_TEXTURE_SIZE, COVER_TEXTURE_SIZE,
-            cropX, cropY, cropX + cropSize, cropY + cropSize, null
-        )
-        graphics.dispose()
-
-        val result = NativeImage(COVER_TEXTURE_SIZE, COVER_TEXTURE_SIZE, false)
-        try {
-            for (y in 0 until COVER_TEXTURE_SIZE) {
-                for (x in 0 until COVER_TEXTURE_SIZE) {
-                    result.setPixel(x, y, normalized.getRGB(x, y))
-                }
-            }
-            return result
-        } catch (e: RuntimeException) {
-            result.close()
-            throw e
-        }
-    }
-
-    private fun releaseCoverTexture() {
-        if (coverTexture != null) {
-            mc.textureManager.release(COVER_TEXTURE)
-            coverTexture = null
-        }
-        coverAvailable = false
-    }
-
-    override fun onRemoved() {
-        releaseCoverTexture()
-    }
+    private fun sourceName(source: String): String =
+        source.substringAfterLast('!').replace(Regex("\\.exe$", RegexOption.IGNORE_CASE), "")
 
     private companion object {
-
-        private val COVER_TEXTURE: Identifier = Identifier.fromNamespaceAndPath("epsilon", "smtc/album_art")
-
-        private const val PADDING = 7f
-        private const val COVER_SIZE = 42f
-        private const val COVER_RADIUS = 8f
-        private const val COVER_GAP = 8f
-        private const val MIN_WIDTH = 216f
-        private const val MAX_WIDTH = 286f
-        private const val TITLE_SCALE = 1.0f
-        private const val ARTIST_SCALE = 0.78f
-        private const val META_SCALE = 0.68f
-        private const val ICON_SCALE = 0.78f
-        private const val WAVE_WIDTH = 18f
-        private const val TITLE_STATUS_GAP = 8f
-        private const val MARQUEE_SPEED = 22f
-        private const val MARQUEE_START_HOLD_SECONDS = 1.25f
-        private const val MARQUEE_GAP = 28f
-        private const val COVER_TEXTURE_SIZE = 256
-
-        private fun title(snapshot: SmtcSnapshot): String {
-            return snapshot.title.ifBlank { "Unknown track" }
-        }
-
-        private fun artist(snapshot: SmtcSnapshot): String {
-            return snapshot.artist.ifBlank { "Unknown artist" }
-        }
-
-        private fun metadata(snapshot: SmtcSnapshot): String {
-            val source = sourceName(snapshot.sourceAppId)
-            if (snapshot.albumTitle.isBlank()) return source
-            if (source.isBlank()) return snapshot.albumTitle
-            return snapshot.albumTitle + "  /  " + source
-        }
-
-        private fun sourceName(sourceAppId: String?): String {
-            if (sourceAppId.isNullOrBlank()) return "Windows media"
-
-            var value = sourceAppId
-            val appSeparator = value.lastIndexOf('!')
-            if (appSeparator >= 0 && appSeparator + 1 < value.length) {
-                value = value.substring(appSeparator + 1)
-            }
-            if (value.lowercase(Locale.ROOT).endsWith(".exe")) {
-                value = value.substring(0, value.length - 4)
-            }
-            return value.ifBlank { "Windows media" }
-        }
-
+        const val PADDING = 7f
+        const val COVER_SIZE = 42f
+        const val COVER_RADIUS = 8f
+        const val COVER_GAP = 8f
+        const val MIN_WIDTH = 216f
+        const val MAX_WIDTH = 286f
+        const val TITLE_SCALE = 1f
+        const val ARTIST_SCALE = 0.78f
+        const val META_SCALE = 0.68f
+        const val ICON_SCALE = 0.78f
+        const val WAVE_WIDTH = 18f
+        const val TITLE_STATUS_GAP = 8f
+        const val MARQUEE_SPEED = 22f
+        const val MARQUEE_START_HOLD_SECONDS = 1.25
+        const val MARQUEE_GAP = 28f
     }
-
 }

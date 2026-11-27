@@ -1,6 +1,6 @@
 package com.github.epsilon.kernel.render.effect
 
-import com.github.epsilon.assets.resources.ParticleAtlas
+import com.github.epsilon.assets.resources.TextureStorage
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.ColorUtils
@@ -17,14 +17,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object FireflyESP {
-
     enum class ColorMode {
         Solid,
         Blend,
         Rainbow
     }
-
-    private val FIREFLY_SPRITE = ParticleAtlas.Sprite.FIREFLY
 
     private val TARGET_ICON_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_firefly_no_depth")
@@ -86,7 +83,7 @@ object FireflyESP {
             val iAge = (target.tickCount - 1).toFloat() + tickDelta
 
             val pipeline = if (canSee) TARGET_ICON_PIPELINE else TARGET_ICON_NO_DEPTH_PIPELINE
-            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, ParticleAtlas.texture)
+            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, TextureStorage.FIREFLY)
 
             for (j in 0 until 3) {
                 for (i in 0..espLength) {
@@ -124,10 +121,10 @@ object FireflyESP {
                         rainbowBrightness.toFloat()
                     ).rgb
 
-                    renderer.vertex(matrix, -scale, scale, 0f, FIREFLY_SPRITE.u0, FIREFLY_SPRITE.v1, renderColor)
-                    renderer.vertex(matrix, scale, scale, 0f, FIREFLY_SPRITE.u1, FIREFLY_SPRITE.v1, renderColor)
-                    renderer.vertex(matrix, scale, -scale, 0f, FIREFLY_SPRITE.u1, FIREFLY_SPRITE.v0, renderColor)
-                    renderer.vertex(matrix, -scale, -scale, 0f, FIREFLY_SPRITE.u0, FIREFLY_SPRITE.v0, renderColor)
+                    renderer.vertex(matrix, -scale, scale, 0f, 0f, 1f, renderColor)
+                    renderer.vertex(matrix, scale, scale, 0f, 1f, 1f, renderColor)
+                    renderer.vertex(matrix, scale, -scale, 0f, 1f, 0f, renderColor)
+                    renderer.vertex(matrix, -scale, -scale, 0f, 0f, 0f, renderColor)
 
                     stack.popPose()
                 }
@@ -175,5 +172,4 @@ object FireflyESP {
             ColorMode.Solid -> primaryColor
         }
     }
-
 }

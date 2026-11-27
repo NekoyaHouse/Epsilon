@@ -4,10 +4,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.GameLeftEvent
 import com.github.epsilon.events.impl.LevelUpdateEvent
-import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
-import com.github.epsilon.kernel.gameplay.combat.CrystalDamage.damage
-import com.github.epsilon.kernel.gameplay.combat.CrystalDamage.snapshot
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
@@ -16,13 +13,10 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.player.RemotePlayer
-import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -122,24 +116,24 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             }
         }
 
-        safeEventHandler<PacketEvent.Apply> { event ->
-            val packet = event.packet as? ClientboundExplodePacket ?: return@safeEventHandler
-            val fake = fakePlayer ?: return@safeEventHandler
-            if (fake.hurtTime != 0) return@safeEventHandler
-
-            val explosionDamage = damage(snapshot(fake), packet.center()).toFloat()
-            fake.handleDamageEvent(level.damageSources().generic())
-            fake.health += fake.absorptionAmount - explosionDamage
-            if (fake.isDeadOrDying) {
-                fake.health = 10.0f
-                val popPacket = ClientboundEntityEventPacket(fake, EntityEvent.PROTECTED_FROM_DEATH)
-                val popEvent = PacketEvent.Receive(popPacket)
-                popEvent.post()
-                if (!popEvent.isCancelled) {
-                    popPacket.handle(connection)
-                }
-            }
-        }
+//TODO:       safeEventHandler<PacketEvent.Receive> { event ->
+//            val packet = event.packet as? ClientboundExplodePacket ?: return@safeEventHandler
+//            val fake = fakePlayer ?: return@safeEventHandler
+//            if (fake.hurtTime != 0) return@safeEventHandler
+//
+//            val explosionDamage = damage(snapshot(fake), packet.center()).toFloat()
+//            fake.handleDamageEvent(level.damageSources().generic())
+//            fake.health += fake.absorptionAmount - explosionDamage
+//            if (fake.isDeadOrDying) {
+//                fake.health = 10.0f
+//                val popPacket = ClientboundEntityEventPacket(fake, EntityEvent.PROTECTED_FROM_DEATH)
+//                val popEvent = PacketEvent.Receive(popPacket)
+//                popEvent.post()
+//                if (!popEvent.isCancelled) {
+//                    popPacket.handle(connection)
+//                }
+//            }
+//        }
     }
 
     private data class MovementFrame(val position: Vec3, val yaw: Float, val pitch: Float)

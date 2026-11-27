@@ -10,7 +10,6 @@ import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.modules.impl.combat.trap.FeetTrap
 import com.github.epsilon.settings.impl.EnumSetting
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -50,7 +49,7 @@ object Step : Module("Step", Category.MOVEMENT) {
         safeEventHandler<ClientTickEvent.Pre> {
             if (sneakingPause && player.isCrouching || insideBlockPause && isInBlock() ||
                 player.isInLava || player.isInWater || inWebPause && isInWeb() ||
-                !player.onGround() || feetTrapPause && FeetTrap.isEnabled
+                !player.onGround() || feetTrapPause && false// TODO:
             ) {
                 player.setStepHeight(0.6f)
                 return@safeEventHandler

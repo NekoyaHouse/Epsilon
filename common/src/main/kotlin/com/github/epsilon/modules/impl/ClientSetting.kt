@@ -154,10 +154,7 @@ object ClientSetting : Module("Client Setting", null) {
         onChanged = { EpsilonLanguageManager.refreshCustomLanguage() }
     ).group(sgGeneral).applyWhenRelease()
 
-    private val renderScale by doubleSetting("Render Scale", 2.0, 1.0..6.0, 0.5)
-        .group(sgGeneral)
-        .applyWhenRelease()
-
+    private val renderScale by doubleSetting("Render Scale", 2.0, 1.0..6.0, 0.5).group(sgGeneral).applyWhenRelease()
 
     val i18nFallback by boolSetting(
         "I18n Fallback",
@@ -199,6 +196,31 @@ object ClientSetting : Module("Client Setting", null) {
         "Dropdown Entrance Animation",
         DropdownEntranceAnimation.Focus,
         { guiMode == GuiMode.Dropdown }
+    ).group(sgGeneral)
+
+    val dropdownEntranceDuration by intSetting(
+        "Dropdown Entrance Duration", 420, 100..1500, 10,
+        { guiMode == GuiMode.Dropdown && dropdownEntranceAnimation != DropdownEntranceAnimation.None }
+    ).group(sgGeneral)
+
+    val dropdownEntranceStagger by intSetting(
+        "Dropdown Entrance Stagger", 55, 0..200, 5,
+        { guiMode == GuiMode.Dropdown && dropdownEntranceAnimation == DropdownEntranceAnimation.Focus }
+    ).group(sgGeneral)
+
+    val dropdownEntranceDistance by intSetting(
+        "Dropdown Entrance Distance", 18, 0..60, 1,
+        { guiMode == GuiMode.Dropdown && dropdownEntranceAnimation == DropdownEntranceAnimation.Focus }
+    ).group(sgGeneral)
+
+    val dropdownEntranceScale by intSetting(
+        "Dropdown Entrance Scale", 94, 80..100, 1,
+        { guiMode == GuiMode.Dropdown && dropdownEntranceAnimation == DropdownEntranceAnimation.Focus }
+    ).group(sgGeneral)
+
+    val dropdownEntranceBounce by intSetting(
+        "Dropdown Entrance Bounce", 12, 0..30, 1,
+        { guiMode == GuiMode.Dropdown && dropdownEntranceAnimation == DropdownEntranceAnimation.Focus }
     ).group(sgGeneral)
 
     val panelEntranceAnimation by enumSetting(

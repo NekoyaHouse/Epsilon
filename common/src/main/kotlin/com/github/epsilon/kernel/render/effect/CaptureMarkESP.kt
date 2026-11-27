@@ -1,6 +1,6 @@
 package com.github.epsilon.kernel.render.effect
 
-import com.github.epsilon.assets.resources.ParticleAtlas
+import com.github.epsilon.assets.resources.TextureStorage
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer
 import com.github.epsilon.kernel.MinecraftWrapper.mc
 import com.github.epsilon.kernel.render.ColorUtils
@@ -17,9 +17,6 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 object CaptureMarkESP {
-
-    private val CAPTUREMARK_SPRITE = ParticleAtlas.Sprite.TARGET
-
     private val TARGET_ICON_PIPELINE = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
         .withLocation("pipeline/epsilon_target_icon")
         .withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
@@ -66,7 +63,7 @@ object CaptureMarkESP {
         poseStack.rotateDegrees(Axis.XP, camera.xRot())
         poseStack.rotateDegrees(Axis.ZP, rotation)
 
-        val renderer = LuminImmediateRenderer.beginPosTexColorQuads(TARGET_ICON_PIPELINE, ParticleAtlas.texture)
+        val renderer = LuminImmediateRenderer.beginPosTexColorQuads(TARGET_ICON_PIPELINE, TextureStorage.TARGET)
 
         val matrix: Matrix4f = poseStack.last().pose()
 
@@ -75,10 +72,10 @@ object CaptureMarkESP {
         val c3 = getColorForProgress(0.5f, waveSpeed, color1, color2, timeSeconds)
         val c4 = getColorForProgress(0.75f, waveSpeed, color1, color2, timeSeconds)
 
-        renderer.vertex(matrix, -size, -size, 0f, CAPTUREMARK_SPRITE.u0, CAPTUREMARK_SPRITE.v0, c1.rgb)
-        renderer.vertex(matrix, -size, size, 0f, CAPTUREMARK_SPRITE.u0, CAPTUREMARK_SPRITE.v1, c2.rgb)
-        renderer.vertex(matrix, size, size, 0f, CAPTUREMARK_SPRITE.u1, CAPTUREMARK_SPRITE.v1, c3.rgb)
-        renderer.vertex(matrix, size, -size, 0f, CAPTUREMARK_SPRITE.u1, CAPTUREMARK_SPRITE.v0, c4.rgb)
+        renderer.vertex(matrix, -size, -size, 0f, 0f, 0f, c1.rgb)
+        renderer.vertex(matrix, -size, size, 0f, 0f, 1f, c2.rgb)
+        renderer.vertex(matrix, size, size, 0f, 1f, 1f, c3.rgb)
+        renderer.vertex(matrix, size, -size, 0f, 1f, 0f, c4.rgb)
         renderer.end()
 
         poseStack.popPose()
@@ -95,5 +92,4 @@ object CaptureMarkESP {
         wave = (wave + 1f) / 2f
         return ColorUtils.interpolateColor(color1, color2, wave)
     }
-
 }

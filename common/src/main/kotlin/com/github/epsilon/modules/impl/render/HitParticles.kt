@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.assets.resources.ParticleAtlas
+import com.github.epsilon.assets.resources.TextureStorage
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -15,6 +15,7 @@ import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.BlockPos
+import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.Blocks
@@ -30,10 +31,10 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         Fly
     }
 
-    private enum class Mode {
-        Stars,
-        Hearts,
-        Bloom
+    private enum class Mode(val texture: Identifier) {
+        Stars(TextureStorage.STAR),
+        Hearts(TextureStorage.HEART),
+        Bloom(TextureStorage.FIREFLY)
     }
 
     private enum class ColorMode {
@@ -44,10 +45,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
     private val mode by enumSetting("Mode", Mode.Stars)
     private val physics by enumSetting("Physics", Physics.Fall)
     private val colorMode by enumSetting("Color Mode", ColorMode.Sync)
-    private val color by colorSetting(
-        "Color", Color(255, 255, 255, 53), true,
-        { colorMode == ColorMode.Custom }
-    )
+    private val color by colorSetting("Color", Color(255, 255, 255, 53), true, { colorMode == ColorMode.Custom })
     private val onlySelf by boolSetting("Only Self", false)
     private val amount by intSetting("Amount", 2, 1..5, 1)
     private val lifeTime by intSetting("Life Time", 2, 1..10, 1)
@@ -95,15 +93,12 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
         handler<Render3DEvent> { event ->
             if (particles.isEmpty()) return@handler
 
-            val sprite = when (mode) {
-                Mode.Stars -> ParticleAtlas.Sprite.STAR
-                Mode.Hearts -> ParticleAtlas.Sprite.HEART
-                Mode.Bloom -> ParticleAtlas.Sprite.FIREFLY
-            }
-            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(HIT_PARTICLE_PIPELINE, ParticleAtlas.texture)
+            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(HIT_PARTICLE_PIPELINE, mode.texture)
+
             for (particle in particles) {
-                particle.renderTexture(event.poseStack, renderer, sprite)
+                particle.renderTexture(event.poseStack, renderer)
             }
+
             renderer.end()
         }
     }
@@ -180,11 +175,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
             return System.currentTimeMillis() - spawnTime > lifeTime * 1000L
         }
 
-        fun renderTexture(
-            poseStack: PoseStack,
-            renderer: LuminImmediateRenderer.PosTexColorQuads,
-            sprite: ParticleAtlas.Sprite
-        ) {
+        fun renderTexture(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads) {
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val particleScale = 0.07f
             val size = scale.toFloat()
@@ -201,10 +192,10 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
             val matrix: Matrix4f = poseStack.last().pose()
             val argb = particleColor.rgb
 
-            renderer.vertex(matrix, 0.0f, size, 0.0f, sprite.u0, sprite.v1, argb)
-            renderer.vertex(matrix, size, size, 0.0f, sprite.u1, sprite.v1, argb)
-            renderer.vertex(matrix, size, 0.0f, 0.0f, sprite.u1, sprite.v0, argb)
-            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, sprite.u0, sprite.v0, argb)
+            renderer.vertex(matrix, 0.0f, size, 0.0f, 0f, 1f, argb)
+            renderer.vertex(matrix, size, size, 0.0f, 1f, 1f, argb)
+            renderer.vertex(matrix, size, 0.0f, 0.0f, 1f, 0f, argb)
+            renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, 0f, 0f, argb)
 
             poseStack.popPose()
         }

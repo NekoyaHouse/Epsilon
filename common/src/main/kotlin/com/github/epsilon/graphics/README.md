@@ -13,13 +13,13 @@ entrypoints. The ordered 2D canvas API below replaces the old layer-handle API.
 
 * **SDF Rounded Rectangles**: Smooth, anti-aliased corners calculated via fragment shaders. Supports dynamic radii
   without modifying vertex data.
-* **MSDF TTF rendering**: STB_truetype supplies glyph metrics, outlines and effect coverage. The pure Java msdfgen port colors
-  linear/quadratic/cubic edges and generates RGB distance fields in a linear RGBA8 atlas; shaders reconstruct coverage
-  with the RGB median and an eight-texel distance range. A separate R8 atlas serves blur/glitch effects. Glyph
+* **MSDF TTF rendering**: STB_truetype supplies glyph metrics, outlines and effect coverage. The pure Java msdfgen port
+  colors linear/quadratic/cubic edges and generates RGB distance fields in a linear RGBA8 atlas; shaders reconstruct
+  coverage with the RGB median and an eight-texel distance range. A separate R8 atlas serves blur/glitch effects. Glyph
   generation stays on the CPU worker and atlas uploads stay on the render thread. Missing-glyph boxes use the same MSDF
-  path. Fabric and NeoForge bundle `msdfgen-java` as a platform-independent JAR. All text uses the single-sample `TTF_FONT` pipeline
-  (`ttf_font.fsh`), which reconstructs pixel coverage from screen-space distance with a one-pixel edge transition. There
-  is no font AA setting or supersampling branch.
+  path. Fabric and NeoForge bundle `msdfgen-java` as a platform-independent JAR. All text uses the single-sample
+  `TTF_FONT` pipeline (`ttf_font.fsh`), which reconstructs pixel coverage from screen-space distance with a one-pixel
+  edge transition. There is no font AA setting or supersampling branch.
 
 ---
 
@@ -87,12 +87,12 @@ Immediate canvas → transient geometry ─────────────�
 Within each flush, explicit layers sort ascending; submissions within a layer preserve declaration order, with child
 trees expanded at their insertion point. Viewports follow the same rule and submit through the host batch. Primitive
 types and textures never override this order. Antialiased rectangles, rounded rectangles, outlines and chevron triangles
-share the shape pipeline. `RectHorizontalGradient` with `antialias = false` uses `RectRenderer` to draw adjacent gradients
-without fading their shared edges. Text, textures and effects use their own pipelines. Only adjacent ranges with compatible pipeline,
-geometry page, resources, uniforms and scissor can batch. Ordinary AA/non-AA text allows up to eight atlas/sampler pairs
-in one run; a per-range instance attribute selects the atlas without changing glyph order. A ninth pair starts another
-run. Blur/glitch text and arbitrary textures retain their existing resource boundaries. No spatial reordering or global
-overlap graph is used.
+share the shape pipeline. `RectHorizontalGradient` with `antialias = false` uses `RectRenderer` to draw adjacent
+gradients without fading their shared edges. Text, textures and effects use their own pipelines. Only adjacent ranges
+with compatible pipeline, geometry page, resources, uniforms and scissor can batch. Ordinary AA/non-AA text allows up to
+eight atlas/sampler pairs in one run; a per-range instance attribute selects the atlas without changing glyph order. A
+ninth pair starts another run. Blur/glitch text and arbitrary textures retain their existing resource boundaries. No
+spatial reordering or global overlap graph is used.
 
 Dropdown module rows explicitly preserve their previous alpha composition inside each panel's reserved layer interval:
 button fills/outlines, translucent row surfaces and Hold underlines, then names/key labels/visibility icons. The

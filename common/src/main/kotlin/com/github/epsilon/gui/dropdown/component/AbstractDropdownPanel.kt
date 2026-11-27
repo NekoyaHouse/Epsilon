@@ -84,7 +84,8 @@ abstract class AbstractDropdownPanel protected constructor(
             }
         }
 
-    override fun startIntro() {
+    override fun startIntro(durationMs: Long?) {
+        if (durationMs != null) introAnim.duration = durationMs
         introAnim.startValue = 0.0f
         introAnim.run(0.0f)
         introAnim.run(1.0f)
@@ -126,7 +127,7 @@ abstract class AbstractDropdownPanel protected constructor(
                 onPress = { event, _ ->
                     when (event.button()) {
                         InputConstants.MOUSE_BUTTON_LEFT -> {
-                            val (mouseX, mouseY) = DropdownScreen.toContentCoordinates(event)
+                            val (mouseX, mouseY) = DropdownScreen.toContentCoordinates(event, id)
                             dragging = true
                             dragOffsetX = x - mouseX
                             dragOffsetY = y - mouseY
@@ -275,7 +276,7 @@ abstract class AbstractDropdownPanel protected constructor(
 
     private fun dragPanel(event: MouseButtonEvent): Boolean {
         if (!dragging) return false
-        val (mouseX, mouseY) = DropdownScreen.toContentCoordinates(event)
+        val (mouseX, mouseY) = DropdownScreen.toContentCoordinates(event, id)
         setPosition(mouseX + dragOffsetX, mouseY + dragOffsetY)
         return true
     }

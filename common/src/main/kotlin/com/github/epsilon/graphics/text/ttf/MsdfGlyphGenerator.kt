@@ -74,7 +74,8 @@ internal object MsdfGlyphGenerator {
         shape: Shape, width: Int, height: Int, scale: Double, xOffset: Int, yOffset: Int
     ): ByteBuffer {
         val halfRange = PIXEL_RANGE * 0.5 / scale
-        val transform = Msdf.Transform(scale, scale, -xOffset / scale, (yOffset + height) / scale, -halfRange, halfRange)
+        val transform =
+            Msdf.Transform(scale, scale, -xOffset / scale, (yOffset + height) / scale, -halfRange, halfRange)
         val source = Msdf.generate(shape, width, height, transform)
         // 保持 atlas 上传缓冲的分配约定，由字形数据的持有方调用 memFree。
         val output = MemoryUtil.memAlloc(width * height * 4)
