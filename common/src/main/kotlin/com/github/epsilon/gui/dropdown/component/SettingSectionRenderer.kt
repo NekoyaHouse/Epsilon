@@ -78,10 +78,12 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             return elementsHeight(node)
         }
         val progress = expandProgress(node)
-        if (progress == 0.0f) return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
-        val contentHeight = DropdownTheme.GROUP_INSET * 2.0f + elementsHeight(node)
-        return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + contentHeight * progress
+        val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET * 2.0f + elementsHeight(node)
+        return groupCardHeight(contentHeight, progress) + DropdownTheme.SETTING_GAP
     }
+
+    private fun groupCardHeight(contentHeight: Float, progress: Float): Float =
+        DropdownTheme.GROUP_HEADER_HEIGHT + (DropdownTheme.SETTING_GAP + contentHeight) * progress
 
     private fun elementsHeight(node: Node): Float {
         var height = 0.0f
@@ -115,13 +117,12 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
 
         val cardBounds = card(node, depth, x, width)
         val progress = expandProgress(node)
-        // 只跨越互不重叠的折叠组头合批；展开卡片与内容保留独立的绘制边界。
         if (progress > 0.0f) flushLabels(labels)
         val contentHeight = if (progress == 0.0f) 0.0f else DropdownTheme.GROUP_INSET * 2.0f + elementsHeight(node)
         Interaction(key = node, bounds = UiRect(cardBounds.x, y, cardBounds.width, DropdownTheme.GROUP_HEADER_HEIGHT)) {
             onClick { toggleCollapsed(node); true }
         }
-        val cardHeight = DropdownTheme.GROUP_HEADER_HEIGHT + (DropdownTheme.SETTING_GAP + contentHeight) * progress
+        val cardHeight = groupCardHeight(contentHeight, progress)
         val radius = DropdownTheme.groupCardRadius(progress)
 
         RoundRect(cardBounds.x, y, cardBounds.width, cardHeight, radius, DropdownTheme.groupCardBackground(depth))
@@ -185,7 +186,7 @@ class SettingSectionRenderer private constructor(nodes: List<Node>) {
             val contentY = y + DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
             ClipIf(
                 progress < 1.0f, cardBounds.x, contentY, cardBounds.width,
-                contentHeight * progress + DropdownTheme.SETTING_GAP
+                maxOf(0.0f, cardHeight - DropdownTheme.GROUP_HEADER_HEIGHT - DropdownTheme.SETTING_GAP)
             ) {
                 val innerX = cardBounds.x + DropdownTheme.GROUP_INSET
                 val innerWidth = maxOf(1.0f, cardBounds.width - DropdownTheme.GROUP_INSET * 2.0f)

@@ -626,6 +626,7 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
                 screenLimited,
                 ClientSetting.dropdownUtilityMaxHeight.coerceIn(100, 1000).toFloat()
             )
+
             else -> minOf(screenLimited, ClientSetting.dropdownCategoryMaxHeight.coerceIn(100, 1000).toFloat())
         }
     }
