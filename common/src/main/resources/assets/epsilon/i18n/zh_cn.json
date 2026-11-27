@@ -494,7 +494,11 @@
         "dropdown entrance stagger": "逐个入场间隔（毫秒）",
         "dropdown entrance distance": "入场位移",
         "dropdown entrance scale": "初始缩放（%）",
-        "dropdown entrance bounce": "回弹强度（%）"
+        "dropdown entrance bounce": "回弹强度（%）",
+        "dropdown height percent": "下拉界面屏幕高度占比（%）",
+        "dropdown category max height": "分类面板高度上限",
+        "dropdown main max height": "主面板高度上限",
+        "dropdown utility max height": "好友/配置面板高度上限"
       },
       "gui setting": {
         "_value": "界面设置",

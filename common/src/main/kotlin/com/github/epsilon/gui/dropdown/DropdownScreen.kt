@@ -612,20 +612,26 @@ object DropdownScreen : Screen(Component.literal("DropdownGui")), ListSettingPop
         visiblePanelIds = panels.filter { it.isVisible }.map { it.id }.toSet()
     }
 
+    private fun resolveScreenHeightLimit(): Float =
+        LuminRenderSystem.getScaledHeight() * ClientSetting.dropdownHeightPercent.coerceIn(20, 100) / 100.0f
+
     private fun resolveMaxPanelHeight(panel: DropdownPanel): Float {
-        return resolveMaxPanelHeight(panel, LuminRenderSystem.getScaledHeight() * 0.72f)
+        return resolveMaxPanelHeight(panel, resolveScreenHeightLimit())
     }
 
     private fun resolveMaxPanelHeight(panel: DropdownPanel, screenLimited: Float): Float {
         return when (panel.id) {
-            "main" -> minOf(screenLimited, 260.0f)
-            "friend", "config" -> minOf(screenLimited, 220.0f)
-            else -> minOf(screenLimited, 350.0f)
+            "main" -> minOf(screenLimited, ClientSetting.dropdownMainMaxHeight.coerceIn(100, 1000).toFloat())
+            "friend", "config" -> minOf(
+                screenLimited,
+                ClientSetting.dropdownUtilityMaxHeight.coerceIn(100, 1000).toFloat()
+            )
+            else -> minOf(screenLimited, ClientSetting.dropdownCategoryMaxHeight.coerceIn(100, 1000).toFloat())
         }
     }
 
     private fun updatePanelHeightLimits() {
-        val screenLimited = LuminRenderSystem.getScaledHeight() * 0.72f
+        val screenLimited = resolveScreenHeightLimit()
         for (panel in panels) {
             panel.updateMaxPanelHeight(resolveMaxPanelHeight(panel, screenLimited))
         }

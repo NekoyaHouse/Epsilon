@@ -192,6 +192,26 @@ object ClientSetting : Module("Client Setting", null) {
         { guiMode == GuiMode.Dropdown }
     ).group(sgGeneral)
 
+    val dropdownHeightPercent by intSetting(
+        "Dropdown Height Percent", 72, 20..100, 1,
+        { guiMode == GuiMode.Dropdown }
+    ).group(sgGeneral)
+
+    val dropdownCategoryMaxHeight by intSetting(
+        "Dropdown Category Max Height", 350, 100..1000, 10,
+        { guiMode == GuiMode.Dropdown }
+    ).group(sgGeneral)
+
+    val dropdownMainMaxHeight by intSetting(
+        "Dropdown Main Max Height", 260, 100..1000, 10,
+        { guiMode == GuiMode.Dropdown }
+    ).group(sgGeneral)
+
+    val dropdownUtilityMaxHeight by intSetting(
+        "Dropdown Utility Max Height", 220, 100..1000, 10,
+        { guiMode == GuiMode.Dropdown }
+    ).group(sgGeneral)
+
     val dropdownEntranceAnimation by enumSetting(
         "Dropdown Entrance Animation",
         DropdownEntranceAnimation.Focus,

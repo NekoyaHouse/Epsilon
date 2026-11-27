@@ -5,7 +5,6 @@ import com.github.epsilon.gui.lib.LuminUIItem
 import com.github.epsilon.gui.lib.Transform
 import com.github.epsilon.gui.lib.UiRect
 import com.github.epsilon.gui.lib.UiScope
-import com.github.epsilon.gui.lib.control.UiScrollBar
 import com.github.epsilon.kernel.state.derivedStateOf
 import com.github.epsilon.kernel.state.getValue
 import com.github.epsilon.kernel.state.mutableStateOf
@@ -48,12 +47,11 @@ class CategoryPanel : AbstractDropdownPanel {
     override fun UiScope.drawPanelContent(mouseX: Int, mouseY: Int, visibleHeight: Float) {
         val buttons = visibleButtons()
         val frameId = getRenderFrameId()
-        val buttonWidth = if (maxScroll > 0.0f) width - UiScrollBar.HOVER_WIDTH + 1f else width
         Transform({ Render2DTransform.translation(0f, -scroll) }) {
             var itemY = 0f
             for (button in buttons) {
                 val buttonHeight = button.getHeightForFrame(frameId)
-                val itemBounds = UiRect(0f, itemY, buttonWidth, buttonHeight)
+                val itemBounds = UiRect(0f, itemY, width, buttonHeight)
                 LuminUIItem(button) { button.drawInScope(this, mouseX, mouseY, itemBounds) }
                 itemY += buttonHeight
             }

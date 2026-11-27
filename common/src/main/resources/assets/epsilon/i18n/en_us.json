@@ -494,7 +494,11 @@
         "dropdown entrance stagger": "Panel Stagger (ms)",
         "dropdown entrance distance": "Entrance Distance",
         "dropdown entrance scale": "Initial Scale (%)",
-        "dropdown entrance bounce": "Bounce Strength (%)"
+        "dropdown entrance bounce": "Bounce Strength (%)",
+        "dropdown height percent": "Dropdown Screen Height (%)",
+        "dropdown category max height": "Dropdown Category Max Height",
+        "dropdown main max height": "Dropdown Main Max Height",
+        "dropdown utility max height": "Dropdown Friends/Config Max Height"
       },
       "gui setting": {
         "_value": "Gui Setting",

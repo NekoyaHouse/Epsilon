@@ -173,11 +173,27 @@ class MusicInstance(
         scope.Outline(PADDING, PADDING, COVER_SIZE, COVER_SIZE, COVER_RADIUS, 0.75f, fade(IslandPalette.OUTLINE))
     }
 
-    private fun drawMarqueeTitle(scope: UiScope, renderer: TextRenderer, title: String, x: Float, y: Float, viewportWidth: Float) {
+    private fun drawMarqueeTitle(
+        scope: UiScope,
+        renderer: TextRenderer,
+        title: String,
+        x: Float,
+        y: Float,
+        viewportWidth: Float
+    ) {
         drawMarqueeText(scope, renderer, title, x, y, viewportWidth, TITLE_SCALE, IslandPalette.TEXT_PRIMARY)
     }
 
-    private fun drawMarqueeText(scope: UiScope, renderer: TextRenderer, text: String, x: Float, y: Float, viewportWidth: Float, scale: Float, color: Color) {
+    private fun drawMarqueeText(
+        scope: UiScope,
+        renderer: TextRenderer,
+        text: String,
+        x: Float,
+        y: Float,
+        viewportWidth: Float,
+        scale: Float,
+        color: Color
+    ) {
         val textWidth = renderer.getWidth(text, scale)
         if (textWidth <= viewportWidth) {
             scope.Text(text, x, y, scale, fade(color))
