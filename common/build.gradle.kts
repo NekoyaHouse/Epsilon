@@ -28,9 +28,7 @@ neoForge {
 }
 
 dependencies {
-    implementation(libs.lwjgl.msdfgen)
-    val msdfgenNatives = rootProject.extra["msdfgen_native_classifiers"] as List<*>
-    msdfgenNatives.forEach { testRuntimeOnly("org.lwjgl:lwjgl-msdfgen:${libs.versions.lwjgl.get()}:$it") }
+    implementation(libs.msdfgen)
     testImplementation(libs.kotlin.test)
     compileOnly(libs.mixin)
     compileOnly(libs.mixinextras.common)
