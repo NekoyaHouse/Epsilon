@@ -269,10 +269,10 @@ object AccountsScreen : Screen(Component.literal("Accounts")) {
 
         val title = EpsilonTranslations.Gui.ACCOUNTS_TITLE.getTranslatedName()
         val titleScale = 1.2f
-        val titleHeight = textRenderer.getHeight(titleScale, StaticFontLoader.JURA_LIGHT)
+        val titleHeight = textRenderer.getHeight(titleScale)
         scope.text(
             title, panelX + 50.0f, panelY + (HEADER_HEIGHT - titleHeight) / 2.0f,
-            titleScale, MD3Theme.TEXT_PRIMARY, StaticFontLoader.JURA_LIGHT,
+            titleScale, MD3Theme.TEXT_PRIMARY,
         )
 
         val currentName = mc.user.name
