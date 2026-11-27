@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.assets.resources.ParticleAtlas
+import com.github.epsilon.assets.resources.TextureStorage
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
@@ -14,6 +14,7 @@ import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.Camera
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -25,6 +26,27 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 
 object JumpCircle : Module("Jump Circle", Category.RENDER) {
+
+    private enum class Mode(val texture: Identifier) {
+        Default(TextureStorage.CIRCLE),
+        Portal(TextureStorage.HIT_BUBBLE)
+    }
+
+    private val mode by enumSetting("Mode", Mode.Default)
+    private val easeOut by boolSetting("Ease Out", true)
+    private val rotateSpeed by doubleSetting("Rotate Speed", 2.0, 0.5..5.0, 0.1)
+    private val circleScale by doubleSetting("Circle Scale", 1.0, 0.5..5.0, 0.1)
+    private val onlySelf by boolSetting("Only Self", false)
+
+    private val circles: MutableList<Circle> = ArrayList()
+    private val groundedCache: MutableList<UUID> = ArrayList()
+
+    private val JUMP_CIRCLE_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        .withLocation("pipeline/epsilon_jump_circle")
+        .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
+        .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
+        .withCull(false)
+        .build()
 
     init {
         onDisable {
@@ -56,55 +78,27 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
 
             circles.removeAll { circle -> circle.timer.passedMillise(if (easeOut) 5000L else 6000L) }
         }
-        handler<Render3DEvent> { onRender3D(it) }
-    }
 
-    private enum class Mode {
-        Default,
-        Portal
-    }
+        handler<Render3DEvent> { event ->
+            if (circles.isEmpty()) return@handler
 
-    private val mode by enumSetting("Mode", Mode.Default)
-    private val easeOut by boolSetting("Ease Out", true)
-    private val rotateSpeed by doubleSetting("Rotate Speed", 2.0, 0.5..5.0, 0.1)
-    private val circleScale by doubleSetting("Circle Scale", 1.0, 0.5..5.0, 0.1)
-    private val onlySelf by boolSetting("Only Self", false)
+            val renderer = LuminImmediateRenderer.beginPosTexColorQuads(JUMP_CIRCLE_PIPELINE, mode.texture)
 
-    private val circles: MutableList<Circle> = ArrayList()
-    private val groundedCache: MutableList<UUID> = ArrayList()
+            circles.reverse()
 
-    private val JUMP_CIRCLE_PIPELINE: RenderPipeline = RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        .withLocation("pipeline/epsilon_jump_circle")
-        .withColorTargetState(ColorTargetState(BlendFunction.LIGHTNING))
-        .withDepthStencilState(DepthStencilState(CompareOp.ALWAYS_PASS, false))
-        .withCull(false)
-        .build()
+            for (circle in circles) {
+                renderCircle(event.poseStack, renderer, circle)
+            }
 
-    private fun onRender3D(event: Render3DEvent) {
-        if (circles.isEmpty()) return
+            circles.reverse()
 
-        val poseStack = event.poseStack
-        val sprite = if (mode == Mode.Portal) ParticleAtlas.Sprite.HIT_BUBBLE else ParticleAtlas.Sprite.CIRCLE
-        val renderer = LuminImmediateRenderer.beginPosTexColorQuads(JUMP_CIRCLE_PIPELINE, ParticleAtlas.texture)
-
-        circles.reverse()
-        for (circle in circles) {
-            renderCircle(poseStack, renderer, circle, sprite)
+            renderer.end()
         }
-        circles.reverse()
-
-        renderer.end()
     }
 
-    private fun shouldTrack(player: Player): Boolean =
-        player.isAlive && (!onlySelf || player === mc.player)
+    private fun shouldTrack(player: Player): Boolean = player.isAlive && (!onlySelf || player === mc.player)
 
-    private fun renderCircle(
-        poseStack: PoseStack,
-        renderer: LuminImmediateRenderer.PosTexColorQuads,
-        circle: Circle,
-        sprite: ParticleAtlas.Sprite,
-    ) {
+    private fun renderCircle(poseStack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads, circle: Circle) {
         val colorAnim = circle.timer.getMs().toFloat() / 6000f
         val sizeProgress = 1f - (circle.timer.getMs() * (if (easeOut) 2f else 1f)) / 5000f
         val sizeAnim = circleScale.toFloat() - (sizeProgress.toDouble()).pow(4.0).toFloat()
@@ -125,8 +119,8 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
             -sizeAnim,
             -sizeAnim + scale,
             0.0f,
-            sprite.u0,
-            sprite.v1,
+            0f,
+            1f,
             applyOpacity(syncColor(270), 1.0f - colorAnim).rgb
         )
         renderer.vertex(
@@ -134,8 +128,8 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
             -sizeAnim + scale,
             -sizeAnim + scale,
             0.0f,
-            sprite.u1,
-            sprite.v1,
+            1f,
+            1f,
             applyOpacity(syncColor(0), 1.0f - colorAnim).rgb
         )
         renderer.vertex(
@@ -143,8 +137,8 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
             -sizeAnim + scale,
             -sizeAnim,
             0.0f,
-            sprite.u1,
-            sprite.v0,
+            1f,
+            0f,
             applyOpacity(syncColor(180), 1.0f - colorAnim).rgb
         )
         renderer.vertex(
@@ -152,8 +146,8 @@ object JumpCircle : Module("Jump Circle", Category.RENDER) {
             -sizeAnim,
             -sizeAnim,
             0.0f,
-            sprite.u0,
-            sprite.v0,
+            0f,
+            0f,
             applyOpacity(syncColor(90), 1.0f - colorAnim).rgb
         )
 

@@ -1,8 +1,7 @@
 package com.github.epsilon.modules.impl.render
 
-import com.github.epsilon.assets.resources.ParticleAtlas
-import com.github.epsilon.assets.resources.ParticleAtlas.Sprite
 import com.github.epsilon.assets.resources.ResourceLocationUtils
+import com.github.epsilon.assets.resources.TextureStorage
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
@@ -15,6 +14,7 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import com.mojang.renderpearl.api.pipeline.*
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
@@ -25,15 +25,15 @@ import kotlin.math.hypot
 
 object Particles : Module("Particles", Category.RENDER) {
 
-    private enum class Mode(val sprite: Sprite) {
-        Star(Sprite.STAR),
-        FireFly(Sprite.FIREFLY),
-        Dollar(Sprite.DOLLAR),
-        Heart(Sprite.HEART),
-        SnowFlake(Sprite.SNOWFLAKE),
-        Drop(Sprite.DROP),
-        Cloud(Sprite.CLOUD),
-        Shit(Sprite.SHIT)
+    private enum class Mode(val texture: Identifier) {
+        Star(TextureStorage.STAR),
+        FireFly(TextureStorage.FIREFLY),
+        Dollar(TextureStorage.DOLLAR),
+        Heart(TextureStorage.HEART),
+        SnowFlake(TextureStorage.SNOWFLAKE),
+        Drop(TextureStorage.DROP),
+        Cloud(TextureStorage.CLOUD),
+        Shit(TextureStorage.SHIT)
     }
 
     private enum class ColorMode {
@@ -151,109 +151,118 @@ object Particles : Module("Particles", Category.RENDER) {
             val stack = event.poseStack
             val camera = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
             val partialTick = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-            val sprite = mode.sprite
-            val pipeline = if (sprite == Sprite.SHIT) translucentParticlePipeline else particlePipeline
-            val particleQuads = LuminImmediateRenderer.beginPosTexColorQuads(pipeline, ParticleAtlas.texture)
+            val texture = mode.texture
             val lines = LuminImmediateRenderer.beginLines(trailPipeline)
 
-            for (particle in particles) {
-                if (!particle.visible || !camera.cullFrustum.pointInFrustum(
-                        particle.x.toDouble(), particle.y.toDouble(), particle.z.toDouble()
-                    )
-                ) continue
-
-                val x = Mth.lerp(partialTick, particle.prevX, particle.x).toDouble() - camera.pos.x
-                val y = Mth.lerp(partialTick, particle.prevY, particle.y).toDouble() - camera.pos.y
-                val z = Mth.lerp(partialTick, particle.prevZ, particle.z).toDouble() - camera.pos.z
-                val particleColor = if (physics == Physics.Rain && !particle.bounced) {
-                    particle.color.rgb
-                } else {
-                    withAlpha(particle.color, particle.remaining.toFloat() / particle.initialLifetime)
-                }
-
-                stack.pushPose()
-                stack.translate(x, y, z)
-                stack.rotateDegrees(Axis.YP, -camera.yRot)
-                stack.rotateDegrees(Axis.XP, camera.xRot)
-                if (physics == Physics.Rain) {
-                    stack.rotateDegrees(Axis.ZP, Mth.lerp(partialTick, particle.prevRotation, particle.rotation))
-                }
-                drawQuad(stack, particleQuads, sprite, size.toFloat(), particleColor)
-                stack.popPose()
-
-                if (physics == Physics.Rain && !particle.bounced) {
-                    val alpha = (particle.remaining / 20.0f).coerceIn(0.0f, 1.0f) / 3.0f
-                    val pose = stack.last()
-                    lines.vertex(
-                        pose.pose(), pose, x.toFloat(), y.toFloat(), z.toFloat(),
-                        withAlpha(particle.color, alpha), 0.0f, 1.0f, 0.0f, 1.0f
-                    )
-                    lines.vertex(
-                        pose.pose(), pose, x.toFloat(), (y + 3.0).toFloat(), z.toFloat(),
-                        withAlpha(particle.color, 0.0f), 0.0f, 1.0f, 0.0f, 1.0f
-                    )
-                }
-            }
-
-            val quads = if (sprite == Sprite.SHIT) {
-                particleQuads.end()
-                LuminImmediateRenderer.beginPosTexColorQuads(particlePipeline, ParticleAtlas.texture)
-            } else {
-                particleQuads
-            }
-
-            for (ripple in ripples) {
-                if (!camera.cullFrustum.pointInFrustum(
-                        ripple.x.toDouble(),
-                        ripple.y.toDouble(),
-                        ripple.z.toDouble()
-                    )
-                ) continue
-                val age = Mth.lerp(partialTick, maxOf(1, ripple.age - 1).toFloat(), ripple.age.toFloat())
-                stack.pushPose()
-                stack.translate(
-                    ripple.x.toDouble() - camera.pos.x, ripple.y.toDouble() - camera.pos.y,
-                    ripple.z.toDouble() - camera.pos.z
+            if (particles.isNotEmpty()) {
+                val particleQuads = LuminImmediateRenderer.beginPosTexColorQuads(
+                    if (texture == TextureStorage.SHIT) translucentParticlePipeline else particlePipeline,
+                    texture
                 )
-                stack.rotateDegrees(Axis.YP, -camera.yRot)
-                stack.rotateDegrees(Axis.XP, 90.0f)
-                drawQuad(stack, quads, Sprite.CIRCLE, 0.5f + age / 15.0f, withAlpha(ripple.color, 1.0f - age / 15.0f))
-                stack.popPose()
+
+                for (particle in particles) {
+                    if (!particle.visible || !camera.cullFrustum.pointInFrustum(
+                            particle.x.toDouble(), particle.y.toDouble(), particle.z.toDouble()
+                        )
+                    ) continue
+
+                    val x = Mth.lerp(partialTick, particle.prevX, particle.x).toDouble() - camera.pos.x
+                    val y = Mth.lerp(partialTick, particle.prevY, particle.y).toDouble() - camera.pos.y
+                    val z = Mth.lerp(partialTick, particle.prevZ, particle.z).toDouble() - camera.pos.z
+                    val particleColor = if (physics == Physics.Rain && !particle.bounced) {
+                        particle.color.rgb
+                    } else {
+                        withAlpha(particle.color, particle.remaining.toFloat() / particle.initialLifetime)
+                    }
+
+                    stack.pushPose()
+                    stack.translate(x, y, z)
+                    stack.rotateDegrees(Axis.YP, -camera.yRot)
+                    stack.rotateDegrees(Axis.XP, camera.xRot)
+                    if (physics == Physics.Rain) {
+                        stack.rotateDegrees(Axis.ZP, Mth.lerp(partialTick, particle.prevRotation, particle.rotation))
+                    }
+                    drawQuad(stack, particleQuads, size.toFloat(), particleColor)
+                    stack.popPose()
+
+                    if (physics == Physics.Rain && !particle.bounced) {
+                        val alpha = (particle.remaining / 20.0f).coerceIn(0.0f, 1.0f) / 3.0f
+                        val pose = stack.last()
+                        lines.vertex(
+                            pose.pose(), pose, x.toFloat(), y.toFloat(), z.toFloat(),
+                            withAlpha(particle.color, alpha), 0.0f, 1.0f, 0.0f, 1.0f
+                        )
+                        lines.vertex(
+                            pose.pose(), pose, x.toFloat(), (y + 3.0).toFloat(), z.toFloat(),
+                            withAlpha(particle.color, 0.0f), 0.0f, 1.0f, 0.0f, 1.0f
+                        )
+                    }
+                }
+
+                particleQuads.end()
             }
 
-            for (splash in splashes) {
-                if (!camera.cullFrustum.pointInFrustum(
-                        splash.position.x,
-                        splash.position.y,
-                        splash.position.z
+            if (ripples.isNotEmpty()) {
+                val rippleQuads = LuminImmediateRenderer.beginPosTexColorQuads(particlePipeline, TextureStorage.CIRCLE)
+
+                for (ripple in ripples) {
+                    if (!camera.cullFrustum.pointInFrustum(
+                            ripple.x.toDouble(),
+                            ripple.y.toDouble(),
+                            ripple.z.toDouble()
+                        )
+                    ) continue
+                    val age = Mth.lerp(partialTick, maxOf(1, ripple.age - 1).toFloat(), ripple.age.toFloat())
+                    stack.pushPose()
+                    stack.translate(
+                        ripple.x.toDouble() - camera.pos.x,
+                        ripple.y.toDouble() - camera.pos.y,
+                        ripple.z.toDouble() - camera.pos.z
                     )
-                ) continue
-                val position =
-                    splash.previousPosition.lerp(splash.position, partialTick.toDouble()).subtract(camera.pos)
-                val progress = Mth.lerp(partialTick, splash.remaining + 1.0f, splash.remaining.toFloat()) / 8.0f
-                stack.pushPose()
-                stack.translate(position)
-                stack.rotateDegrees(Axis.YP, -camera.yRot)
-                stack.rotateDegrees(Axis.XP, camera.xRot)
-                drawQuad(stack, quads, Mode.FireFly.sprite, 0.1f * progress, withAlpha(splash.color, progress))
-                stack.popPose()
+                    stack.rotateDegrees(Axis.YP, -camera.yRot)
+                    stack.rotateDegrees(Axis.XP, 90.0f)
+                    drawQuad(stack, rippleQuads, 0.5f + age / 15.0f, withAlpha(ripple.color, 1.0f - age / 15.0f))
+                    stack.popPose()
+                }
+
+                rippleQuads.end()
             }
 
-            quads.end()
+            if (splashes.isNotEmpty()) {
+                val splashQuads = LuminImmediateRenderer.beginPosTexColorQuads(particlePipeline, Mode.FireFly.texture)
+
+                for (splash in splashes) {
+                    if (!camera.cullFrustum.pointInFrustum(
+                            splash.position.x,
+                            splash.position.y,
+                            splash.position.z
+                        )
+                    ) continue
+                    val position =
+                        splash.previousPosition.lerp(splash.position, partialTick.toDouble()).subtract(camera.pos)
+                    val progress = Mth.lerp(partialTick, splash.remaining + 1.0f, splash.remaining.toFloat()) / 8.0f
+                    stack.pushPose()
+                    stack.translate(position)
+                    stack.rotateDegrees(Axis.YP, -camera.yRot)
+                    stack.rotateDegrees(Axis.XP, camera.xRot)
+                    drawQuad(stack, splashQuads, 0.1f * progress, withAlpha(splash.color, progress))
+                    stack.popPose()
+                }
+
+                splashQuads.end()
+            }
+
             lines.end()
         }
     }
 
-    private fun drawQuad(
-        stack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads,
-        sprite: Sprite, size: Float, color: Int
-    ) {
+    private fun drawQuad(stack: PoseStack, renderer: LuminImmediateRenderer.PosTexColorQuads, size: Float, color: Int) {
         stack.translate(-size / 2.0, -size / 2.0, -0.01)
         val matrix = stack.last().pose()
-        renderer.vertex(matrix, 0.0f, size, 0.0f, sprite.u1, sprite.v0, color)
-        renderer.vertex(matrix, size, size, 0.0f, sprite.u0, sprite.v0, color)
-        renderer.vertex(matrix, size, 0.0f, 0.0f, sprite.u0, sprite.v1, color)
-        renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, sprite.u1, sprite.v1, color)
+        renderer.vertex(matrix, 0.0f, size, 0.0f, 1f, 0f, color)
+        renderer.vertex(matrix, size, size, 0.0f, 0f, 0f, color)
+        renderer.vertex(matrix, size, 0.0f, 0.0f, 0f, 1f, color)
+        renderer.vertex(matrix, 0.0f, 0.0f, 0.0f, 1f, 1f, color)
     }
 
     private fun resolveColor(offset: Int): Color {

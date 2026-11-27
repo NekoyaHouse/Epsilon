@@ -132,7 +132,6 @@ object ModuleManager : AlwaysListening {
         addModule(Hat)
         addModule(Health)
         addModule(HitParticles)
-        addModule(HoleESP)
         addModule(ItemPhysics)
         addModule(JumpCircle)
         addModule(LogoutSpots)

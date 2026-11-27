@@ -2,13 +2,15 @@ package com.github.epsilon.elements.impl.island
 
 import com.github.epsilon.elements.HudModule
 import com.github.epsilon.elements.impl.island.instance.LandController
-import com.github.epsilon.elements.impl.island.instance.impl.*
+import com.github.epsilon.elements.impl.island.instance.impl.BalanceInstance
+import com.github.epsilon.elements.impl.island.instance.impl.ScaffoldBlocksInstance
+import com.github.epsilon.elements.impl.island.instance.impl.TabListInstance
+import com.github.epsilon.elements.impl.island.instance.impl.TargetInstance
 import com.github.epsilon.elements.impl.island.pattern.impl.CheckPattern
 import com.github.epsilon.graphics.renderers.TextRenderer
 import com.github.epsilon.gui.lib.UiScope
 import com.github.epsilon.kernel.client.platform.ClientPlatform
 import com.github.epsilon.kernel.client.platform.PlatformRequirement
-import com.github.epsilon.kernel.ffi.smtc.SmtcService
 import com.github.epsilon.kernel.gameplay.inventory.NavenInvUtils.getBlockCountInInventory
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
@@ -27,7 +29,6 @@ import java.awt.Color
 import java.util.function.Supplier
 
 object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
-
     private val targetHud by boolSetting("Target", true)
     private val scaffoldBlocks by boolSetting("Scaffold Blocks", true)
     private val timerBalance by boolSetting("Timer Balance", true)
@@ -56,15 +57,11 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
     private val textRendererSupplier: Supplier<TextRenderer> = Suppliers.memoize { TextRenderer.create() }
     private val landRenderer = LandRenderer(LandController, 48.0f, 48.0f)
-
     private var target: LivingEntity? = null
-
-    /** 本帧是否完成了布局（上下文缺失时不做绘制）。 */
     private var frameVisible: Boolean = false
 
     init {
         onEnable {
-            if (music && ClientPlatform.isWindowsX64()) SmtcService.start()
         }
 
         onDisable {
@@ -72,8 +69,6 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
             LandController.removeInstances(ScaffoldBlocksInstance::class.java)
             LandController.removeInstances(BalanceInstance::class.java)
             LandController.removeInstances(TabListInstance::class.java)
-            LandController.removeInstances(MusicInstance::class.java)
-            SmtcService.stop()
             target = null
         }
     }
@@ -189,29 +184,7 @@ object Island : HudModule("Island", 0.0f, 0.0f, 154.0f, 24.0f) {
 
     private fun updateMusicInstance() {
         if (music && ClientPlatform.isWindowsX64()) {
-            SmtcService.start()
-            val snapshot = SmtcService.snapshot()
-            if (!snapshot.available || !snapshot.isPlaying) {
-                LandController.removeInstances(MusicInstance::class.java)
-                return
-            }
 
-            if (LandController.getInstance(MusicInstance::class.java) == null) {
-                LandController.post(
-                    MusicInstance(
-                        SmtcService,
-                        textRendererSupplier,
-                        CheckPattern {
-                            val current = SmtcService.snapshot()
-                            !music || !current.available || !current.isPlaying
-                        }
-                    )
-                )
-            }
-        } else {
-            LandController.removeInstances(MusicInstance::class.java)
-            SmtcService.stop()
         }
     }
-
 }
