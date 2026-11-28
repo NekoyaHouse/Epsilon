@@ -126,7 +126,12 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             val fake = fakePlayer
             if (fake != null && !fake.isRemoved && fake.hurtTime == 0) {
                 fake.handleDamageEvent(level.damageSources().generic())
-                fake.health += fake.absorptionAmount - calculateDamage(level, packet.center(), fake, AutoCrystal.assumeBestArmor)
+                fake.health += fake.absorptionAmount - calculateDamage(
+                    level,
+                    packet.center(),
+                    fake,
+                    AutoCrystal.assumeBestArmor
+                )
                 if (fake.isDeadOrDying) {
                     fake.health = 10f
                     val pop = PacketEvent.Receive(ClientboundEntityEventPacket(fake, 35.toByte()))
