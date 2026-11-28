@@ -2004,6 +2004,60 @@
         "misc swap delay": "切换延迟（刻）",
         "misc swap penalty": "切换惩罚（刻）",
         "misc multipoint": "多点可见性检查"
+      },
+      "surround": {
+        "_value": "自动围堵",
+        "multitask": "使用物品时工作",
+        "timing": {
+          "_value": "补放时机",
+          "vanilla": "常规",
+          "sequential": "包触发"
+        },
+        "explosions": "爆炸预放置",
+        "spawn": "水晶生成预放置",
+        "broke": "破坏时补放",
+        "surround": "围堵四周",
+        "standhead": "站立封顶",
+        "crawlhead": "爬行封顶",
+        "minedownward": "允许向下挖掘",
+        "blocks": "围堵方块",
+        "delay": "放置间隔（刻）",
+        "bpt": "每刻放置数",
+        "swapaction": {
+          "_value": "换物品方式",
+          "screen": "容器交换",
+          "hotbar": "快捷栏",
+          "pick": "Pick（容器兼容回退）"
+        },
+        "center": {
+          "_value": "自动居中",
+          "never": "从不",
+          "onactivate": "启用时",
+          "always": "始终"
+        },
+        "rotate": "放置转头",
+        "placerange": "放置范围",
+        "protect": "水晶防护",
+        "breakcrystal": "破坏阻挡水晶",
+        "breakrange": "水晶攻击范围",
+        "assumebreak": "预测方块破坏",
+        "breaktime": "预测破坏时间（秒）",
+        "airplace": "空中放置",
+        "support": "最大支撑方块数",
+        "calcdelay": "支撑计算间隔（刻）",
+        "multi": "多条支撑路径",
+        "extend": {
+          "_value": "扩展围堵",
+          "always": "始终",
+          "mining": "被挖掘时",
+          "disable": "禁用"
+        },
+        "groundonly": "仅地面工作",
+        "pauseonflying": "滑翔时暂停",
+        "pauseinfluid": "流体中暂停",
+        "disableonydiff": "高度上升时关闭",
+        "disableonjump": "跳跃时关闭",
+        "disableondeath": "死亡时关闭"
       }
     },
     "elements": {

@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.combat.autocrystal
 import com.github.epsilon.assets.i18n.I18NJson
 import com.github.epsilon.assets.i18n.TranslateComponent
 import com.github.epsilon.kernel.gameplay.player.DamageUtils
-import com.github.epsilon.modules.impl.combat.AutoCrystal
+import com.github.epsilon.modules.impl.combat.crystalaura.AutoCrystal
 import com.github.epsilon.settings.impl.EnumSetting
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject

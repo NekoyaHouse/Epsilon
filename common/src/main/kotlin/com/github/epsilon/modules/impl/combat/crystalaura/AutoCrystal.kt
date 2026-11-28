@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat
+package com.github.epsilon.modules.impl.combat.crystalaura
 
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
@@ -19,6 +19,7 @@ import com.github.epsilon.managers.FriendManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import com.github.epsilon.modules.impl.combat.AutoMend
 import com.github.epsilon.settings.group
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -48,8 +49,8 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
 import java.util.Locale
+import java.util.UUID
 import kotlin.collections.ArrayDeque
-import kotlin.collections.ArrayList
 import kotlin.collections.List
 import kotlin.collections.Set
 import kotlin.collections.any
@@ -60,9 +61,7 @@ import kotlin.collections.filterIsInstance
 import kotlin.collections.firstOrNull
 import kotlin.collections.flatMap
 import kotlin.collections.forEach
-import kotlin.collections.getOrPut
 import kotlin.collections.isNotEmpty
-import kotlin.collections.last
 import kotlin.collections.listOf
 import kotlin.collections.listOfNotNull
 import kotlin.collections.map
@@ -77,11 +76,11 @@ import kotlin.collections.set
 import kotlin.collections.toList
 import kotlin.collections.toMap
 import kotlin.collections.toSet
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.round
 
 object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
-
     private enum class Sequential {
         None,
         Strict,
@@ -321,7 +320,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private var unconfirmedBreak: BlockPos? = null
     private var unconfirmedTime = 0L
     private val attacks = mutableMapOf<Int, Long>()
-    private val joined = mutableMapOf<java.util.UUID, Long>()
+    private val joined = mutableMapOf<UUID, Long>()
     private val dead = mutableSetOf<Int>()
     private val predictedAttackIds = mutableMapOf<Int, Long>()
     private val marks = ArrayDeque<Mark>()
@@ -539,7 +538,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         quiverThreat = antiQuiver && focus is Player && level.entitiesForRendering().filterIsInstance<Arrow>().any {
             val dx = it.x - focus.eyePosition.x;
             val dz = it.z - focus.eyePosition.z
-            it.y >= focus.eyeY && dx * dx + dz * dz < 0.25 && kotlin.math.abs(focus.eyeY - it.eyeY) < 4.0
+            it.y >= focus.eyeY && dx * dx + dz * dz < 0.25 && abs(focus.eyeY - it.eyeY) < 4.0
         }
     }
 
@@ -1009,36 +1008,4 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         Render3DScheduler.addFilledBox(box, color(fill))
         Render3DScheduler.addOutlineBox(box, color(outline), lineWidth.toFloat())
     }
-
-    internal class PlacementPredictionCache<K : Any>(
-        private val ticks: Int,
-        private val initialBounds: (K) -> AABB,
-        private val advance: (K, AABB) -> AABB?
-    ) {
-        private val paths = mutableMapOf<K, List<AABB>>()
-
-        init {
-            require(ticks >= 0)
-        }
-
-        private fun path(entity: K): List<AABB> = paths.getOrPut(entity) {
-            val result = ArrayList<AABB>(ticks + 1)
-            var box = initialBounds(entity)
-            result.add(box)
-            for (tick in 1..ticks) {
-                box = advance(entity, box) ?: break
-                result.add(box)
-            }
-            result
-        }
-
-        fun bounds(entity: K): AABB = path(entity).last()
-
-        fun intersects(entity: K, box: AABB): Boolean {
-            val path = path(entity)
-            return if (path.size == 1) path[0].intersects(box)
-            else (1 until path.size).any { path[it].intersects(box) }
-        }
-    }
-
 }

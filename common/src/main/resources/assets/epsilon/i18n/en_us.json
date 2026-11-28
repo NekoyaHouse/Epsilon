@@ -2004,6 +2004,60 @@
         "misc swap delay": "Misc Swap Delay (ticks)",
         "misc swap penalty": "Misc Swap Penalty (ticks)",
         "misc multipoint": "Misc Multipoint"
+      },
+      "surround": {
+        "_value": "Surround",
+        "multitask": "Multitask",
+        "timing": {
+          "_value": "Timing",
+          "vanilla": "Vanilla",
+          "sequential": "Sequential"
+        },
+        "explosions": "Explosion Pre-place",
+        "spawn": "Crystal Spawn Pre-place",
+        "broke": "Replace Broken Blocks",
+        "surround": "Surround Sides",
+        "standhead": "Standing Head Trap",
+        "crawlhead": "Crawling Head Trap",
+        "minedownward": "Allow Mining Downward",
+        "blocks": "Blocks",
+        "delay": "Placement Delay (ticks)",
+        "bpt": "Blocks per Tick",
+        "swapaction": {
+          "_value": "Swap Action",
+          "screen": "Screen",
+          "hotbar": "Hotbar",
+          "pick": "Pick (container fallback)"
+        },
+        "center": {
+          "_value": "Center",
+          "never": "Never",
+          "onactivate": "On Activate",
+          "always": "Always"
+        },
+        "rotate": "Rotate",
+        "placerange": "Place Range",
+        "protect": "Crystal Protection",
+        "breakcrystal": "Break Blocking Crystals",
+        "breakrange": "Crystal Break Range",
+        "assumebreak": "Assume Block Broken",
+        "breaktime": "Assumed Break Time (seconds)",
+        "airplace": "Air Place",
+        "support": "Max Support Blocks",
+        "calcdelay": "Support Calculation Delay (ticks)",
+        "multi": "Multiple Support Paths",
+        "extend": {
+          "_value": "Extend",
+          "always": "Always",
+          "mining": "Mining",
+          "disable": "Disabled"
+        },
+        "groundonly": "Ground Only",
+        "pauseonflying": "Pause While Gliding",
+        "pauseinfluid": "Pause in Fluids",
+        "disableonydiff": "Disable on Rising",
+        "disableonjump": "Disable on Jump",
+        "disableondeath": "Disable on Death"
       }
     },
     "elements": {
