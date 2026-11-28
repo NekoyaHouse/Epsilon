@@ -10,6 +10,7 @@ import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.isGrimDirection
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
@@ -28,6 +29,9 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.shapes.Shapes
+import net.minecraft.world.phys.shapes.VoxelShape
 import kotlin.math.floor
 
 object Surround : Module("Surround", Category.COMBAT) {
@@ -276,9 +280,8 @@ object Surround : Module("Surround", Category.COMBAT) {
         val state = level.getBlockState(neighbor)
         if (state.canBeReplaced() || !state.fluidState.isEmpty) return@mapNotNull null
         val face = side.opposite
-        val point = Vec3.atCenterOf(neighbor).add(face.unitVec3.scale(0.5))
-        if (player.eyePosition.distanceTo(point) > placeRange) null
-        else BlockHitResult(point, face, neighbor, false)
+        if (!isGrimDirection(neighbor, face)) return@mapNotNull null
+        hit(state.getShape(level, neighbor, CollisionContext.of(player)), neighbor, face, player.eyePosition, placeRange)
     }.minByOrNull { player.eyePosition.distanceToSqr(it.location) }
 
     private fun NonNullContext.placeAll(positions: Collection<BlockPos>, skipMiningDown: Boolean = false) {
@@ -309,7 +312,8 @@ object Surround : Module("Surround", Category.COMBAT) {
         if (collisions.any { it !is EndCrystal }) return false
         if (collisions.isNotEmpty() && (!breakCrystal || collisions.any { !attackCrystal(it as EndCrystal) })) return false
         val normalHit = hit(pos)
-        val blockHit = normalHit ?: if (airPlace) { BlockHitResult(Vec3.atCenterOf(pos), Direction.DOWN, pos, false)
+        val blockHit = normalHit ?: if (airPlace) {
+            airHit(pos, player.eyePosition, placeRange) { isGrimDirection(pos, it) } ?: return false
         } else return false
         if (player.eyePosition.distanceTo(blockHit.location) > placeRange) return false
 
@@ -349,8 +353,6 @@ object Surround : Module("Surround", Category.COMBAT) {
                 )
             )
             withRotation(blockHit.location) {
-                // Always use the packet path for forced/crystal/air placements. Vanilla local
-                // prediction would reject an occupied target or interact with the target instead.
                 if (forced || normalHit == null || collisions.isNotEmpty()) {
                     level.blockStatePredictionHandler.startPredicting().use { prediction ->
                         connection.send(ServerboundUseItemOnPacket(hand, blockHit, prediction.currentSequence()))
@@ -472,4 +474,34 @@ object Surround : Module("Surround", Category.COMBAT) {
             }
         }
     }
+
+    private fun faceCenter(bounds: AABB, face: Direction): Vec3 {
+        val center = bounds.center
+        return when (face) {
+            Direction.DOWN -> Vec3(center.x, bounds.minY, center.z)
+            Direction.UP -> Vec3(center.x, bounds.maxY, center.z)
+            Direction.NORTH -> Vec3(center.x, center.y, bounds.minZ)
+            Direction.SOUTH -> Vec3(center.x, center.y, bounds.maxZ)
+            Direction.WEST -> Vec3(bounds.minX, center.y, center.z)
+            Direction.EAST -> Vec3(bounds.maxX, center.y, center.z)
+        }
+    }
+
+    private fun hit(shape: VoxelShape, pos: BlockPos, face: Direction, eye: Vec3, range: Double): BlockHitResult? =
+        shape.toAabbs().mapNotNull { localBounds ->
+            val bounds = localBounds.move(pos)
+            val point = faceCenter(bounds, face)
+            val clipped = shape.clip(eye, point.subtract(face.unitVec3.scale(1.0E-4)), pos)
+                ?: return@mapNotNull null
+            clipped.takeIf { it.direction == face && eye.distanceTo(it.location) <= range }
+        }.minByOrNull { eye.distanceToSqr(it.location) }
+
+    private fun airHit(
+        pos: BlockPos,
+        eye: Vec3,
+        range: Double,
+        canUseFace: (Direction) -> Boolean,
+    ): BlockHitResult? = Direction.entries.filter(canUseFace).mapNotNull { face ->
+        hit(Shapes.block(), pos, face, eye, range)
+    }.minByOrNull { eye.distanceToSqr(it.location) }
 }
