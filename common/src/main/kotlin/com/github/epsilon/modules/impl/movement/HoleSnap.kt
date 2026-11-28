@@ -102,7 +102,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             if (packet is ClientboundPlayerPositionPacket || packet is ClientboundPlayerRotationPacket) {
                 rubberbands++
                 if (rubberbands >= rubberbandLimit) {
-                    isEnabled = false
+                    toggle()
                 }
             }
         }

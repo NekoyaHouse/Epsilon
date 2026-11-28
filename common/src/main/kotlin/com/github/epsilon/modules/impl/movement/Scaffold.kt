@@ -344,7 +344,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
                     translatedName,
                     EpsilonTranslations.Notifications.SCAFFOLD_TOGGLE_ON_TELEPORT.getTranslatedName()
                 )
-                isEnabled = false
+                toggle()
             }
         }
 

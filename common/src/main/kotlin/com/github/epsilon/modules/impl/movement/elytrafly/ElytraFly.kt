@@ -261,7 +261,7 @@ object ElytraFly : Module("Elytra Fly", Category.MOVEMENT) {
         mode = state.mode
 
         if (!state.enabled && isEnabled) {
-            isEnabled = false
+            toggle()
         }
     }
 

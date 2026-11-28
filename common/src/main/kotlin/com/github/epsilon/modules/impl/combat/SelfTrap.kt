@@ -478,8 +478,9 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
                 } else remoteMining.remove(packet.id)
             }
 
-            is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) isEnabled =
-                false
+            is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) {
+                toggle()
+            }
 
             is ClientboundBlockUpdatePacket -> {
                 pending.remove(packet.pos)

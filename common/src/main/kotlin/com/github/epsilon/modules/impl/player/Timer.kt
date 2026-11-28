@@ -103,7 +103,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
                     }
 
                     if (!player.isAlive || player.health <= 0.0f) {
-                        isEnabled = false
+                        toggle()
                         return@safeEventHandler
                     }
 

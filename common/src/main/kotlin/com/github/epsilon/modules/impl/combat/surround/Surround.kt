@@ -113,9 +113,6 @@ object Surround : Module("Surround", Category.COMBAT) {
     private var placedThisTick = 0
     private var previousY: Double? = null
 
-    @Volatile
-    private var generation = 0
-
     init {
         onEnable {
             clear()
@@ -138,7 +135,7 @@ object Surround : Module("Surround", Category.COMBAT) {
                 (disableOnYDiff && y != null && player.y > y) ||
                 (disableOnJump && player.input.keyPresses.jump())
             ) {
-                isEnabled = false
+                toggle()
                 return@safeEventHandler
             }
             sent.entries.removeIf { System.nanoTime() - it.value > 250_000_000L }
@@ -161,38 +158,65 @@ object Surround : Module("Surround", Category.COMBAT) {
             }
         }
 
-        handler<PacketEvent.Receive> { event ->
-            if (event.isCancelled) return@handler
-            val token = generation
-            val packet = event.packet
-            mc.execute {
-                if (isEnabled && token == generation) runSafe { receive(packet) }
+        safeEventHandler<PacketEvent.Receive> { event ->
+            if (event.isCancelled) return@safeEventHandler
+
+            when (val packet = event.packet) {
+                is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) toggle()
+
+                is ClientboundBlockDestructionPacket -> {
+                    if (packet.progress in 0..9) {
+                        val old = miners[packet.id]
+                        miners[packet.id] = Mining(
+                            packet.pos.immutable(),
+                            if (old?.pos == packet.pos) old.started else System.nanoTime(), packet.progress == 9
+                        )
+                    } else miners.remove(packet.id)
+                }
+
+                is ClientboundBlockUpdatePacket -> {
+                    sent.remove(packet.pos)
+                    if (packet.blockState.canBeReplaced()) {
+                        miners.entries.removeIf { it.value.pos == packet.pos }
+                        if (localMining == packet.pos) localMining = null
+                        if (timing == Timing.Sequential && broke && packet.pos in walls && canAct()) attempt(
+                            packet.pos,
+                            true
+                        )
+                    }
+                }
+
+                is ClientboundExplodePacket -> if (timing == Timing.Sequential && explosions && canAct()) {
+                    val pos = BlockPos.containing(packet.center())
+                    if (pos in walls) attempt(pos)
+                }
+
+                is ClientboundAddEntityPacket -> if (timing == Timing.Sequential && spawn && packet.type == EntityTypes.END_CRYSTAL && canAct()) {
+                    val pos = BlockPos.containing(packet.x, packet.y, packet.z)
+                    if (pos in walls) attempt(pos)
+                }
             }
         }
 
         handler<PacketEvent.Send> { event ->
             val packet = event.packet as? ServerboundPlayerActionPacket ?: return@handler
             if (event.isCancelled) return@handler
-            val token = generation
-            mc.execute {
-                if (!isEnabled || token != generation) return@execute
-                when (packet.action) {
-                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK -> {
-                        localMining = packet.pos.immutable()
-                        localMiningStarted = System.nanoTime()
-                        localMiningCompleted = false
-                    }
 
-                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK -> localMiningCompleted = true
-                    ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK -> localMining = null
-                    else -> Unit
+            when (packet.action) {
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK -> {
+                    localMining = packet.pos.immutable()
+                    localMiningStarted = System.nanoTime()
+                    localMiningCompleted = false
                 }
+
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK -> localMiningCompleted = true
+                ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK -> localMining = null
+                else -> Unit
             }
         }
     }
 
     private fun clear() {
-        generation++
         walls.clear()
         floors.clear()
         paths = emptyList()
@@ -321,8 +345,7 @@ object Surround : Module("Surround", Category.COMBAT) {
         if (collisions.any { it !is EndCrystal }) return false
         if (collisions.isNotEmpty() && (!breakCrystal || collisions.any { !attackCrystal(it as EndCrystal) })) return false
         val normalHit = hit(pos)
-        val blockHit = normalHit ?: if (airPlace) {
-            airHit(pos, player.eyePosition, placeRange) { RotationUtils.isGrimDirection(pos, it) } ?: return false
+        val blockHit = normalHit ?: if (airPlace) { BlockHitResult(Vec3.atCenterOf(pos), Direction.DOWN, pos, false)
         } else return false
         if (player.eyePosition.distanceTo(blockHit.location) > placeRange) return false
 
@@ -445,45 +468,6 @@ object Surround : Module("Surround", Category.COMBAT) {
         }
     }
 
-    private fun NonNullContext.receive(packet: Packet<*>) {
-        when (packet) {
-            is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) isEnabled =
-                false
-
-            is ClientboundBlockDestructionPacket -> {
-                if (packet.progress in 0..9) {
-                    val old = miners[packet.id]
-                    miners[packet.id] = Mining(
-                        packet.pos.immutable(),
-                        if (old?.pos == packet.pos) old.started else System.nanoTime(), packet.progress == 9
-                    )
-                } else miners.remove(packet.id)
-            }
-
-            is ClientboundBlockUpdatePacket -> {
-                sent.remove(packet.pos)
-                if (packet.blockState.canBeReplaced()) {
-                    miners.entries.removeIf { it.value.pos == packet.pos }
-                    if (localMining == packet.pos) localMining = null
-                    if (timing == Timing.Sequential && broke && packet.pos in walls && canAct()) attempt(
-                        packet.pos,
-                        true
-                    )
-                }
-            }
-
-            is ClientboundExplodePacket -> if (timing == Timing.Sequential && explosions && canAct()) {
-                val pos = BlockPos.containing(packet.center())
-                if (pos in walls) attempt(pos)
-            }
-
-            is ClientboundAddEntityPacket -> if (timing == Timing.Sequential && spawn && packet.type == EntityTypes.END_CRYSTAL && canAct()) {
-                val pos = BlockPos.containing(packet.x, packet.y, packet.z)
-                if (pos in walls) attempt(pos)
-            }
-        }
-    }
-
     private fun faceCenter(bounds: AABB, face: Direction): Vec3 {
         val center = bounds.center
         return when (face) {
@@ -504,13 +488,4 @@ object Surround : Module("Surround", Category.COMBAT) {
                 ?: return@mapNotNull null
             clipped.takeIf { it.direction == face && eye.distanceTo(it.location) <= range }
         }.minByOrNull { eye.distanceToSqr(it.location) }
-
-    private fun airHit(
-        pos: BlockPos,
-        eye: Vec3,
-        range: Double,
-        canUseFace: (Direction) -> Boolean,
-    ): BlockHitResult? = Direction.entries.filter(canUseFace).mapNotNull { face ->
-        hit(Shapes.block(), pos, face, eye, range)
-    }.minByOrNull { eye.distanceToSqr(it.location) }
 }

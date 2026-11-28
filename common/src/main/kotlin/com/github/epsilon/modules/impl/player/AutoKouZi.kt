@@ -68,7 +68,7 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
     private fun sendTxtMode() {
         if (allSentences.isEmpty()) {
             sendMessage("句子列表为空，请检查文件")
-            isEnabled = false
+            toggle()
             return
         }
 
@@ -94,7 +94,7 @@ object AutoKouZi : Module("Auto Kou Zi", Category.PLAYER) {
     private fun sendSentenceMode() {
         if (allSentences.isEmpty()) {
             sendMessage("关键词列表为空，请检查文件")
-            isEnabled = false
+            toggle()
             return
         }
 
