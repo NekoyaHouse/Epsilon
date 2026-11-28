@@ -121,7 +121,6 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
 
         safeEventHandler<PacketEvent.Receive> { event ->
             val packet = event.packet as? ClientboundExplodePacket ?: return@safeEventHandler
-            if (event.isCancelled) return@safeEventHandler
 
             val fake = fakePlayer
             if (fake != null && !fake.isRemoved && fake.hurtTime == 0) {

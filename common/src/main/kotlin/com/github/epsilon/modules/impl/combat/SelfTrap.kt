@@ -158,14 +158,44 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
         }
 
         safeEventHandler<PacketEvent.Receive> { event ->
-            if (!event.isCancelled) {
-                receive(event.packet)
+            when (val packet = event.packet) {
+                is ClientboundBlockDestructionPacket -> {
+                    if (packet.progress in 0..9) {
+                        val old = remoteMining[packet.id]
+                        remoteMining[packet.id] = Mining(
+                            packet.pos.immutable(),
+                            if (old?.pos == packet.pos) old.since else System.nanoTime(), packet.progress == 9
+                        )
+                    } else remoteMining.remove(packet.id)
+                }
+
+                is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) {
+                    toggle()
+                }
+
+                is ClientboundBlockUpdatePacket -> {
+                    pending.remove(packet.pos)
+                    if (!packet.blockState.canBeReplaced()) remoteMining.entries.removeIf { it.value.pos == packet.pos && it.value.finished }
+                    if (timing == Timing.Packet && broke && packet.pos in wallTargets && packet.blockState.canBeReplaced() && canAct()) {
+                        place(packet.pos, true)
+                    }
+                }
+
+                is ClientboundExplodePacket -> if (timing == Timing.Packet && explosions && canAct()) {
+                    val pos = BlockPos.containing(packet.center())
+                    if (pos in wallTargets) placeCounted(pos)
+                }
+
+                is ClientboundAddEntityPacket -> if (timing == Timing.Packet && spawn && packet.type == EntityTypes.END_CRYSTAL && canAct()) {
+                    val pos = BlockPos.containing(packet.x, packet.y, packet.z)
+                    if (pos in wallTargets) placeCounted(pos)
+                }
             }
         }
 
         handler<PacketEvent.Send> { event ->
             val packet = event.packet
-            if (!event.isCancelled && packet is ServerboundPlayerActionPacket) {
+            if (packet is ServerboundPlayerActionPacket) {
                 when (packet.action) {
                     ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK -> localMining = packet.pos.immutable()
                     ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
@@ -467,43 +497,6 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
                     player.horizontalCollision
                 )
             )
-        }
-    }
-
-    private fun NonNullContext.receive(packet: Packet<*>) {
-        when (packet) {
-            is ClientboundBundlePacket -> packet.subPackets().forEach { receive(it) }
-            is ClientboundBlockDestructionPacket -> {
-                if (packet.progress in 0..9) {
-                    val old = remoteMining[packet.id]
-                    remoteMining[packet.id] = Mining(
-                        packet.pos.immutable(),
-                        if (old?.pos == packet.pos) old.since else System.nanoTime(), packet.progress == 9
-                    )
-                } else remoteMining.remove(packet.id)
-            }
-
-            is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) {
-                toggle()
-            }
-
-            is ClientboundBlockUpdatePacket -> {
-                pending.remove(packet.pos)
-                if (!packet.blockState.canBeReplaced()) remoteMining.entries.removeIf { it.value.pos == packet.pos && it.value.finished }
-                if (timing == Timing.Packet && broke && packet.pos in wallTargets && packet.blockState.canBeReplaced() && canAct()) {
-                    place(packet.pos, true)
-                }
-            }
-
-            is ClientboundExplodePacket -> if (timing == Timing.Packet && explosions && canAct()) {
-                val pos = BlockPos.containing(packet.center())
-                if (pos in wallTargets) placeCounted(pos)
-            }
-
-            is ClientboundAddEntityPacket -> if (timing == Timing.Packet && spawn && packet.type == EntityTypes.END_CRYSTAL && canAct()) {
-                val pos = BlockPos.containing(packet.x, packet.y, packet.z)
-                if (pos in wallTargets) placeCounted(pos)
-            }
         }
     }
 

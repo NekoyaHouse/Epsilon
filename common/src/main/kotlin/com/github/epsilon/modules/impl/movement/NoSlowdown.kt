@@ -17,6 +17,7 @@ import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
+import net.minecraft.network.PacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.PacketFlow
 import net.minecraft.network.protocol.common.ClientboundPingPacket
@@ -59,8 +60,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
             if (eating) {
                 ticks++
-                if (Math.toIntExact(packets.stream().filter { it is ClientboundPingPacket }
-                        .count()) > 150 && ticks > 1) {
+                if (packets.count { it is ClientboundPingPacket } > 150 && ticks > 1) {
                     NotificationManager.error(
                         translatedName,
                         EpsilonTranslations.Notifications.TRANSACTION_COUNT_TOO_HIGH.getTranslatedName()
@@ -126,21 +126,19 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
             val packet = event.packet
 
-            if (packet is ClientboundPlayerPositionPacket) {
-                flush()
-                return@safeEventHandler
-            }
-
-            if (packet is ClientboundSetHealthPacket ||
-                packet is ClientboundSystemChatPacket ||
-                packet is ClientboundMoveEntityPacket ||
-                packet is ClientboundTeleportEntityPacket ||
-                packet is ClientboundEntityEventPacket ||
-                packet is ClientboundAddEntityPacket ||
-                packet is ClientboundBlockUpdatePacket ||
-                packet is ClientboundBlockEventPacket
-            ) {
-                return@safeEventHandler
+            when (packet) {
+                is ClientboundPlayerPositionPacket -> {
+                    flush()
+                    return@safeEventHandler
+                }
+                is ClientboundSetHealthPacket,
+                is ClientboundSystemChatPacket,
+                is ClientboundMoveEntityPacket,
+                is ClientboundTeleportEntityPacket,
+                is ClientboundEntityEventPacket,
+                is ClientboundAddEntityPacket,
+                is ClientboundBlockUpdatePacket,
+                is ClientboundBlockEventPacket -> return@safeEventHandler
             }
 
             if (packet.type().flow() == PacketFlow.CLIENTBOUND) {
@@ -231,25 +229,16 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
         return anim == ItemUseAnimation.EAT || anim == ItemUseAnimation.DRINK
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun flush() {
         val connection = mc.connection
         if (connection == null) {
             packets.clear()
             return
         }
-        // 收到位置包时 flush 会在 Netty 线程执行；此时直接 handle 会让 ClientPacketListener 判定跨线程并抛出
-        // RunningOnDifferentThreadException，该异常在事件监听器里会被当作监听失败并取消订阅。
-        // 因此离线线程上按原顺序把包交给 Minecraft 的包处理器，由主线程在下一个 tick 按序执行。
-        val onMainThread = mc.isSameThread
+
         while (true) {
             val queued = packets.poll() ?: break
-            val packet = queued as Packet<ClientPacketListener>
-            if (onMainThread) {
-                packet.handle(connection)
-            } else {
-                mc.packetProcessor().scheduleIfPossible(connection, packet)
-            }
+            (queued as Packet<ClientPacketListener>).handle(connection)
         }
     }
 

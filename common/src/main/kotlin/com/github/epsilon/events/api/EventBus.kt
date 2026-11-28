@@ -21,7 +21,13 @@ open class EventBus : IPosting {
     private val parallelHandlers = CopyOnWriteArrayList<ParallelHandler>()
 
     override fun post(event: Any) {
-        for (handler in handlers) handler.function(event)
+        for (handler in handlers) {
+            try {
+                handler.function(event)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         invokeParallel(event)
     }
 

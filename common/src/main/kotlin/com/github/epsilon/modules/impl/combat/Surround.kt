@@ -158,8 +158,6 @@ object Surround : Module("Surround", Category.COMBAT) {
         }
 
         safeEventHandler<PacketEvent.Receive> { event ->
-            if (event.isCancelled) return@safeEventHandler
-
             when (val packet = event.packet) {
                 is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) toggle()
 
@@ -199,7 +197,6 @@ object Surround : Module("Surround", Category.COMBAT) {
 
         handler<PacketEvent.Send> { event ->
             val packet = event.packet as? ServerboundPlayerActionPacket ?: return@handler
-            if (event.isCancelled) return@handler
 
             when (packet.action) {
                 ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK -> {
