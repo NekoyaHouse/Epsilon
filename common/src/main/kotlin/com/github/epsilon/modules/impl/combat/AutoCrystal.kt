@@ -8,6 +8,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader
 import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.dropAll
 import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
 import com.github.epsilon.kernel.gameplay.player.DamageUtils
+import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
 import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
@@ -116,35 +117,37 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val sgTargeting = settingGroup("Targeting")
     private val sgMisc = settingGroup("Misc")
 
-    private var place by boolSetting("Place", true).group(sgPlace)
-    private var placeDelay by intSetting("Place Delay", 0, 0..1000, 1, { place }).group(sgPlace)
-    private var placeRange by doubleSetting("Place Range", 4.0, 0.0..6.0, 0.1, { place }).group(sgPlace)
-    private var placeWallRange by doubleSetting(
+    private val place by boolSetting("Place", true).group(sgPlace)
+    private val placeDelay by intSetting("Place Delay", 0, 0..1000, 1, { place }).group(sgPlace)
+    private val placeRange by doubleSetting("Place Range", 4.0, 0.0..6.0, 0.1, { place }).group(sgPlace)
+    private val placeWallRange by doubleSetting(
         "Place Wall Range",
         4.0,
         0.0..6.0,
         0.1,
         { place }).group(sgPlace)
-    private var minPlaceDamage by doubleSetting(
+    private val minPlaceDamage by doubleSetting(
         "Place Min Damage",
         6.0,
         0.1..20.1,
         0.1,
         { place }).group(sgPlace)
-    private var maxPlaceSelfDamage by doubleSetting("Place Max Self Damage", 20.0, 0.0..20.0, 0.1, { place }).group(sgPlace)
-    private var placeDamageRatio by doubleSetting("Place Damage Ratio", 1.8, 0.5..2.0, 0.1, { place }).group(sgPlace)
-    private var sequential by enumSetting("Place Sequential", Sequential.Strong, { place }).group(sgPlace)
-    private var requireUpperAir by boolSetting("Place 1.12", false, { place }).group(sgPlace)
-    private var strictDirection by boolSetting("Place Strict Direction", false, { place }).group(sgPlace)
+    private val maxPlaceSelfDamage by doubleSetting("Place Max Self Damage", 20.0, 0.0..20.0, 0.1, { place }).group(sgPlace)
+    private val placeDamageRatio by doubleSetting("Place Damage Ratio", 1.8, 0.5..2.0, 0.1, { place }).group(sgPlace)
+    private val sequential by enumSetting("Place Sequential", Sequential.Strong, { place }).group(sgPlace)
+    private val requireUpperAir by boolSetting("Place 1.12", false, { place }).group(sgPlace)
+    private val strictDirection by boolSetting("Place Strict Direction", false, { place }).group(sgPlace)
     private var lowerHitBox by boolSetting("Place Lower Hit Box", false, { place }).group(sgPlace)
-    private var mineIgnore by boolSetting("Place Mine Ignore", false, { place }).group(sgPlace)
-    private var alwaysIgnoreMining by boolSetting("Place Always", true, { place }).group(sgPlace)
+    private val mineIgnore by boolSetting("Place Mine Ignore", false, { place }).group(sgPlace)
+    private val alwaysIgnoreMining by boolSetting("Place Always", true, { place }).group(sgPlace)
     private var miningIgnoreThreshold by intSetting(
         "Place Threshold",
         1,
         1..5,
         1,
         { place }).group(sgPlace)
+    private val placeSwingMode by enumSetting("Place Swing Mode", SwingMode.Both).group(sgPlace)
+
     private var breaking by boolSetting("Break", true).group(sgBreak)
     private var breakDelay by intSetting("Break Delay", 0, 0..1000, 1, { breaking }).group(sgBreak)
     private var attackFactor by intSetting("Break Factor", 1, 1..5, 1, { breaking }).group(sgBreak)
@@ -172,6 +175,8 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         1,
         { breaking }).group(sgBreak)
     private var weakness by enumSetting("Break Weakness", Weakness.Silent, { breaking }).group(sgBreak)
+    private val breakSwingMode by enumSetting("Break Swing Mode", SwingMode.Both).group(sgBreak)
+
     private var basePlace by boolSetting("Base Place", true).group(sgBasePlace)
     private var basePlaceDelay by intSetting(
         "Base Place Delay",
@@ -308,19 +313,36 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private fun now() = System.nanoTime() / 1_000_000L
 
     init {
-        onEnable { val times = joined.toMap(); resetState(); joined.putAll(times) }
-        onDisable {
-            runSafe { restoreSlot() };
+        onEnable {
             val times = joined.toMap(); resetState(); joined.putAll(times)
         }
-        handler<RespawnEvent> { resetState(); forceSuicide = false }
+
+        onDisable {
+            runSafe {
+                restoreSlot()
+            }
+            val times = joined.toMap(); resetState(); joined.putAll(times)
+        }
+
+        handler<RespawnEvent> {
+            resetState()
+            forceSuicide = false
+        }
+
         handler<ClientTickEvent.Pre>(alwaysListening = true) {
             observeWorld()
         }
-        safeEventHandler<StartDestroyBlockEvent> { miningPos = it.blockPos }
-        safeEventHandler<DestroyedBlockEvent> {
-            unconfirmedBreak = it.blockPos; unconfirmedTime = now(); miningPos = null
+
+        safeEventHandler<StartDestroyBlockEvent> {
+            miningPos = it.blockPos
         }
+
+        safeEventHandler<DestroyedBlockEvent> {
+            unconfirmedBreak = it.blockPos
+            unconfirmedTime = now()
+            miningPos = null
+        }
+
         safeEventHandler<PlayerTickEvent.Pre> {
             world = level
             val time = now()
@@ -353,12 +375,14 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             else if (rotatePlace) placement?.base?.let { Vec3.upFromBottomCenterOf(it, 1.0) } else null
             if (rotate && point != null) requestRotation(point, false) else clearRotation()
         }
+
         safeEventHandler<PlayerTickEvent.Post> {
             if (!shouldPause()) {
                 chooseCrystal()?.let { attack(it.id, it.position(), false) }
                 runPlacement()
             }
         }
+
         // Receive is posted on Netty. Only immutable packet data crosses this boundary.
         handler<PacketEvent.Receive>(alwaysListening = true) { event ->
             val packet = event.packet
@@ -372,20 +396,24 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
                 runSafe {
                     if (packet is ClientboundPlayerInfoUpdatePacket || packet is ClientboundPlayerInfoRemovePacket) {
                         if (packet is ClientboundPlayerInfoUpdatePacket && ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in packet.actions()) {
-                            for (entry in packet.entries()) joined[entry.profileId()] = now()
+                            for (entry in packet.entries()) {
+                                joined[entry.profileId()] = now()
+                            }
                         }
-                        if (packet is ClientboundPlayerInfoRemovePacket) for (id in packet.profileIds()) joined.remove(
-                            id
-                        )
+                        if (packet is ClientboundPlayerInfoRemovePacket) for (id in packet.profileIds()) {
+                            joined.remove(id)
+                        }
                         return@runSafe
                     }
                     if (epoch != generation || !isEnabled || world !== level) return@runSafe
                     when (packet) {
-                        is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) onSpawn(packet)
+                        is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
+                            onSpawn(packet)
+                        }
                         is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach { id ->
-                            attacks.remove(id); dead.remove(
-                            id
-                        ); predictedAttackIds.remove(id)
+                            attacks.remove(id)
+                            dead.remove(id)
+                            predictedAttackIds.remove(id)
                         }
 
                         is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.DEATH) {
@@ -397,22 +425,24 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
                 }
             }
         }
+
         safeEventHandler<Render3DEvent> {
             if (!render) return@safeEventHandler
             val time = now()
             marks.removeAll { !fade || time - it.time > (fadeTime * 1000).toLong() }
             val current = placement
             val drawn = if (multiFade) marks.toList() else marks.lastOrNull()?.let(::listOf).orEmpty()
-            for (mark in drawn) {
-                if (mark.base == current?.base) continue
-                val alpha = (1.0 - (time - mark.time) / (fadeTime * 1000)).coerceIn(0.0, 1.0)
-                drawBox(AABB(mark.base), alpha)
+            for ((base, _, time1) in drawn) {
+                if (base == current?.base) continue
+                val alpha = (1.0 - (time - time1) / (fadeTime * 1000)).coerceIn(0.0, 1.0)
+                drawBox(AABB(base), alpha)
             }
             current?.let { drawBox(AABB(it.base), 1.0) }
             if (drawPrediction && prediction) target?.let {
                 Render3DScheduler.addOutlineBox(predictedBounds(it), outline.rgb, lineWidth.toFloat())
             }
         }
+
         safeEventHandler<Render2DEvent.Level> { event ->
             if (!render || !renderDamage) return@safeEventHandler
             val visible = placement?.let { Mark(it.base, it.damage, now()) }
@@ -721,12 +751,9 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         return null
     }
 
-    /** Use the game's shared sequence allocator; never invent sequence IDs. */
     private fun NonNullContext.sendPlacement(hit: BlockHitResult, hand: InteractionHand) {
-        level.blockStatePredictionHandler.startPredicting().use {
-            connection.send(ServerboundUseItemOnPacket(hand, hit, it.currentSequence()))
-        }
-        player.swing(hand, player.getItemInHand(hand).interactAnimation, false)
+        connection.send(ServerboundUseItemOnPacket(hand, hit, level.blockStatePredictionHandler.startPredicting().currentSequence()))
+        placeSwingMode.interactSwing(hand)
     }
 
     private fun NonNullContext.runPlacement() {
@@ -812,16 +839,16 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         if (weapon != null) {
             player.inventory.selectedSlot = weapon; gameMode.ensureHasSentCarriedItem()
         }
-        try {
-            gameMode.ensureHasSentCarriedItem()
-            connection.send(ServerboundAttackPacket(id))
-            player.swing(InteractionHand.MAIN_HAND, player.mainHandItem.attackAnimation, false)
-            connection.send(ServerboundPunchPacket.INSTANCE)
-        } finally {
-            if (weapon != null && weakness == Weakness.Silent) {
-                player.inventory.selectedSlot = original; gameMode.ensureHasSentCarriedItem()
-            }
+
+        gameMode.ensureHasSentCarriedItem()
+        connection.send(ServerboundAttackPacket(id))
+
+        breakSwingMode.attackSwing(InteractionHand.MAIN_HAND)
+
+        if (weapon != null && weakness == Weakness.Silent) {
+            player.inventory.selectedSlot = original; gameMode.ensureHasSentCarriedItem()
         }
+
         lastBreak = now(); attacks[id] = lastBreak; previousPlacement = BlockPos.containing(position)
         lastBase = lastBreak
         return true
@@ -859,7 +886,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
                     val known = level.getEntity(next)
                     if (known != null && known !is EndCrystal) break
                     connection.send(ServerboundAttackPacket(next))
-                    connection.send(ServerboundPunchPacket.INSTANCE)
+                    breakSwingMode.attackSwing(InteractionHand.MAIN_HAND)
                     predictedAttackIds[next] = now()
                 }
             }
