@@ -143,10 +143,10 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val sequential by enumSetting("Place Sequential", Sequential.Strong, { place }).group(sgPlace)
     private val requireUpperAir by boolSetting("Place 1.12", false, { place }).group(sgPlace)
     private val strictDirection by boolSetting("Place Strict Direction", false, { place }).group(sgPlace)
-    private var lowerHitBox by boolSetting("Place Lower Hit Box", false, { place }).group(sgPlace)
+    private val lowerHitBox by boolSetting("Place Lower Hit Box", false, { place }).group(sgPlace)
     private val mineIgnore by boolSetting("Place Mine Ignore", false, { place }).group(sgPlace)
     private val alwaysIgnoreMining by boolSetting("Place Always", true, { place }).group(sgPlace)
-    private var miningIgnoreThreshold by intSetting(
+    private val miningIgnoreThreshold by intSetting(
         "Place Threshold",
         1,
         1..5,
@@ -154,143 +154,143 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         { place }).group(sgPlace)
     private val placeSwingMode by enumSetting("Place Swing Mode", SwingMode.Both).group(sgPlace)
 
-    private var breaking by boolSetting("Break", true).group(sgBreak)
-    private var breakDelay by intSetting("Break Delay", 0, 0..1000, 1, { breaking }).group(sgBreak)
-    private var attackFactor by intSetting("Break Factor", 1, 1..5, 1, { breaking }).group(sgBreak)
-    private var breakRange by doubleSetting(
+    private val breaking by boolSetting("Break", true).group(sgBreak)
+    private val breakDelay by intSetting("Break Delay", 0, 0..1000, 1, { breaking }).group(sgBreak)
+    private val attackFactor by intSetting("Break Factor", 1, 1..5, 1, { breaking }).group(sgBreak)
+    private val breakRange by doubleSetting(
         "Break Range",
         4.0,
         0.0..6.0,
         0.1,
         { breaking }).group(sgBreak)
-    private var breakWallRange by doubleSetting(
+    private val breakWallRange by doubleSetting(
         "Break Wall Range",
         4.0,
         0.0..6.0,
         0.1,
         { breaking }).group(sgBreak)
-    private var minBreakDamage by doubleSetting("Break Min Damage", 3.0, 0.1..20.0, 0.1, { breaking }).group(sgBreak)
-    private var maxBreakSelfDamage by doubleSetting("Break Max Self Damage", 12.0, 0.0..20.0, 0.1, { breaking }).group(
+    private val minBreakDamage by doubleSetting("Break Min Damage", 3.0, 0.1..20.0, 0.1, { breaking }).group(sgBreak)
+    private val maxBreakSelfDamage by doubleSetting("Break Max Self Damage", 12.0, 0.0..20.0, 0.1, { breaking }).group(
         sgBreak
     )
-    private var antiSuicide by boolSetting("Break Anti Suicide", false, { breaking }).group(sgBreak)
-    private var instant by enumSetting("Break Instant", Instant.Always, { breaking }).group(sgBreak)
-    private var await by boolSetting("Break Await", false, { breaking }).group(sgBreak)
-    private var ticksExisted by intSetting(
+    private val antiSuicide by boolSetting("Break Anti Suicide", false, { breaking }).group(sgBreak)
+    private val instant by enumSetting("Break Instant", Instant.Always, { breaking }).group(sgBreak)
+    private val await by boolSetting("Break Await", false, { breaking }).group(sgBreak)
+    private val ticksExisted by intSetting(
         "Break Ticks Existed",
         1,
         0..40,
         1,
         { breaking }).group(sgBreak)
-    private var weakness by enumSetting("Break Weakness", Weakness.Silent, { breaking }).group(sgBreak)
+    private val weakness by enumSetting("Break Weakness", Weakness.Silent, { breaking }).group(sgBreak)
     private val breakSwingMode by enumSetting("Break Swing Mode", SwingMode.Both).group(sgBreak)
 
-    private var basePlace by boolSetting("Base Place", true).group(sgBasePlace)
-    private var basePlaceDelay by intSetting(
+    private val basePlace by boolSetting("Base Place", true).group(sgBasePlace)
+    private val basePlaceDelay by intSetting(
         "Base Place Delay",
         800,
         0..1000,
         1,
         { basePlace }).group(sgBasePlace)
-    private var basePlaceAir by boolSetting("Base Place Air", false, { basePlace }).group(sgBasePlace)
+    private val basePlaceAir by boolSetting("Base Place Air", false, { basePlace }).group(sgBasePlace)
 
-    private var rotate by boolSetting("Rotate", true).group(sgRotate)
-    private var rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(sgRotate)
+    private val rotate by boolSetting("Rotate", true).group(sgRotate)
+    private val rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(sgRotate)
     private val rotatePlace2B2T by boolSetting("Place 2B2T", false, { rotate && rotatePlace }).group(sgRotate)
-    private var rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(sgRotate)
+    private val rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(sgRotate)
 
-    private var facePlace by boolSetting("Face Place", true).group(sgFacePlace)
-    private var facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(
+    private val facePlace by boolSetting("Face Place", true).group(sgFacePlace)
+    private val facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(
         sgFacePlace
     )
-    private var facePlaceArmorThreshold by intSetting("Face Place Armor Threshold", 26, 0..100, 1, { facePlace }).group(
+    private val facePlaceArmorThreshold by intSetting("Face Place Armor Threshold", 26, 0..100, 1, { facePlace }).group(
         sgFacePlace
     )
-    private var facePlaceShieldBreaker by boolSetting("Face Place Shield Breaker", false, { facePlace }).group(
+    private val facePlaceShieldBreaker by boolSetting("Face Place Shield Breaker", false, { facePlace }).group(
         sgFacePlace
     )
-    private var damageSync by boolSetting(
+    private val damageSync by boolSetting(
         "Face Place Damage Sync",
         true,
         { facePlace }).group(sgFacePlace)
 
-    private var prediction by boolSetting("Extrapolation", true).group(sgExtrapolation)
-    private var predictionTicks by intSetting(
+    private val prediction by boolSetting("Extrapolation", true).group(sgExtrapolation)
+    private val predictionTicks by intSetting(
         "Extrapolation Ticks",
         3,
         1..8,
         1,
         { prediction }).group(sgExtrapolation)
-    private var drawPrediction by boolSetting(
+    private val drawPrediction by boolSetting(
         "Extrapolation Draw",
         false,
         { prediction }).group(sgExtrapolation)
 
-    private var render by boolSetting("Render", true).group(sgRender)
-    private var fill by colorSetting(
+    private val render by boolSetting("Render", true).group(sgRender)
+    private val fill by colorSetting(
         "Render Fill",
         Color(148, 161, 244, 32),
         true,
         { render }).group(sgRender)
-    private var outline by colorSetting("Render Outline", Color(148, 161, 244, 255), true, { render }).group(sgRender)
-    private var lineWidth by doubleSetting(
+    private val outline by colorSetting("Render Outline", Color(148, 161, 244, 255), true, { render }).group(sgRender)
+    private val lineWidth by doubleSetting(
         "Render Line Width",
         2.0,
         0.1..3.0,
         0.1,
         { render }).group(sgRender)
-    private var renderDamage by boolSetting("Render Damage", false, { render }).group(sgRender)
-    private var fade by boolSetting("Render Fade", true, { render }).group(sgRender)
-    private var multiFade by boolSetting("Render Multi Fade", false, { render }).group(sgRender)
-    private var fadeTime by doubleSetting(
+    private val renderDamage by boolSetting("Render Damage", false, { render }).group(sgRender)
+    private val fade by boolSetting("Render Fade", true, { render }).group(sgRender)
+    private val multiFade by boolSetting("Render Multi Fade", false, { render }).group(sgRender)
+    private val fadeTime by doubleSetting(
         "Render Fade Time",
         0.5,
         0.1..1.5,
         0.1,
         { render }).group(sgRender)
 
-    private var pauseMining by boolSetting("Pause Mining", false).group(sgPause)
-    private var pauseEating by boolSetting("Pause Eating", true).group(sgPause)
-    private var pauseMending by boolSetting("Pause Mending", false).group(sgPause)
+    private val pauseMining by boolSetting("Pause Mining", false).group(sgPause)
+    private val pauseEating by boolSetting("Pause Eating", true).group(sgPause)
+    private val pauseMending by boolSetting("Pause Mending", false).group(sgPause)
 
-    private var targetRange by doubleSetting(
+    private val targetRange by doubleSetting(
         "Targeting Target Range",
         16.0,
         1.0..16.0,
         0.1
     ).group(sgTargeting)
-    private var crystalRange by doubleSetting(
+    private val crystalRange by doubleSetting(
         "Targeting Crystal Range",
         6.0,
         0.1..12.0,
         0.1
     ).group(sgTargeting)
-    private var antiFriendKill by boolSetting("Targeting Anti Friend Kill", false).group(sgTargeting)
-    private var antiQuiver by boolSetting("Targeting Anti Quiver", true).group(sgTargeting)
-    private var ignoreNakeds by boolSetting("Targeting Ignore Nakeds", false).group(sgTargeting)
-    private var assumeBestArmor by boolSetting("Targeting Assume Best Armor", true).group(sgTargeting)
-    private var bosses by boolSetting("Targeting Bosses", false).group(sgTargeting)
+    private val antiFriendKill by boolSetting("Targeting Anti Friend Kill", false).group(sgTargeting)
+    private val antiQuiver by boolSetting("Targeting Anti Quiver", true).group(sgTargeting)
+    private val ignoreNakeds by boolSetting("Targeting Ignore Nakeds", false).group(sgTargeting)
+    val assumeBestArmor by boolSetting("Targeting Assume Best Armor", true).group(sgTargeting)
+    private val bosses by boolSetting("Targeting Bosses", false).group(sgTargeting)
     private var forceSuicide by boolSetting("Targeting Force Suicide", false).group(sgTargeting)
-    private var forceSuicideNoArmor by boolSetting("Targeting No Armor", false).group(sgTargeting)
-    private var assumeInvincibility by boolSetting(
+    private val forceSuicideNoArmor by boolSetting("Targeting No Armor", false).group(sgTargeting)
+    private val assumeInvincibility by boolSetting(
         "Targeting Assume Invincibility",
         false
     ).group(sgTargeting)
-    private var assumeSelfInvincibility by boolSetting("Targeting Self", true).group(sgTargeting)
-    private var invincibilityTimeout by doubleSetting(
+    private val assumeSelfInvincibility by boolSetting("Targeting Self", true).group(sgTargeting)
+    private val invincibilityTimeout by doubleSetting(
         "Targeting Timeout",
         1.8,
         0.0..4.0,
         0.1
     ).group(sgTargeting)
 
-    private var autoSwap by enumSetting("Misc Auto Swap", SwapMode.Silent).group(sgMisc)
-    private var silent by enumSetting("Misc Silent", Silent.Normal).group(sgMisc)
-    private var swapBack by boolSetting("Misc Swap Back", true).group(sgMisc)
-    private var strictTiming by boolSetting("Misc Strict Timing", false).group(sgMisc)
-    private var swapDelay by doubleSetting("Misc Swap Delay", 0.0, 0.0..10.0, 0.1).group(sgMisc)
-    private var swapPenalty by doubleSetting("Misc Swap Penalty", 0.0, 0.0..10.0, 0.1).group(sgMisc)
-    private var multipoint by boolSetting("Misc Multipoint", true).group(sgMisc)
+    private val autoSwap by enumSetting("Misc Auto Swap", SwapMode.Silent).group(sgMisc)
+    private val silent by enumSetting("Misc Silent", Silent.Normal).group(sgMisc)
+    private val swapBack by boolSetting("Misc Swap Back", true).group(sgMisc)
+    private val strictTiming by boolSetting("Misc Strict Timing", false).group(sgMisc)
+    private val swapDelay by doubleSetting("Misc Swap Delay", 0.0, 0.0..10.0, 0.1).group(sgMisc)
+    private val swapPenalty by doubleSetting("Misc Swap Penalty", 0.0, 0.0..10.0, 0.1).group(sgMisc)
+    private val multipoint by boolSetting("Misc Multipoint", true).group(sgMisc)
 
     private data class Placement(
         val base: BlockPos,

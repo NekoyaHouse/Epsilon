@@ -1028,7 +1028,13 @@
         "move to slot": "Move To Slot",
         "elytra slot": "Elytra Slot"
       },
-      "fake player": "Fake Player",
+      "fake player": {
+        "_value": "Fake Player",
+        "copy inventory": "Copy Inventory",
+        "name": "Name",
+        "record / stop": "Record / Stop",
+        "play / stop": "Play / Stop"
+      },
       "ghost hand": "Ghost Hand",
       "inv manager": {
         "_value": "Inv Manager",

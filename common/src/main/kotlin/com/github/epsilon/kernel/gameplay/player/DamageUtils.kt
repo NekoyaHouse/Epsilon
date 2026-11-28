@@ -84,13 +84,14 @@ internal object DamageUtils {
         return reduced.coerceAtLeast(0f).toDouble()
     }
 
-    private fun exposure(
+    fun exposure(
         level: ClientLevel,
         center: Vec3,
         entity: LivingEntity,
         bb: AABB,
         ignored: Set<BlockPos>,
-        solid: BlockPos?
+        solid: BlockPos?,
+        ignoreWeakBlocks: Boolean = true
     ): Double {
         val xs = 1.0 / ((bb.maxX - bb.minX) * 2.0 + 1.0)
         val ys = 1.0 / ((bb.maxY - bb.minY) * 2.0 + 1.0)
@@ -112,7 +113,7 @@ internal object DamageUtils {
                     val context = object : ClipContext(from, center, Block.COLLIDER, Fluid.NONE, entity) {
                         override fun getBlockShape(state: BlockState, getter: BlockGetter, pos: BlockPos): VoxelShape {
                             if (pos == solid) return Shapes.block()
-                            if (pos in ignored || state.block.explosionResistance < 600f) return Shapes.empty()
+                            if (pos in ignored || ignoreWeakBlocks && state.block.explosionResistance < 600f) return Shapes.empty()
                             return super.getBlockShape(state, getter, pos)
                         }
                     }

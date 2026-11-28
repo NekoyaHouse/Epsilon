@@ -29,7 +29,6 @@ object EpsilonCommon {
         ClientboundPacketManager.hashCode()
         ServerboundPacketManager.hashCode()
         TargetManager.hashCode()
-        ExtrapolationManager.hashCode()
         HealthManager.hashCode()
         SkinManager.hashCode()
 

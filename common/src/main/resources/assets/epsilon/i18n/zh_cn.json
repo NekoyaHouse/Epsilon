@@ -1028,7 +1028,13 @@
         "move to slot": "移动到槽位",
         "elytra slot": "鞘翅槽位"
       },
-      "fake player": "假人",
+      "fake player": {
+        "_value": "假玩家",
+        "copy inventory": "复制装备",
+        "name": "名称",
+        "record / stop": "录制 / 停止",
+        "play / stop": "回放 / 停止"
+      },
       "ghost hand": "幽灵手",
       "inv manager": {
         "_value": "背包管理",
