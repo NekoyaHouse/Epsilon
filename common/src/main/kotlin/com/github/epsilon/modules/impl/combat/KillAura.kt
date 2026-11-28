@@ -120,10 +120,10 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         0.5, { esp && espMode == ESPMode.Deobf })
     private val espColor1 by colorSetting(
         "ESP Main",
-        Color(255, 183, 197), true, { esp && espMode == ESPMode.CaptureMark })
+        Color(255, 183, 197), visible = { esp && espMode == ESPMode.CaptureMark })
     private val espColor2 by colorSetting(
         "ESP Second",
-        Color(255, 133, 161), true, { esp && espMode == ESPMode.CaptureMark })
+        Color(255, 133, 161), visible = { esp && espMode == ESPMode.CaptureMark })
     private val espSize by doubleSetting(
         "ESP Size",
         1.2,
@@ -145,7 +145,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         false, { esp && espMode == ESPMode.Circle })
     private val lineColor by colorSetting(
         "Line Color",
-        Color(255, 255, 255, 233), true, { esp && espMode == ESPMode.Circle })
+        Color(255, 255, 255, 233), visible = { esp && espMode == ESPMode.Circle })
     private val circleAlphaFactor by doubleSetting(
         "Circle Alpha Factor",
         1.0,
@@ -156,12 +156,11 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         FireflyESP.ColorMode.Blend, { esp && espMode == ESPMode.Firefly })
     private val fireflyColor by colorSetting(
         "Firefly Color",
-        Color(149, 149, 149, 255), true, { esp && espMode == ESPMode.Firefly })
+        Color(149, 149, 149, 255), visible = { esp && espMode == ESPMode.Firefly })
     private val fireflyColor2 by colorSetting(
         "Firefly Color 2",
         Color(255, 133, 161, 255),
-        true,
-        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        visible = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorMix by doubleSetting(
         "Firefly Color Mix",
         0.65,

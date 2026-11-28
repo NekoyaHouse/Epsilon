@@ -217,12 +217,8 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
         { prediction }).group(sgExtrapolation)
 
     private val render by boolSetting("Render", true).group(sgRender)
-    private val fill by colorSetting(
-        "Render Fill",
-        Color(148, 161, 244, 32),
-        true,
-        { render }).group(sgRender)
-    private val outline by colorSetting("Render Outline", Color(148, 161, 244, 255), true, { render }).group(sgRender)
+    private val fill by colorSetting("Render Fill", Color(148, 161, 244, 32), visible = { render }).group(sgRender)
+    private val outline by colorSetting("Render Outline", Color(148, 161, 244, 255), visible = { render }).group(sgRender)
     private val lineWidth by doubleSetting(
         "Render Line Width",
         2.0,

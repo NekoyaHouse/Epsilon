@@ -146,7 +146,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private var render by boolSetting("Render Vector", true).group(sgRender)
     private var renderColor by colorSetting(
         "Render Color",
-        Color(255, 133, 161, 210), true, { render }).group(sgRender)
+        Color(255, 133, 161, 210), visible = { render }).group(sgRender)
     private var renderWidth by doubleSetting("Render Width", 2.0, 0.5..8.0, 0.5, { render }).group(sgRender)
 
     /** 模式到状态机的固定映射；切换模式只替换引用，不重建行为对象。 */

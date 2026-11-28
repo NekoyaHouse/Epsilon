@@ -163,8 +163,8 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
     private val fade by boolSetting("Fade", true, { render })
     private val fadeTime by intSetting("Fade Time", 500, 0..3000, 50, { render && fade })
     private val shrink by boolSetting("Shrink", false, { render })
-    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), true, { render })
-    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), true, { render })
+    private val sideColor by colorSetting("Side Color", Color(255, 183, 197, 100), visible = { render })
+    private val lineColor by colorSetting("Line Color", Color(255, 105, 180), visible = { render })
 
     private var airTicks = 0
     private var yLevel = 0

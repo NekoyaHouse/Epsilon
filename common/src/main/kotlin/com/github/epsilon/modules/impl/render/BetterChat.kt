@@ -29,7 +29,7 @@ object BetterChat : Module("Better Chat", Category.RENDER) {
     private val blurStrength by doubleSetting("Blur Strength", 8.0, 1.0..20.0, 0.5)
     private val dropShadow by boolSetting("Drop Shadow", false)
     private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0..24.0, 1.0, { dropShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), true, { dropShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), visible = { dropShadow })
 
     private const val CHAT_BOTTOM_OFFSET = 40.0f
     private const val CHAT_HORIZONTAL_PADDING = 4.0f

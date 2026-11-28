@@ -66,7 +66,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
 
     private val render by boolSetting("Render", true).group(sgRender)
     private val lineWidth by doubleSetting("Line Width", 2.0, 1.0..4.0, 0.1, { render }).group(sgRender)
-    private val color by colorSetting("Color", Color.WHITE, true, { render }).group(sgRender)
+    private val color by colorSetting("Color", Color.WHITE, visible = { render }).group(sgRender)
 
     private var singleHole: Hole? = null
     private var targetHole: Hole? = null

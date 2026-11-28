@@ -41,29 +41,24 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     private val nameColor by colorSetting("Name Color", Color(247, 249, 252, 245))
     private val friendColor by colorSetting(
         "Friend Color", Color(105, 229, 166, 245),
-        true,
-        { friendStatus }
+        visible = { friendStatus }
     )
     private val teamColor by colorSetting(
         "Team Color", Color(116, 210, 150, 245),
-        true,
-        { teamStatus }
+        visible = { teamStatus }
     )
     private val healthColor by colorSetting(
         "Health Color", Color(215, 220, 228, 245),
-        true,
-        { showHealth }
+        visible = { showHealth }
     )
     private val heartColor by colorSetting(
         "Heart Color", Color(255, 91, 105, 250),
-        true,
-        { showHealth }
+        visible = { showHealth }
     )
     private val backgroundColor by colorSetting("Background Color", Color(13, 16, 20, 165))
     private val outlineColor by colorSetting(
         "Outline Color", Color(255, 255, 255, 28),
-        true,
-        { outline }
+        visible = { outline }
     )
     private val backgroundBlur by boolSetting("Background Blur", true)
     private val blurStrength by intSetting(
@@ -77,8 +72,7 @@ object NameTags : Module("Name Tags", Category.RENDER) {
     )
     private val shadowColor by colorSetting(
         "Shadow Color", Color(0, 0, 0, 135),
-        true,
-        { dropShadow }
+        visible = { dropShadow }
     )
 
     private val equipmentSlots = arrayOf(
