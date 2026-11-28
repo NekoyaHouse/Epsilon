@@ -197,7 +197,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
 
     private var rotate by boolSetting("Rotate", true).group(sgRotate)
     private var rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(sgRotate)
-    private val rotatePlace2B2T by boolSetting("Place 2B2T", false, { rotate }).group(sgRotate)
+    private val rotatePlace2B2T by boolSetting("Place 2B2T", false, { rotate && rotatePlace }).group(sgRotate)
     private var rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(sgRotate)
 
     private var facePlace by boolSetting("Face Place", true).group(sgFacePlace)
