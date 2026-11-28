@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.combat.surround
+package com.github.epsilon.modules.impl.combat
 
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
@@ -15,8 +15,8 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.movement.Blink
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.*
+import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -27,7 +27,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import kotlin.math.floor
 
@@ -96,8 +95,6 @@ object Surround : Module("Surround", Category.COMBAT) {
     private val placeSwingHand by boolSetting("Place Swing Hand", true)
     private val attackSwingHand by boolSetting("Attack Swing Hand", true)
 
-    private data class Mining(val pos: BlockPos, val started: Long, val completed: Boolean)
-
     private val miners = mutableMapOf<Int, Mining>()
     private var localMining: BlockPos? = null
     private var localMiningStarted = 0L
@@ -112,6 +109,8 @@ object Surround : Module("Surround", Category.COMBAT) {
     private var calculationDelay = 0
     private var placedThisTick = 0
     private var previousY: Double? = null
+
+    private val horizontal = listOf(Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
 
     init {
         onEnable {
@@ -264,16 +263,16 @@ object Surround : Module("Surround", Category.COMBAT) {
     private fun NonNullContext.calculateTargets() {
         walls.clear()
         floors.clear()
-        val footprint = SurroundPlanner.footprint(player.x, player.y, player.z)
+        val footprint = footprint(player.x, player.y, player.z)
         for (pos in footprint) {
             floors.add(pos.below())
             if (!surround) continue
-            for (side in SurroundPlanner.horizontal) {
+            for (side in horizontal) {
                 val wall = pos.relative(side)
                 if (wall in footprint) continue
                 walls.add(wall)
                 if (extend == Extend.Always || (extend == Extend.Mining && isMining(wall))) {
-                    SurroundPlanner.horizontal.mapTo(walls) { wall.relative(it) }
+                    horizontal.mapTo(walls) { wall.relative(it) }
                     walls.add(wall.above())
                 }
             }
@@ -286,8 +285,7 @@ object Surround : Module("Surround", Category.COMBAT) {
             paths = emptyList()
         } else if (calculationDelay <= 0 || targets != cachedTargets) {
             paths = targets.filter { !level.getBlockState(it).`is`(Blocks.BEDROCK) }.mapNotNull { target ->
-                SurroundPlanner.supportPath(target, support, { canSupport(it) }, { hit(it) != null })
-                    .takeIf { it.isNotEmpty() }
+                supportPath(target, support, { canSupport(it) }, { hit(it) != null }).takeIf { it.isNotEmpty() }
             }
             calculationDelay = calcDelay
         } else calculationDelay--
@@ -345,7 +343,8 @@ object Surround : Module("Surround", Category.COMBAT) {
         if (collisions.any { it !is EndCrystal }) return false
         if (collisions.isNotEmpty() && (!breakCrystal || collisions.any { !attackCrystal(it as EndCrystal) })) return false
         val normalHit = hit(pos)
-        val blockHit = normalHit ?: if (airPlace) { BlockHitResult(Vec3.atCenterOf(pos), Direction.DOWN, pos, false)
+        val blockHit = normalHit ?: if (airPlace) {
+            BlockHitResult(Vec3.atCenterOf(pos), Direction.DOWN, pos, false)
         } else return false
         if (player.eyePosition.distanceTo(blockHit.location) > placeRange) return false
 
@@ -468,6 +467,40 @@ object Surround : Module("Surround", Category.COMBAT) {
         }
     }
 
+    private fun footprint(x: Double, y: Double, z: Double): Set<BlockPos> = buildSet {
+        for (bx in Mth.floor(x - 0.3)..Mth.floor(x + 0.3)) {
+            for (by in Mth.floor(y)..Mth.floor(y + 0.4)) {
+                for (bz in Mth.floor(z - 0.3)..Mth.floor(z + 0.3)) {
+                    add(BlockPos(bx, by, bz))
+                }
+            }
+        }
+    }
+
+    private fun supportPath(
+        target: BlockPos,
+        limit: Int,
+        canPlace: (BlockPos) -> Boolean,
+        hasSide: (BlockPos) -> Boolean,
+    ): List<BlockPos> {
+        if (limit <= 0 || hasSide(target)) return emptyList()
+        val queue = ArrayDeque<List<BlockPos>>()
+        queue.add(listOf(target))
+        val visited = mutableSetOf(target)
+        while (queue.isNotEmpty()) {
+            val path = queue.removeFirst()
+            if (path.size > limit) continue
+            for (side in Direction.entries) {
+                val next = path.last().relative(side)
+                if (!visited.add(next) || !canPlace(next)) continue
+                val extended = path + next
+                if (hasSide(next)) return extended.drop(1).reversed()
+                queue.add(extended)
+            }
+        }
+        return emptyList()
+    }
+
     private fun faceCenter(bounds: AABB, face: Direction): Vec3 {
         val center = bounds.center
         return when (face) {
@@ -488,4 +521,6 @@ object Surround : Module("Surround", Category.COMBAT) {
                 ?: return@mapNotNull null
             clipped.takeIf { it.direction == face && eye.distanceTo(it.location) <= range }
         }.minByOrNull { eye.distanceToSqr(it.location) }
+
+    private data class Mining(val pos: BlockPos, val started: Long, val completed: Boolean)
 }

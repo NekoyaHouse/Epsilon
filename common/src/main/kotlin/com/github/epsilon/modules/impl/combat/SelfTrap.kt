@@ -23,7 +23,6 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.component.SwingAnimation
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.phys.AABB
@@ -140,7 +139,7 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
             val rose = !previousY.isNaN() && player.y > previousY
             previousY = player.y
             if (disableOnDeath && !player.isAlive || disableOnYDiff && rose || disableOnJump && player.input.keyPresses.jump()) {
-                isEnabled = false
+                toggle()
                 return@safeEventHandler
             }
             if (placementDelay > 0) {
@@ -222,6 +221,7 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
         supportTargets.clear()
         val recalculate = calculationDelay <= 0
         if (recalculate) supportPaths.clear()
+
         fun add(pos: BlockPos, targets: MutableSet<BlockPos>, mode: Extend = Extend.Disable) {
             targets.add(pos)
             if (mode == Extend.Always || mode == Extend.Mining && isMined(pos)) {
@@ -290,16 +290,20 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
     }
 
     private fun NonNullContext.findHit(pos: BlockPos, allowAir: Boolean = false): BlockHitResult? {
+        val eyes = player.eyePosition
         val hits = Direction.entries.mapNotNull { direction ->
             val neighbor = pos.relative(direction)
             val state = level.getBlockState(neighbor)
-            if (state.canBeReplaced() && neighbor !in pending) return@mapNotNull null
+            if (state.canBeReplaced() || !state.fluidState.isEmpty) return@mapNotNull null
             val face = direction.opposite
-            val point = Vec3.atCenterOf(neighbor).add(face.stepX * 0.5, face.stepY * 0.5, face.stepZ * 0.5)
-            if (player.eyePosition.distanceToSqr(point) > placeRange * placeRange) return@mapNotNull null
+            val shape = state.getShape(level, neighbor)
+            val bounds = if (shape.isEmpty) AABB(neighbor) else shape.bounds().move(neighbor)
+            if (!isFaceVisible(eyes, bounds, face)) return@mapNotNull null
+            val point = Vec3.atCenterOf(neighbor).relative(face, 0.5)
+            if (eyes.distanceToSqr(point) > placeRange * placeRange) return@mapNotNull null
             BlockHitResult(point, face, neighbor, false)
         }
-        return hits.minByOrNull { player.eyePosition.distanceToSqr(it.location) }
+        return hits.minByOrNull { eyes.distanceToSqr(it.location) }
             ?: if (allowAir && player.eyePosition.distanceToSqr(Vec3.atCenterOf(pos)) <= placeRange * placeRange)
                 BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false) else null
     }
@@ -403,7 +407,8 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
             }
         } ?: return false
         val block = (inventory.getItem(slot).item as BlockItem).block
-        val shape = block.defaultBlockState().getCollisionShape(level, pos).move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        val shape = block.defaultBlockState().getCollisionShape(level, pos)
+            .move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         for (box in shape.toAabbs()) {
             for (entity in level.getEntities(
                 null as Entity?,
@@ -486,7 +491,6 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
                 pending.remove(packet.pos)
                 if (!packet.blockState.canBeReplaced()) remoteMining.entries.removeIf { it.value.pos == packet.pos && it.value.finished }
                 if (timing == Timing.Packet && broke && packet.pos in wallTargets && packet.blockState.canBeReplaced() && canAct()) {
-                    // Upstream Broke bypasses Delay/BPT; Spawn/Explosions share the tick budget.
                     place(packet.pos, true)
                 }
             }
@@ -500,6 +504,17 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
                 val pos = BlockPos.containing(packet.x, packet.y, packet.z)
                 if (pos in wallTargets) placeCounted(pos)
             }
+        }
+    }
+
+    private fun isFaceVisible(eyes: Vec3, bounds: AABB, face: Direction): Boolean {
+        return bounds.contains(eyes) || when (face) {
+            Direction.NORTH -> eyes.z <= bounds.minZ
+            Direction.SOUTH -> eyes.z >= bounds.maxZ
+            Direction.EAST -> eyes.x >= bounds.maxX
+            Direction.WEST -> eyes.x <= bounds.minX
+            Direction.UP -> eyes.y >= bounds.maxY
+            Direction.DOWN -> eyes.y <= bounds.minY
         }
     }
 
