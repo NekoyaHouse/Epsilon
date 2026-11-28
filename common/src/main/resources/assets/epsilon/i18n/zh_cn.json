@@ -2058,6 +2058,67 @@
         "disableonydiff": "高度上升时关闭",
         "disableonjump": "跳跃时关闭",
         "disableondeath": "死亡时关闭"
+      },
+      "selftrap": {
+        "_value": "自我封闭",
+        "multitask": "使用物品时工作",
+        "timing": {
+          "_value": "补放时机",
+          "tick": "游戏刻",
+          "packet": "收包"
+        },
+        "explosions": "爆炸补放",
+        "spawn": "水晶生成补放",
+        "broke": "方块破坏补放",
+        "surround": "围脚",
+        "trap": "围身",
+        "standhead": "站立封头",
+        "crawlhead": "爬行封头",
+        "minedownward": "允许向下挖掘",
+        "blocks": "放置方块",
+        "delay": "放置间隔",
+        "bpt": "每刻放置数",
+        "swapaction": {
+          "_value": "换物方式",
+          "screen": "背包交换",
+          "hotbar": "快捷栏",
+          "pick": "拾取（交换回退）"
+        },
+        "center": {
+          "_value": "居中",
+          "never": "从不",
+          "onactivate": "开启时",
+          "always": "始终"
+        },
+        "rotate": "自动转向",
+        "placerange": "放置范围",
+        "protect": "水晶保护",
+        "breakcrystal": "破坏水晶",
+        "breakrange": "水晶攻击范围",
+        "assumebreak": "预测挖掘完成",
+        "breaktime": "预测挖掘时间",
+        "airplace": "空中放置",
+        "support": "最多辅助方块",
+        "calcdelay": "辅助计算间隔",
+        "multi": "多条辅助路径",
+        "extend": {
+          "_value": "围脚扩展",
+          "always": "始终",
+          "mining": "被挖掘时",
+          "disable": "关闭"
+        },
+        "trapextend": {
+          "_value": "围身扩展",
+          "always": "始终",
+          "mining": "被挖掘时",
+          "disable": "关闭"
+        },
+        "groundonly": "仅在地面",
+        "pauseonflying": "滑翔时暂停",
+        "pauseinfluid": "流体中暂停",
+        "disableonydiff": "高度上升时关闭",
+        "disableonjump": "跳跃时关闭",
+        "disableondeath": "死亡时关闭"
       }
     },
     "elements": {

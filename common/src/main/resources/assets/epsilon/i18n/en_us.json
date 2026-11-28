@@ -2058,6 +2058,67 @@
         "disableonydiff": "Disable on Rising",
         "disableonjump": "Disable on Jump",
         "disableondeath": "Disable on Death"
+      },
+      "selftrap": {
+        "_value": "SelfTrap",
+        "multitask": "Multitask",
+        "timing": {
+          "_value": "Timing",
+          "tick": "Tick",
+          "packet": "Packet"
+        },
+        "explosions": "Explosions",
+        "spawn": "Crystal Spawn",
+        "broke": "Block Broken",
+        "surround": "Surround",
+        "trap": "Trap",
+        "standhead": "Standing Head",
+        "crawlhead": "Crawling Head",
+        "minedownward": "Allow Mining Down",
+        "blocks": "Blocks",
+        "delay": "Placement Delay",
+        "bpt": "Blocks Per Tick",
+        "swapaction": {
+          "_value": "Swap Action",
+          "screen": "Inventory Swap",
+          "hotbar": "Hotbar",
+          "pick": "Pick (Swap Fallback)"
+        },
+        "center": {
+          "_value": "Center",
+          "never": "Never",
+          "onactivate": "On Activate",
+          "always": "Always"
+        },
+        "rotate": "Rotate",
+        "placerange": "Placement Range",
+        "protect": "Crystal Protection",
+        "breakcrystal": "Break Crystals",
+        "breakrange": "Crystal Break Range",
+        "assumebreak": "Assume Broken",
+        "breaktime": "Assumed Break Time",
+        "airplace": "Air Place",
+        "support": "Max Support Blocks",
+        "calcdelay": "Support Calculation Delay",
+        "multi": "Multiple Support Paths",
+        "extend": {
+          "_value": "Surround Extension",
+          "always": "Always",
+          "mining": "When Mined",
+          "disable": "Disabled"
+        },
+        "trapextend": {
+          "_value": "Trap Extension",
+          "always": "Always",
+          "mining": "When Mined",
+          "disable": "Disabled"
+        },
+        "groundonly": "Ground Only",
+        "pauseonflying": "Pause While Gliding",
+        "pauseinfluid": "Pause In Fluid",
+        "disableonydiff": "Disable On Rising",
+        "disableonjump": "Disable On Jump",
+        "disableondeath": "Disable On Death"
       }
     },
     "elements": {

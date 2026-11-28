@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.StartUseItemEvent
 import com.github.epsilon.kernel.gameplay.player.SwingMode
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getDirection
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
@@ -48,7 +48,7 @@ object GhostHand : Module("Ghost Hand", Category.PLAYER) {
                         val result = gameMode.useItemOn(
                             player,
                             hand,
-                            BlockHitResult(Vec3.atCenterOf(pos), getDirection(pos), pos, true)
+                            BlockHitResult(Vec3.atCenterOf(pos), RotationUtils.getDirection(pos), pos, true)
                         )
                         if (result is InteractionResult.Success || result is InteractionResult.Fail) {
                             SwingMode.Both.interactSwing(hand)

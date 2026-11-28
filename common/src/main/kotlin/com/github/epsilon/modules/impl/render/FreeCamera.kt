@@ -8,7 +8,7 @@ import com.github.epsilon.kernel.client.ChatMessages
 import com.github.epsilon.kernel.client.KeybindUtils
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
@@ -147,11 +147,11 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
 
                 val hit = mc.hitResult
                 if (hit is EntityHitResult) {
-                    rotation = calculate(hit.entity.blockPosition())
+                    rotation = RotationUtils.calculate(hit.entity.blockPosition())
                 } else if (hit is BlockHitResult) {
                     val crossHairPos: BlockPos = hit.blockPos
                     if (!level.getBlockState(crossHairPos).isAir) {
-                        rotation = calculate(hit.location)
+                        rotation = RotationUtils.calculate(hit.location)
                     }
                 }
 

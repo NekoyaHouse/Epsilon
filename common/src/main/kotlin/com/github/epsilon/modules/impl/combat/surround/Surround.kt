@@ -3,14 +3,11 @@ package com.github.epsilon.modules.impl.combat.surround
 import com.github.epsilon.events.api.EventPriority
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
-import com.github.epsilon.events.impl.GameJoinedEvent
-import com.github.epsilon.events.impl.GameLeftEvent
 import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
 import com.github.epsilon.kernel.gameplay.player.SwingMode
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.isGrimDirection
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
@@ -113,6 +110,7 @@ object Surround : Module("Surround", Category.COMBAT) {
     private var calculationDelay = 0
     private var placedThisTick = 0
     private var previousY: Double? = null
+
     @Volatile
     private var generation = 0
 
@@ -124,9 +122,11 @@ object Surround : Module("Surround", Category.COMBAT) {
                 if (center == Center.OnActivate) centerPlayer()
             }
         }
-        onDisable { clear() }
-        handler<GameLeftEvent> { clear() }
-        handler<GameJoinedEvent> { clear() }
+
+        onDisable {
+            clear()
+        }
+
         safeEventHandler<PlayerTickEvent.Pre>(priority = EventPriority.HIGH) {
             placedThisTick = 0
             attacked.clear()
@@ -158,7 +158,7 @@ object Surround : Module("Surround", Category.COMBAT) {
                 placeAll(walls)
             }
         }
-        // Connection receive callbacks can run on Netty. Recheck lifecycle after dispatching.
+
         handler<PacketEvent.Receive> { event ->
             if (event.isCancelled) return@handler
             val token = generation
@@ -167,6 +167,7 @@ object Surround : Module("Surround", Category.COMBAT) {
                 if (isEnabled && token == generation) runSafe { receive(packet) }
             }
         }
+
         handler<PacketEvent.Send> { event ->
             val packet = event.packet as? ServerboundPlayerActionPacket ?: return@handler
             if (event.isCancelled) return@handler
@@ -280,8 +281,14 @@ object Surround : Module("Surround", Category.COMBAT) {
         val state = level.getBlockState(neighbor)
         if (state.canBeReplaced() || !state.fluidState.isEmpty) return@mapNotNull null
         val face = side.opposite
-        if (!isGrimDirection(neighbor, face)) return@mapNotNull null
-        hit(state.getShape(level, neighbor, CollisionContext.of(player)), neighbor, face, player.eyePosition, placeRange)
+        if (!RotationUtils.isGrimDirection(neighbor, face)) return@mapNotNull null
+        hit(
+            state.getShape(level, neighbor, CollisionContext.of(player)),
+            neighbor,
+            face,
+            player.eyePosition,
+            placeRange
+        )
     }.minByOrNull { player.eyePosition.distanceToSqr(it.location) }
 
     private fun NonNullContext.placeAll(positions: Collection<BlockPos>, skipMiningDown: Boolean = false) {
@@ -313,7 +320,7 @@ object Surround : Module("Surround", Category.COMBAT) {
         if (collisions.isNotEmpty() && (!breakCrystal || collisions.any { !attackCrystal(it as EndCrystal) })) return false
         val normalHit = hit(pos)
         val blockHit = normalHit ?: if (airPlace) {
-            airHit(pos, player.eyePosition, placeRange) { isGrimDirection(pos, it) } ?: return false
+            airHit(pos, player.eyePosition, placeRange) { RotationUtils.isGrimDirection(pos, it) } ?: return false
         } else return false
         if (player.eyePosition.distanceTo(blockHit.location) > placeRange) return false
 
@@ -385,7 +392,7 @@ object Surround : Module("Surround", Category.COMBAT) {
 
     private inline fun <T> NonNullContext.withRotation(point: Vec3, action: () -> T): T {
         if (!rotate) return action()
-        val rotation = calculate(point)
+        val rotation = RotationUtils.calculate(point)
         when (rotationMode) {
             RotationMode.BBTT -> connection.send(
                 ServerboundMovePlayerPacket.Rot(

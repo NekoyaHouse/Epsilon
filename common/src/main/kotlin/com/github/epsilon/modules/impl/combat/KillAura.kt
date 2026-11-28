@@ -8,8 +8,7 @@ import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.effect.CaptureMarkESP
@@ -265,7 +264,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             val velocity = Velocity
 
             if (velocity.delay) {
-                targets!!.sortBy { o -> abs(velocity.yaw - calculate(o).yaw).toDouble() }
+                targets!!.sortBy { o -> abs(velocity.yaw - RotationUtils.calculate(o).yaw).toDouble() }
             }
 
             when (targetMode) {
@@ -294,7 +293,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                 PriorityMode.Range -> targets!!.sortBy { o -> o.distanceTo(player).toDouble() }
 
                 PriorityMode.Fov -> {
-                    targets!!.sortBy { o -> abs(Mth.wrapDegrees(player.xRot - calculate(o).yaw)).toDouble() }
+                    targets!!.sortBy { o -> abs(Mth.wrapDegrees(player.xRot - RotationUtils.calculate(o).yaw)).toDouble() }
                 }
 
                 PriorityMode.Health -> {
@@ -310,7 +309,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             val ignoreWalls = throughWalls
 
             if (rotate) {
-                val calculate = calculate(currentTarget, true, aimRange)
+                val calculate = RotationUtils.calculate(currentTarget, true, aimRange)
 
                 if (!ignoreWalls && raycast(calculate, aimRange)?.type == HitResult.Type.BLOCK) {
                     return@safeEventHandler
@@ -457,7 +456,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         if (throughWalls) {
             val currentTarget = target ?: return null
             if (!currentTarget.isAlive || currentTarget.isDeadOrDying) return null
-            return if (getEyeDistanceToEntity(currentTarget) <= aimRange) currentTarget else null
+            return if (RotationUtils.getEyeDistanceToEntity(currentTarget) <= aimRange) currentTarget else null
         }
 
         val hitResult = RotationManager.getHitResult()

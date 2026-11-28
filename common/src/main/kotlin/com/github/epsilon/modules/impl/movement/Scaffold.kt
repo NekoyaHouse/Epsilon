@@ -9,7 +9,6 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.PlayerTickEvent
 import com.github.epsilon.events.impl.Render3DEvent
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
-import com.github.epsilon.kernel.gameplay.grimac.C03Interact.placeBlock
 import com.github.epsilon.kernel.gameplay.inventory.FindItemResult
 import com.github.epsilon.kernel.gameplay.inventory.InvUtils.find
 import com.github.epsilon.kernel.gameplay.inventory.InvUtils.findInHotbar
@@ -20,7 +19,7 @@ import com.github.epsilon.kernel.gameplay.movement.FallingPlayer
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.overBlock
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeOrElse
@@ -37,6 +36,8 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -463,7 +464,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         val hit = BlockHitResult(getVec3(pos, face), face, pos, false)
 
         val result = if (rotationMode == RotationMode.Packet) {
-            placeBlock(hand, hit)
+            c03Place(hand, hit)
         } else {
             gameMode.useItemOn(player, hand, hit)
         }
@@ -587,7 +588,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             return@runSafeOrElse current
         }
 
-        val calculated = calculate(pos, direction)
+        val calculated = RotationUtils.calculate(pos, direction)
         val yawArray = floatArrayOf(
             -135f,
             -90f,
@@ -753,6 +754,42 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
         return !(block is FlowerBlock || block is BushBlock || block is NetherFungusBlock || block is CropBlock) && block !is SlabBlock && !blacklistedBlocks.contains(
             block
         )
+    }
+
+
+    private fun NonNullContext.c03Place(hand: InteractionHand, blockHitResult: BlockHitResult): InteractionResult {
+        val rotation = RotationUtils.calculate(blockHitResult.location)
+
+        // Snap
+        connection.send(
+            ServerboundMovePlayerPacket.PosRot(
+                player.x,
+                player.y,
+                player.z,
+                rotation.yaw,
+                rotation.pitch,
+                player.onGround(),
+                player.horizontalCollision
+            )
+        )
+
+        // Interact
+        val result = gameMode.useItemOn(player, hand, blockHitResult)
+
+        // Snap back
+        connection.send(
+            ServerboundMovePlayerPacket.PosRot(
+                player.x,
+                player.y,
+                player.z,
+                player.yRot,
+                player.xRot,
+                player.onGround(),
+                player.horizontalCollision
+            )
+        )
+
+        return result
     }
 
     val isEmergencyPlacementActive: Boolean

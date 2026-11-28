@@ -51,6 +51,7 @@ object ModuleManager : AlwaysListening {
 
         // Combat
         addModule(AimBot)
+        addModule(SelfTrap)
         addModule(AutoCrystal)
         addModule(AutoMend)
         addModule(AutoTotem)

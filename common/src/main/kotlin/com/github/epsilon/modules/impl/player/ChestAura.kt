@@ -7,7 +7,7 @@ import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.RotationManager
@@ -91,7 +91,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
 
             val target = findTarget() ?: return@safeEventHandler
 
-            val targetRotation = calculate(player.eyePosition, target.hit.location)
+            val targetRotation = RotationUtils.calculate(player.eyePosition, target.hit.location)
             RotationManager.setRotations(
                 targetRotation,
                 turnSpeed,
@@ -207,7 +207,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
         val wallRange = throughWallRange
         if (distanceSq > wallRange * wallRange) return null
 
-        val rotation = calculate(eyes, Vec3.atCenterOf(pos))
+        val rotation = RotationUtils.calculate(eyes, Vec3.atCenterOf(pos))
         val throughWallHit = raycastTarget(rotation, pos, true) ?: return null
         return Target(pos, throughWallHit, true)
     }

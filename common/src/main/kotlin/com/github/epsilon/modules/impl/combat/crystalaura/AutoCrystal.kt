@@ -11,7 +11,7 @@ import com.github.epsilon.kernel.gameplay.player.DamageUtils
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.WorldToScreen
@@ -769,7 +769,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     }
 
     private fun NonNullContext.requestRotation(point: Vec3, immediate: Boolean): Boolean {
-        val request = calculate(point, false)
+        val request = RotationUtils.calculate(point, false)
         if (!RotationManager.setRotationsExact(request, RotationPriority.High)) return false
         rotationRequest = request
         if (immediate) {

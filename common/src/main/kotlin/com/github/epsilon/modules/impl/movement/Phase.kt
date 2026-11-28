@@ -15,7 +15,7 @@ import com.github.epsilon.kernel.gameplay.movement.MovementUtils
 import com.github.epsilon.kernel.gameplay.movement.MovementUtils.forward
 import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
 import com.github.epsilon.kernel.gameplay.player.SwingMode
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.modules.Category
@@ -262,7 +262,7 @@ object Phase : Module("Phase", Category.MOVEMENT) {
                         return@safeEventHandler
                     }
 
-                    val angle = calculate(Vec3.atCenterOf(block))
+                    val angle = RotationUtils.calculate(Vec3.atCenterOf(block))
                     val result = if (swapMode == SwapMode.Silent) {
                         findInHotbar(Items.ENDER_PEARL)
                     } else {
