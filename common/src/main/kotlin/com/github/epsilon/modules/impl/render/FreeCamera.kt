@@ -241,7 +241,7 @@ object FreeCamera : Module("Free Camera", Category.RENDER) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> {
+        safeEventHandler<PacketEvent.ReceiveMain> {
             val packet = it.packet
             if (packet is ClientboundPlayerCombatKillPacket) {
                 val entity = level.getEntity(packet.playerId())

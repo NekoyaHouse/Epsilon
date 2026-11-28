@@ -14,7 +14,7 @@ object HealthManager : AlwaysListening {
     private val scoreboardHealth = ConcurrentHashMap<String, Int>()
 
     init {
-        handler<PacketEvent.Receive>(alwaysListening = true) { event -> onPacket(event) }
+        handler<PacketEvent.ReceiveMain>(alwaysListening = true) { event -> onPacket(event) }
     }
 
     fun getHealth(entity: Entity): Float {
@@ -26,7 +26,7 @@ object HealthManager : AlwaysListening {
         return 0f
     }
 
-    private fun onPacket(event: PacketEvent.Receive) {
+    private fun onPacket(event: PacketEvent.ReceiveMain) {
         if (mc.player == null || mc.level == null) return
 
         val packet = event.packet

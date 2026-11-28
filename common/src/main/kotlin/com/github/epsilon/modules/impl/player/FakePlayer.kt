@@ -7,6 +7,7 @@ import com.github.epsilon.events.impl.PacketEvent
 import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.kernel.gameplay.player.DamageUtils
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.network.ClientboundPacketDispatcher
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.crystalaura.AutoCrystal
@@ -119,7 +120,7 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             val packet = event.packet as? ClientboundExplodePacket ?: return@safeEventHandler
 
             val fake = fakePlayer
@@ -133,11 +134,9 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
                 )
                 if (fake.isDeadOrDying) {
                     fake.health = 10f
-                    val pop = PacketEvent.Receive(ClientboundEntityEventPacket(fake, 35.toByte()))
-                    pop.post()
-                    if (!pop.isCancelled) {
-                        (pop.packet as? ClientboundEntityEventPacket)?.let { connection.handleEntityEvent(it) }
-                    }
+                    ClientboundPacketDispatcher.receive(
+                        ClientboundEntityEventPacket(fake, 35.toByte()), connection
+                    )
                 }
             }
         }

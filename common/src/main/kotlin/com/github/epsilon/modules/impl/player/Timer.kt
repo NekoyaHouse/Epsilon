@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.player
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.*
+import com.github.epsilon.kernel.network.ClientboundPacketDispatcher
 import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.TimerManager
 import com.github.epsilon.modules.Category
@@ -11,7 +12,10 @@ import com.github.epsilon.modules.impl.combat.KillAura
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundPingPacket
-import net.minecraft.network.protocol.game.*
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -38,10 +42,12 @@ object Timer : Module("Timer", Category.MOVEMENT) {
     private var attack = false
     private var releasing = false
     private var shouldRelease = false
+
+    @Volatile
     var lagging = false
 
     private val timer = TimerUtils()
-    val packets: Queue<Packet<ClientGamePacketListener>> = ConcurrentLinkedQueue()
+    val packets: Queue<Packet<*>> = ConcurrentLinkedQueue()
 
     init {
         onEnable {
@@ -135,20 +141,21 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
+            val packet = event.packet
+            if (mode == Mode.Balance && (packet is ClientboundPlayerPositionPacket ||
+                        (packet is ClientboundSetEntityMotionPacket && packet.id() == player.id))
+            ) {
+                stopBalance()
+            }
+        }
+
+        safeEventHandler<PacketEvent.ReceiveNetty> { event ->
             if (mode != Mode.Balance) return@safeEventHandler
 
             val packet = event.packet
-            if (packet is ClientboundPlayerPositionPacket) {
-                stopBalance()
-                return@safeEventHandler
-            }
-            if (packet is ClientboundSetEntityMotionPacket && packet.id() == player.id) {
-                stopBalance()
-                return@safeEventHandler
-            }
             if (packet is ClientboundPingPacket && lagging) {
-                packets.add(packet as Packet<ClientGamePacketListener>)
+                packets.add(packet)
                 event.cancel()
             }
         }
@@ -254,7 +261,7 @@ object Timer : Module("Timer", Category.MOVEMENT) {
             while (true) {
                 val packet = packets.poll() ?: break
                 val connection = mc.connection ?: break
-                packet.handle(connection)
+                ClientboundPacketDispatcher.replay(packet, connection)
             }
         }
     }

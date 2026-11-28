@@ -51,7 +51,7 @@ object LogoutSpots : Module("Logout Spots", Category.RENDER) {
             logoutCache.clear()
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             val packet = event.packet
             if (packet is ClientboundPlayerInfoUpdatePacket) {
                 if (packet.actions().contains(Action.ADD_PLAYER)) {

@@ -173,7 +173,7 @@ object ElytraGrimAccelerate : Module("Elytra Grim Acc", Category.MOVEMENT) {
             }
         }
 
-        handler<PacketEvent.Receive> { event ->
+        handler<PacketEvent.ReceiveMain> { event ->
             if (event.packet is ClientboundPlayerPositionPacket) {
                 // 服务端传送会直接改写客户端坐标，下一个位置包的位移不能当作真实速度
                 hasSentPosition = false

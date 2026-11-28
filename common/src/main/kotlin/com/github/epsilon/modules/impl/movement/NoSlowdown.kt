@@ -8,16 +8,15 @@ import com.github.epsilon.events.impl.SendPositionEvent
 import com.github.epsilon.events.impl.SlowdownEvent
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
+import com.github.epsilon.kernel.network.ClientboundPacketDispatcher
 import com.github.epsilon.kernel.network.NetworkUtils
 import com.github.epsilon.managers.NotificationManager
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
-import net.minecraft.network.PacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.PacketFlow
 import net.minecraft.network.protocol.common.ClientboundPingPacket
@@ -121,7 +120,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveNetty> { event ->
             if (player.tickCount < 30 || !eating || mode != Mode.GrimBlink) return@safeEventHandler
 
             val packet = event.packet
@@ -131,6 +130,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
                     flush()
                     return@safeEventHandler
                 }
+
                 is ClientboundSetHealthPacket,
                 is ClientboundSystemChatPacket,
                 is ClientboundMoveEntityPacket,
@@ -238,7 +238,7 @@ object NoSlowdown : Module("No Slowdown", Category.MOVEMENT) {
 
         while (true) {
             val queued = packets.poll() ?: break
-            (queued as Packet<ClientPacketListener>).handle(connection)
+            ClientboundPacketDispatcher.replay(queued, connection)
         }
     }
 

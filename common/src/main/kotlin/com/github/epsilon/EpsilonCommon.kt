@@ -4,17 +4,9 @@ import com.github.epsilon.assets.i18n.EpsilonLanguageManager
 import com.github.epsilon.assets.i18n.I18NFileGenerator
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler
 import com.github.epsilon.managers.*
-import com.github.epsilon.managers.network.ClientboundPacketManager
-import com.github.epsilon.managers.network.ServerboundPacketManager
 import com.github.epsilon.managers.target.TargetManager
 import com.github.epsilon.modules.impl.ClientSetting
 
-/**
- * 客户端公共初始化入口，由各加载器的入口在自己的初始化阶段调用一次。
- *
- * 初始化顺序不可调整：模块与 HUD 元素必须先完成注册，Manager 预热要早于配置恢复，
- * 语言选择必须在配置恢复之后。
- */
 object EpsilonCommon {
 
     fun init() {
@@ -24,10 +16,8 @@ object EpsilonCommon {
         ModuleManager.initModules()
         HudElementManager.initElements()
 
-        // 预热 Managers（Kotlin object 在首次访问时完成类初始化）
+        // 预热 Managers
         ExecutorManager.hashCode()
-        ClientboundPacketManager.hashCode()
-        ServerboundPacketManager.hashCode()
         TargetManager.hashCode()
         HealthManager.hashCode()
         SkinManager.hashCode()

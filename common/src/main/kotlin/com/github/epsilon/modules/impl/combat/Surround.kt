@@ -157,7 +157,7 @@ object Surround : Module("Surround", Category.COMBAT) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             when (val packet = event.packet) {
                 is ClientboundPlayerCombatKillPacket -> if (disableOnDeath && packet.playerId() == player.id) toggle()
 

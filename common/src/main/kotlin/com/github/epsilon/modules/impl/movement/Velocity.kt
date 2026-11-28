@@ -11,12 +11,12 @@ import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
 import com.github.epsilon.kernel.jvm.NonNullContext
+import com.github.epsilon.kernel.network.ClientboundPacketDispatcher
 import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.KillAura
 import com.github.epsilon.settings.impl.EnumSetting
-import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.*
@@ -57,7 +57,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
     private var lag: Long = 0
     private var startDelay: Long = 0
 
-    private val packets: Queue<Packet<in ClientPacketListener>> = ConcurrentLinkedQueue()
+    private val packets: Queue<Packet<*>> = ConcurrentLinkedQueue()
 
     override fun getInfo(): String {
         return modeSetting.translatedValue + when (mode) {
@@ -74,7 +74,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             jump = false
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveNetty> { event ->
             when (mode) {
                 Mode.Cancel -> cancelPacket(event)
                 Mode.Reduce -> reducePacket(event)
@@ -135,7 +135,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         }
     }
 
-    private fun NonNullContext.cancelPacket(event: PacketEvent.Receive) {
+    private fun NonNullContext.cancelPacket(event: PacketEvent.ReceiveNetty) {
         val packet = event.packet
 
         if (serverMotion && packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
@@ -157,7 +157,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         }
     }
 
-    private fun NonNullContext.reducePacket(event: PacketEvent.Receive) {
+    private fun NonNullContext.reducePacket(event: PacketEvent.ReceiveNetty) {
         val packet = event.packet
 
         if (packet is ClientboundSetEntityMotionPacket
@@ -169,7 +169,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
         ) {
             if (delay) {
                 event.cancel()
-                packets.add(packet as Packet<in ClientPacketListener?>?)
+                packets.add(packet)
             }
         }
 
@@ -183,7 +183,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
                 if (chackFall && !delay) {
                     delay = true
                     event.cancel()
-                    packets.add(packet as Packet<in ClientPacketListener?>)
+                    packets.add(packet)
                     startDelay = System.currentTimeMillis()
                 }
                 yaw = Mth.wrapDegrees(Math.toDegrees(atan2(packet.movement.z, packet.movement.x)) + 90.0).toFloat()
@@ -196,7 +196,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT) {
             while (!packets.isEmpty()) {
                 val packet = packets.poll()
                 if (packet != null) {
-                    packet.handle(connection)
+                    ClientboundPacketDispatcher.replay(packet, connection)
                 }
             }
             delay = false

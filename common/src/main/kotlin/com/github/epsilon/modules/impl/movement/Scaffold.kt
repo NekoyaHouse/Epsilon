@@ -337,7 +337,7 @@ object Scaffold : Module("Scaffold", Category.MOVEMENT) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             if (toggleOnTeleport && pearlUsePacketSent && event.packet is ClientboundPlayerPositionPacket) {
                 pearlUsePacketSent = false
                 NotificationManager.error(

@@ -106,7 +106,7 @@ object NoRender : Module("No Render", Category.RENDER) {
             if (noCaveCulling) it.cancel()
         }
 
-        handler<PacketEvent.Receive> {
+        handler<PacketEvent.ReceiveNetty> {
             val packet = it.packet
             if (dropSpawnPacket && packet is ClientboundAddEntityPacket && packet.type in entities) it.cancel()
         }

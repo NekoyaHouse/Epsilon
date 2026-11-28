@@ -9,12 +9,11 @@ import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.jvm.runSafeOrElse
-import com.github.epsilon.managers.network.ServerboundPacketManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
+import com.github.epsilon.modules.impl.movement.Blink
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.*
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
@@ -157,7 +156,7 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             when (val packet = event.packet) {
                 is ClientboundBlockDestructionPacket -> {
                     if (packet.progress in 0..9) {
@@ -235,7 +234,7 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
     }
 
     private fun NonNullContext.canAct(): Boolean {
-        if (!player.isAlive || ServerboundPacketManager.blinking) return false
+        if (!player.isAlive || Blink.isEnabled) return false
         if (groundOnly && !player.onGround() && level.getBlockState(player.blockPosition()).block !is LadderBlock) return false
         if (pauseOnFlying && player.isFallFlying) return false
         if (pauseInFluid && (player.isInWater || player.isInLava)) return false

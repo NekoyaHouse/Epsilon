@@ -402,46 +402,42 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             }
         }
 
-        // Receive is posted on Netty. Only immutable packet data crosses this boundary.
-        handler<PacketEvent.Receive>(alwaysListening = true) { event ->
+        handler<PacketEvent.ReceiveMain>(alwaysListening = true) { event ->
             val packet = event.packet
             if (packet !is ClientboundAddEntityPacket && packet !is ClientboundRemoveEntitiesPacket &&
                 packet !is ClientboundEntityEventPacket && packet !is ClientboundPlayerInfoUpdatePacket &&
                 packet !is ClientboundPlayerInfoRemovePacket && packet !is ClientboundPlayerCombatKillPacket
             ) return@handler
-            val epoch = generation
-            mc.execute {
-                observeWorld()
-                runSafe {
-                    if (packet is ClientboundPlayerInfoUpdatePacket || packet is ClientboundPlayerInfoRemovePacket) {
-                        if (packet is ClientboundPlayerInfoUpdatePacket && ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in packet.actions()) {
-                            for (entry in packet.entries()) {
-                                joined[entry.profileId()] = now()
-                            }
+            observeWorld()
+            runSafe {
+                if (packet is ClientboundPlayerInfoUpdatePacket || packet is ClientboundPlayerInfoRemovePacket) {
+                    if (packet is ClientboundPlayerInfoUpdatePacket && ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in packet.actions()) {
+                        for (entry in packet.entries()) {
+                            joined[entry.profileId()] = now()
                         }
-                        if (packet is ClientboundPlayerInfoRemovePacket) for (id in packet.profileIds()) {
-                            joined.remove(id)
-                        }
-                        return@runSafe
                     }
-                    if (epoch != generation || !isEnabled || world !== level) return@runSafe
-                    when (packet) {
-                        is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
-                            onSpawn(packet)
-                        }
-
-                        is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach { id ->
-                            attacks.remove(id)
-                            dead.remove(id)
-                            predictedAttackIds.remove(id)
-                        }
-
-                        is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.DEATH) {
-                            packet.getEntity(level)?.let { dead.add(it.id) }
-                        }
-
-                        is ClientboundPlayerCombatKillPacket -> forceSuicide = false
+                    if (packet is ClientboundPlayerInfoRemovePacket) for (id in packet.profileIds()) {
+                        joined.remove(id)
                     }
+                    return@runSafe
+                }
+                if (!isEnabled || world !== level) return@runSafe
+                when (packet) {
+                    is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
+                        onSpawn(packet)
+                    }
+
+                    is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach { id ->
+                        attacks.remove(id)
+                        dead.remove(id)
+                        predictedAttackIds.remove(id)
+                    }
+
+                    is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.DEATH) {
+                        packet.getEntity(level)?.let { dead.add(it.id) }
+                    }
+
+                    is ClientboundPlayerCombatKillPacket -> forceSuicide = false
                 }
             }
         }

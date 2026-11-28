@@ -95,7 +95,7 @@ object HoleSnap : Module("Hole Snap", Category.MOVEMENT) {
             targetHole = null
         }
 
-        handler<PacketEvent.Receive> { event ->
+        handler<PacketEvent.ReceiveMain> { event ->
             if (rubberbandLimit <= 0) return@handler
 
             val packet = event.packet

@@ -12,7 +12,11 @@ open class PacketEvent {
         companion object : EventBus()
     }
 
-    class Receive(var packet: Packet<*>) : Cancellable(), IEvent, IPosting by Companion {
+    class ReceiveNetty(var packet: Packet<*>) : Cancellable(), IEvent, IPosting by Companion {
+        companion object : EventBus()
+    }
+
+    class ReceiveMain(val packet: Packet<*>) : IEvent, IPosting by Companion {
         companion object : EventBus()
     }
 

@@ -125,7 +125,7 @@ object ChestAura : Module("Chest Aura", Category.PLAYER) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             val packet = event.packet
             if (packet is ClientboundBlockEventPacket) {
                 markContainerOpened(packet.pos)

@@ -78,7 +78,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
             rowsInitialized = false
         }
 
-        safeEventHandler<PacketEvent.Receive> { event -> onPacketReceive(event, level) }
+        safeEventHandler<PacketEvent.ReceiveMain> { event -> onPacketReceive(event, level) }
         safeEventHandler<PlayerTickEvent.Post> { refreshRows() }
         handler<GameLeftEvent> {
             popCounts.clear()
@@ -156,7 +156,7 @@ object PlayerInfo : HudModule("Player Info", 4.0f, 48.0f, 250.0f, 70.0f) {
         }
     }
 
-    private fun onPacketReceive(event: PacketEvent.Receive, level: ClientLevel) {
+    private fun onPacketReceive(event: PacketEvent.ReceiveMain, level: ClientLevel) {
         val packet = event.packet
         if (packet !is ClientboundEntityEventPacket || packet.eventId != EntityEvent.PROTECTED_FROM_DEATH) {
             return

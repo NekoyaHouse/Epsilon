@@ -85,7 +85,7 @@ object Xray : Module("Xray", Category.RENDER) {
             }
         }
 
-        handler<PacketEvent.Receive> { event ->
+        handler<PacketEvent.ReceiveMain> { event ->
             val packet = event.packet
             if (packet is ClientboundBlockUpdatePacket) {
                 if (isCheckableOre(packet.blockState.block) && !ores.contains(packet.pos)) {
