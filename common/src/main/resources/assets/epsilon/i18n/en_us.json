@@ -404,6 +404,10 @@
         "replace minecraft font": "Replace Minecraft Font",
         "close gui on outside": "Close Gui On Outside",
         "dropdown hints": "Dropdown Hints",
+        "dropdown height percent": "Dropdown Screen Height (%)",
+        "dropdown category max height": "Dropdown Category Max Height",
+        "dropdown main max height": "Dropdown Main Max Height",
+        "dropdown utility max height": "Dropdown Friends/Config Max Height",
         "dropdown entrance animation": {
           "_value": "Dropdown Entrance Animation",
           "focus": "Focus",
@@ -411,6 +415,11 @@
           "classic": "Classic",
           "none": "None"
         },
+        "dropdown entrance duration": "Entrance Duration (ms)",
+        "dropdown entrance stagger": "Panel Stagger (ms)",
+        "dropdown entrance distance": "Entrance Distance",
+        "dropdown entrance scale": "Initial Scale (%)",
+        "dropdown entrance bounce": "Bounce Strength (%)",
         "panel entrance animation": {
           "_value": "Panel Entrance Animation",
           "focus": "Focus",
@@ -489,16 +498,7 @@
         "animated chat prefix": "Animated Chat Prefix",
         "chat prefix color start": "Chat Prefix Color Start",
         "chat prefix color end": "Chat Prefix Color End",
-        "chat prefix gradient speed": "Chat Prefix Gradient Speed",
-        "dropdown entrance duration": "Entrance Duration (ms)",
-        "dropdown entrance stagger": "Panel Stagger (ms)",
-        "dropdown entrance distance": "Entrance Distance",
-        "dropdown entrance scale": "Initial Scale (%)",
-        "dropdown entrance bounce": "Bounce Strength (%)",
-        "dropdown height percent": "Dropdown Screen Height (%)",
-        "dropdown category max height": "Dropdown Category Max Height",
-        "dropdown main max height": "Dropdown Main Max Height",
-        "dropdown utility max height": "Dropdown Friends/Config Max Height"
+        "chat prefix gradient speed": "Chat Prefix Gradient Speed"
       },
       "gui setting": {
         "_value": "Gui Setting",
@@ -538,6 +538,191 @@
         "bow fov": "Bow FOV",
         "bow range": "Bow Range",
         "bow smooth": "Bow Smooth"
+      },
+      "self trap": {
+        "_value": "",
+        "timing": {
+          "_value": "",
+          "tick": "",
+          "packet": ""
+        },
+        "explosions": "",
+        "spawn": "",
+        "broke": "",
+        "surround": "",
+        "trap": "",
+        "stand head": "",
+        "crawl head": "",
+        "mine downward": "",
+        "blocks": "",
+        "delay": "",
+        "bpt": "",
+        "swap action": {
+          "_value": "",
+          "screen": "",
+          "hotbar": "",
+          "pick": ""
+        },
+        "center": {
+          "_value": "",
+          "never": "",
+          "onactivate": "",
+          "always": ""
+        },
+        "rotate": "",
+        "rotation mode": {
+          "_value": "",
+          "bbtt": "",
+          "grim": ""
+        },
+        "place range": "",
+        "protect": "",
+        "break crystal": "",
+        "break range": "",
+        "assume break": "",
+        "break time": "",
+        "air place": "",
+        "support": "",
+        "calc delay": "",
+        "multi": "",
+        "extend": {
+          "_value": "",
+          "always": "",
+          "mining": "",
+          "disable": ""
+        },
+        "trap extend": {
+          "_value": "",
+          "always": "",
+          "mining": "",
+          "disable": ""
+        },
+        "ground only": "",
+        "pause on eat": "",
+        "pause on flying": "",
+        "pause in fluid": "",
+        "disable on ydiff": "",
+        "disable on jump": "",
+        "disable on death": "",
+        "place swing hand": "",
+        "attack swing hand": ""
+      },
+      "auto crystal": {
+        "_value": "Auto Crystal",
+        "place": "Place",
+        "break": "Break",
+        "base place": "Base Place",
+        "rotate": "Rotate",
+        "face place": "Face Place",
+        "extrapolation": "Extrapolation",
+        "render": "Render",
+        "pause": "Pause",
+        "targeting": "Targeting",
+        "misc": "Misc",
+        "place delay": "Place Delay (ms)",
+        "place range": "Place Range",
+        "place wall range": "Place Wall Range",
+        "place min damage": "Minimum Place Damage (20.1 = lethal)",
+        "place max self damage": "Place Max Self Damage",
+        "place damage ratio": "Place Damage Ratio",
+        "place sequential": {
+          "_value": "Place Sequential",
+          "none": "None",
+          "strict": "Strict",
+          "strong": "Strong"
+        },
+        "place 1": {
+          "12": "Place 1.12"
+        },
+        "place strict direction": "Place Strict Direction",
+        "place lower hit box": "Place Lower Hit Box",
+        "place mine ignore": "Place Mine Ignore",
+        "place always": "Place Always",
+        "place threshold": "Place Threshold",
+        "place swing mode": {
+          "_value": "",
+          "both": "",
+          "packet": "",
+          "client": "",
+          "none": ""
+        },
+        "break delay": "Break Delay (ms)",
+        "break factor": "Break Factor",
+        "break range": "Break Range",
+        "break wall range": "Break Wall Range",
+        "break min damage": "Break Min Damage",
+        "break max self damage": "Break Max Self Damage",
+        "break anti suicide": "Break Anti Suicide",
+        "break instant": {
+          "_value": "Break Instant",
+          "always": "Always",
+          "strict": "Strict",
+          "none": "None"
+        },
+        "break await": "Break Await",
+        "break ticks existed": "Break Ticks Existed",
+        "break weakness": {
+          "_value": "Break Weakness",
+          "none": "None",
+          "normal": "Normal",
+          "silent": "Silent"
+        },
+        "break swing mode": {
+          "_value": "",
+          "both": "",
+          "packet": "",
+          "client": "",
+          "none": ""
+        },
+        "base place delay": "Base Place Delay (ms)",
+        "base place air": "Base Place Air",
+        "rotate place": "Rotate Place",
+        "place 2b2t": "",
+        "rotate break": "Rotate Break",
+        "face place health": "Face Place Health",
+        "face place armor threshold": "Face Place Armor Threshold",
+        "face place shield breaker": "Face Place Shield Breaker",
+        "face place damage sync": "Face Place Damage Sync",
+        "extrapolation ticks": "Extrapolation Ticks",
+        "extrapolation draw": "Extrapolation Draw",
+        "render fill": "Render Fill",
+        "render outline": "Render Outline",
+        "render line width": "Render Line Width",
+        "render damage": "Render Damage",
+        "render fade": "Render Fade",
+        "render multi fade": "Render Multi Fade",
+        "render fade time": "Render Fade Time (s)",
+        "pause mining": "Pause Mining",
+        "pause eating": "Pause Eating",
+        "pause mending": "Pause Mending",
+        "targeting target range": "Targeting Target Range",
+        "targeting crystal range": "Targeting Crystal Range",
+        "targeting anti friend kill": "Targeting Anti Friend Kill",
+        "targeting anti quiver": "Targeting Anti Quiver",
+        "targeting ignore nakeds": "Targeting Ignore Nakeds",
+        "targeting assume best armor": "Targeting Assume Best Armor",
+        "targeting bosses": "Targeting Bosses",
+        "targeting force suicide": "Targeting Force Suicide",
+        "targeting no armor": "Targeting No Armor",
+        "targeting assume invincibility": "Targeting Assume Invincibility",
+        "targeting self": "Targeting Self",
+        "targeting timeout": "Targeting Timeout (s)",
+        "misc auto swap": {
+          "_value": "Misc Auto Swap",
+          "none": "None",
+          "normal": "Normal",
+          "silent": "Silent"
+        },
+        "misc silent": {
+          "_value": "Misc Silent",
+          "normal": "Normal",
+          "alternative": "Alternative"
+        },
+        "misc swap back": "Misc Swap Back",
+        "misc strict timing": "Misc Strict Timing",
+        "misc swap delay": "Misc Swap Delay (ticks)",
+        "misc swap penalty": "Misc Swap Penalty (ticks)",
+        "misc multipoint": "Misc Multipoint"
       },
       "auto mend": {
         "_value": "Auto Mend",
@@ -665,6 +850,67 @@
         "range": "Range",
         "fov": "FOV"
       },
+      "surround": {
+        "_value": "Surround",
+        "timing": {
+          "_value": "Timing",
+          "vanilla": "Vanilla",
+          "sequential": "Sequential"
+        },
+        "explosions": "Explosion Pre-place",
+        "spawn": "Crystal Spawn Pre-place",
+        "broke": "Replace Broken Blocks",
+        "surround": "Surround Sides",
+        "stand head": "",
+        "crawl head": "",
+        "mine downward": "",
+        "blocks": "Blocks",
+        "delay": "Placement Delay (ticks)",
+        "bpt": "Blocks per Tick",
+        "swap action": {
+          "_value": "",
+          "screen": "",
+          "hotbar": "",
+          "pick": ""
+        },
+        "center": {
+          "_value": "Center",
+          "never": "Never",
+          "onactivate": "On Activate",
+          "always": "Always"
+        },
+        "rotate": "Rotate",
+        "rotation mode": {
+          "_value": "",
+          "bbtt": "",
+          "grim": ""
+        },
+        "place range": "",
+        "protect": "Crystal Protection",
+        "break crystal": "",
+        "break range": "",
+        "assume break": "",
+        "break time": "",
+        "airplace": "Air Place",
+        "support": "Max Support Blocks",
+        "calc delay": "",
+        "multi": "Multiple Support Paths",
+        "extend": {
+          "_value": "Extend",
+          "always": "Always",
+          "mining": "Mining",
+          "disable": "Disabled"
+        },
+        "ground only": "",
+        "pause on eat": "",
+        "pause on flying": "",
+        "pause in fluid": "",
+        "disable on ydiff": "",
+        "disable on jump": "",
+        "disable on death": "",
+        "place swing hand": "",
+        "attack swing hand": ""
+      },
       "auto armor": {
         "_value": "Auto Armor",
         "head": {
@@ -782,13 +1028,7 @@
         "move to slot": "Move To Slot",
         "elytra slot": "Elytra Slot"
       },
-      "fake player": {
-        "_value": "Fake Player",
-        "record / stop": "Record / Stop",
-        "play / stop": "Play / Stop",
-        "copy inventory": "Copy Inventory",
-        "name": "Name"
-      },
+      "fake player": "Fake Player",
       "ghost hand": "Ghost Hand",
       "inv manager": {
         "_value": "Inv Manager",
@@ -1284,17 +1524,17 @@
         "side color": "Side Color",
         "line color": "Line Color"
       },
-      "customsky": {
-        "_value": "Custom Sky",
+      "custom sky": {
+        "_value": "",
         "shader": {
-          "_value": "Shader",
-          "cine": "Cine",
-          "euabe": "Euabe",
-          "local": "Local"
+          "_value": "",
+          "cine": "",
+          "euabe": "",
+          "local": ""
         },
-        "speed": "Speed",
-        "color": "Color",
-        "background color (local)": "Background Color (Local)"
+        "speed": "",
+        "color": "",
+        "background color (local)": ""
       },
       "esp 2d": {
         "_value": "ESP 2D",
@@ -1902,223 +2142,6 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
-      },
-      "auto crystal": {
-        "_value": "Auto Crystal",
-        "place": "Place",
-        "break": "Break",
-        "base place": "Base Place",
-        "rotate": "Rotate",
-        "face place": "Face Place",
-        "extrapolation": "Extrapolation",
-        "render": "Render",
-        "pause": "Pause",
-        "targeting": "Targeting",
-        "misc": "Misc",
-        "place delay": "Place Delay (ms)",
-        "place range": "Place Range",
-        "place wall range": "Place Wall Range",
-        "place min damage": "Minimum Place Damage (20.1 = lethal)",
-        "place max self damage": "Place Max Self Damage",
-        "place damage ratio": "Place Damage Ratio",
-        "place sequential": {
-          "_value": "Place Sequential",
-          "none": "None",
-          "strict": "Strict",
-          "strong": "Strong"
-        },
-        "place 1": {
-          "12": "Place 1.12"
-        },
-        "place strict direction": "Place Strict Direction",
-        "place lower hit box": "Place Lower Hit Box",
-        "place mine ignore": "Place Mine Ignore",
-        "place always": "Place Always",
-        "place threshold": "Place Threshold",
-        "break delay": "Break Delay (ms)",
-        "break factor": "Break Factor",
-        "break range": "Break Range",
-        "break wall range": "Break Wall Range",
-        "break min damage": "Break Min Damage",
-        "break max self damage": "Break Max Self Damage",
-        "break anti suicide": "Break Anti Suicide",
-        "break instant": {
-          "_value": "Break Instant",
-          "always": "Always",
-          "strict": "Strict",
-          "none": "None"
-        },
-        "break await": "Break Await",
-        "break ticks existed": "Break Ticks Existed",
-        "break weakness": {
-          "_value": "Break Weakness",
-          "none": "None",
-          "normal": "Normal",
-          "silent": "Silent"
-        },
-        "base place delay": "Base Place Delay (ms)",
-        "base place air": "Base Place Air",
-        "rotate place": "Rotate Place",
-        "rotate break": "Rotate Break",
-        "face place health": "Face Place Health",
-        "face place armor threshold": "Face Place Armor Threshold",
-        "face place shield breaker": "Face Place Shield Breaker",
-        "face place damage sync": "Face Place Damage Sync",
-        "extrapolation ticks": "Extrapolation Ticks",
-        "extrapolation draw": "Extrapolation Draw",
-        "render fill": "Render Fill",
-        "render outline": "Render Outline",
-        "render line width": "Render Line Width",
-        "render damage": "Render Damage",
-        "render fade": "Render Fade",
-        "render multi fade": "Render Multi Fade",
-        "render fade time": "Render Fade Time (s)",
-        "pause mining": "Pause Mining",
-        "pause eating": "Pause Eating",
-        "pause mending": "Pause Mending",
-        "targeting target range": "Targeting Target Range",
-        "targeting crystal range": "Targeting Crystal Range",
-        "targeting anti friend kill": "Targeting Anti Friend Kill",
-        "targeting anti quiver": "Targeting Anti Quiver",
-        "targeting ignore nakeds": "Targeting Ignore Nakeds",
-        "targeting assume best armor": "Targeting Assume Best Armor",
-        "targeting bosses": "Targeting Bosses",
-        "targeting force suicide": "Targeting Force Suicide",
-        "targeting no armor": "Targeting No Armor",
-        "targeting assume invincibility": "Targeting Assume Invincibility",
-        "targeting self": "Targeting Self",
-        "targeting timeout": "Targeting Timeout (s)",
-        "misc auto swap": {
-          "_value": "Misc Auto Swap",
-          "none": "None",
-          "normal": "Normal",
-          "silent": "Silent"
-        },
-        "misc silent": {
-          "_value": "Misc Silent",
-          "normal": "Normal",
-          "alternative": "Alternative"
-        },
-        "misc swap back": "Misc Swap Back",
-        "misc strict timing": "Misc Strict Timing",
-        "misc swap delay": "Misc Swap Delay (ticks)",
-        "misc swap penalty": "Misc Swap Penalty (ticks)",
-        "misc multipoint": "Misc Multipoint"
-      },
-      "surround": {
-        "_value": "Surround",
-        "multitask": "Multitask",
-        "timing": {
-          "_value": "Timing",
-          "vanilla": "Vanilla",
-          "sequential": "Sequential"
-        },
-        "explosions": "Explosion Pre-place",
-        "spawn": "Crystal Spawn Pre-place",
-        "broke": "Replace Broken Blocks",
-        "surround": "Surround Sides",
-        "standhead": "Standing Head Trap",
-        "crawlhead": "Crawling Head Trap",
-        "minedownward": "Allow Mining Downward",
-        "blocks": "Blocks",
-        "delay": "Placement Delay (ticks)",
-        "bpt": "Blocks per Tick",
-        "swapaction": {
-          "_value": "Swap Action",
-          "screen": "Screen",
-          "hotbar": "Hotbar",
-          "pick": "Pick (container fallback)"
-        },
-        "center": {
-          "_value": "Center",
-          "never": "Never",
-          "onactivate": "On Activate",
-          "always": "Always"
-        },
-        "rotate": "Rotate",
-        "placerange": "Place Range",
-        "protect": "Crystal Protection",
-        "breakcrystal": "Break Blocking Crystals",
-        "breakrange": "Crystal Break Range",
-        "assumebreak": "Assume Block Broken",
-        "breaktime": "Assumed Break Time (seconds)",
-        "airplace": "Air Place",
-        "support": "Max Support Blocks",
-        "calcdelay": "Support Calculation Delay (ticks)",
-        "multi": "Multiple Support Paths",
-        "extend": {
-          "_value": "Extend",
-          "always": "Always",
-          "mining": "Mining",
-          "disable": "Disabled"
-        },
-        "groundonly": "Ground Only",
-        "pauseonflying": "Pause While Gliding",
-        "pauseinfluid": "Pause in Fluids",
-        "disableonydiff": "Disable on Rising",
-        "disableonjump": "Disable on Jump",
-        "disableondeath": "Disable on Death"
-      },
-      "selftrap": {
-        "_value": "SelfTrap",
-        "multitask": "Multitask",
-        "timing": {
-          "_value": "Timing",
-          "tick": "Tick",
-          "packet": "Packet"
-        },
-        "explosions": "Explosions",
-        "spawn": "Crystal Spawn",
-        "broke": "Block Broken",
-        "surround": "Surround",
-        "trap": "Trap",
-        "standhead": "Standing Head",
-        "crawlhead": "Crawling Head",
-        "minedownward": "Allow Mining Down",
-        "blocks": "Blocks",
-        "delay": "Placement Delay",
-        "bpt": "Blocks Per Tick",
-        "swapaction": {
-          "_value": "Swap Action",
-          "screen": "Inventory Swap",
-          "hotbar": "Hotbar",
-          "pick": "Pick (Swap Fallback)"
-        },
-        "center": {
-          "_value": "Center",
-          "never": "Never",
-          "onactivate": "On Activate",
-          "always": "Always"
-        },
-        "rotate": "Rotate",
-        "placerange": "Placement Range",
-        "protect": "Crystal Protection",
-        "breakcrystal": "Break Crystals",
-        "breakrange": "Crystal Break Range",
-        "assumebreak": "Assume Broken",
-        "breaktime": "Assumed Break Time",
-        "airplace": "Air Place",
-        "support": "Max Support Blocks",
-        "calcdelay": "Support Calculation Delay",
-        "multi": "Multiple Support Paths",
-        "extend": {
-          "_value": "Surround Extension",
-          "always": "Always",
-          "mining": "When Mined",
-          "disable": "Disabled"
-        },
-        "trapextend": {
-          "_value": "Trap Extension",
-          "always": "Always",
-          "mining": "When Mined",
-          "disable": "Disabled"
-        },
-        "groundonly": "Ground Only",
-        "pauseonflying": "Pause While Gliding",
-        "pauseinfluid": "Pause In Fluid",
-        "disableonydiff": "Disable On Rising",
-        "disableonjump": "Disable On Jump",
-        "disableondeath": "Disable On Death"
       }
     },
     "elements": {
