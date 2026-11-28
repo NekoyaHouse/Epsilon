@@ -8,8 +8,7 @@ import com.github.epsilon.kernel.gameplay.player.PlayerState.isEating
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.effect.CaptureMarkESP
@@ -121,10 +120,10 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         0.5, { esp && espMode == ESPMode.Deobf })
     private val espColor1 by colorSetting(
         "ESP Main",
-        Color(255, 183, 197), true, { esp && espMode == ESPMode.CaptureMark })
+        Color(255, 183, 197), visible = { esp && espMode == ESPMode.CaptureMark })
     private val espColor2 by colorSetting(
         "ESP Second",
-        Color(255, 133, 161), true, { esp && espMode == ESPMode.CaptureMark })
+        Color(255, 133, 161), visible = { esp && espMode == ESPMode.CaptureMark })
     private val espSize by doubleSetting(
         "ESP Size",
         1.2,
@@ -146,7 +145,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         false, { esp && espMode == ESPMode.Circle })
     private val lineColor by colorSetting(
         "Line Color",
-        Color(255, 255, 255, 233), true, { esp && espMode == ESPMode.Circle })
+        Color(255, 255, 255, 233), visible = { esp && espMode == ESPMode.Circle })
     private val circleAlphaFactor by doubleSetting(
         "Circle Alpha Factor",
         1.0,
@@ -157,12 +156,11 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         FireflyESP.ColorMode.Blend, { esp && espMode == ESPMode.Firefly })
     private val fireflyColor by colorSetting(
         "Firefly Color",
-        Color(149, 149, 149, 255), true, { esp && espMode == ESPMode.Firefly })
+        Color(149, 149, 149, 255), visible = { esp && espMode == ESPMode.Firefly })
     private val fireflyColor2 by colorSetting(
         "Firefly Color 2",
         Color(255, 133, 161, 255),
-        true,
-        { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
+        visible = { esp && espMode == ESPMode.Firefly && fireflyColorMode == FireflyESP.ColorMode.Blend })
     private val fireflyColorMix by doubleSetting(
         "Firefly Color Mix",
         0.65,
@@ -265,7 +263,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             val velocity = Velocity
 
             if (velocity.delay) {
-                targets!!.sortBy { o -> abs(velocity.yaw - calculate(o).yaw).toDouble() }
+                targets!!.sortBy { o -> abs(velocity.yaw - RotationUtils.calculate(o).yaw).toDouble() }
             }
 
             when (targetMode) {
@@ -294,7 +292,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
                 PriorityMode.Range -> targets!!.sortBy { o -> o.distanceTo(player).toDouble() }
 
                 PriorityMode.Fov -> {
-                    targets!!.sortBy { o -> abs(Mth.wrapDegrees(player.xRot - calculate(o).yaw)).toDouble() }
+                    targets!!.sortBy { o -> abs(Mth.wrapDegrees(player.xRot - RotationUtils.calculate(o).yaw)).toDouble() }
                 }
 
                 PriorityMode.Health -> {
@@ -310,7 +308,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
             val ignoreWalls = throughWalls
 
             if (rotate) {
-                val calculate = calculate(currentTarget, true, aimRange)
+                val calculate = RotationUtils.calculate(currentTarget, true, aimRange)
 
                 if (!ignoreWalls && raycast(calculate, aimRange)?.type == HitResult.Type.BLOCK) {
                     return@safeEventHandler
@@ -457,7 +455,7 @@ object KillAura : Module("Kill Aura", Category.COMBAT) {
         if (throughWalls) {
             val currentTarget = target ?: return null
             if (!currentTarget.isAlive || currentTarget.isDeadOrDying) return null
-            return if (getEyeDistanceToEntity(currentTarget) <= aimRange) currentTarget else null
+            return if (RotationUtils.getEyeDistanceToEntity(currentTarget) <= aimRange) currentTarget else null
         }
 
         val hitResult = RotationManager.getHitResult()

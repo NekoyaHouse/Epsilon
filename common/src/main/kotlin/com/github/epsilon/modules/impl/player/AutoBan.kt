@@ -68,7 +68,7 @@ object AutoBan : Module("Auto Ban", Category.PLAYER) {
     private fun sendNextWord() {
         if (words.isEmpty()) {
             sendMessage("词库为空，请检查文件")
-            isEnabled = false
+            toggle()
             return
         }
 

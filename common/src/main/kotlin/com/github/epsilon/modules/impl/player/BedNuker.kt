@@ -8,7 +8,7 @@ import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.RaycastUtils.raycast
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.managers.RotationManager
@@ -76,7 +76,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             }
 
             if (rotate) {
-                val rot = calculate(currentAimPoint(bedTargetNow))
+                val rot = RotationUtils.calculate(currentAimPoint(bedTargetNow))
                 if (bedTargetNow) {
                     RotationManager.setRotations(
                         rot,
@@ -254,7 +254,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
             val candidate = TargetData(
                 bedPos,
                 face,
-                calculate(aimPoint),
+                RotationUtils.calculate(aimPoint),
                 distanceSq,
                 0,
                 true,
@@ -284,7 +284,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
 
         if (!throughWalls) {
             val face = getClosestFace(adjacentPos, eyes)
-            val blockerRotation = calculate(adjacentPos, face)
+            val blockerRotation = RotationUtils.calculate(adjacentPos, face)
             return TargetData(
                 adjacentPos,
                 face,
@@ -298,7 +298,7 @@ object BedNuker : Module("Bed Nuker", Category.PLAYER) {
         }
 
         val face = getClosestFace(adjacentPos, eyes)
-        val blockerRotation = calculate(adjacentPos, face)
+        val blockerRotation = RotationUtils.calculate(adjacentPos, face)
         return TargetData(
             adjacentPos,
             face,

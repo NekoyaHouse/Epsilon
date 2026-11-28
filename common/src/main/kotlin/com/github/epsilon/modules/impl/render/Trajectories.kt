@@ -53,13 +53,11 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
     private val impactOutline by boolSetting("Impact Outline", true).group(renderGroup)
     private val impactFillColor by colorSetting(
         "Impact Fill Color", Color(255, 150, 0, 45),
-        true,
-        { impactFill }
+        visible = { impactFill }
     ).group(renderGroup)
     private val impactOutlineColor by colorSetting(
         "Impact Outline Color", Color(255, 180, 55, 245),
-        true,
-        { impactOutline }
+        visible = { impactOutline }
     ).group(renderGroup)
     private val positionBoxes by boolSetting("Render Position Boxes", false).group(renderGroup)
     private val positionBoxSize by doubleSetting(
@@ -68,13 +66,11 @@ object Trajectories : Module("Trajectories", Category.RENDER) {
     ).group(renderGroup)
     private val positionFillColor by colorSetting(
         "Position Fill Color", Color(255, 150, 0, 28),
-        true,
-        { positionBoxes }
+        visible = { positionBoxes }
     ).group(renderGroup)
     private val positionOutlineColor by colorSetting(
         "Position Outline Color", Color(255, 180, 55, 180),
-        true,
-        { positionBoxes }
+        visible = { positionBoxes }
     ).group(renderGroup)
 
     private val MULTISHOT_OFFSET: Double = Math.toRadians(10.0)

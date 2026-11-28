@@ -56,22 +56,19 @@ object GuiSetting : Module("Gui Setting", null) {
     val primaryColor by colorSetting(
         "Primary Color",
         Color(255, 140, 180, 220),
-        true,
-        { ClientSetting.guiMode == ClientSetting.GuiMode.TrollHack }
+        visible = { ClientSetting.guiMode == ClientSetting.GuiMode.TrollHack }
     )
 
     val backgroundColor by colorSetting(
         "Background Color",
         Color(0, 0, 0, 160),
-        true,
-        { ClientSetting.guiMode == ClientSetting.GuiMode.TrollHack }
+        visible = { ClientSetting.guiMode == ClientSetting.GuiMode.TrollHack }
     )
 
     val textColor by colorSetting(
         "Text Color",
         Color(255, 250, 253, 255),
-        true,
-        { ClientSetting.guiMode == ClientSetting.GuiMode.TrollHack }
+        visible = { ClientSetting.guiMode == ClientSetting.GuiMode.TrollHack }
     )
 
     val hoverAlpha by intSetting(

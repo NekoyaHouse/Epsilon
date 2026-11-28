@@ -146,7 +146,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
     private var render by boolSetting("Render Vector", true).group(sgRender)
     private var renderColor by colorSetting(
         "Render Color",
-        Color(255, 133, 161, 210), true, { render }).group(sgRender)
+        Color(255, 133, 161, 210), visible = { render }).group(sgRender)
     private var renderWidth by doubleSetting("Render Width", 2.0, 0.5..8.0, 0.5, { render }).group(sgRender)
 
     /** 模式到状态机的固定映射；切换模式只替换引用，不重建行为对象。 */
@@ -226,7 +226,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         safeEventHandler<AttackEntityEvent> { onAttackEntity(it) }
 
         // 伤害包用于重锤确认，实体事件用于 kinetic 命中；传送包只清除旧轨迹。
-        handler<PacketEvent.Receive> { onPacketReceive(it) }
+        handler<PacketEvent.ReceiveMain> { onPacketReceive(it) }
 
         handler<KeyPressEvent> { onKeyPress(it) }
         handler<MousePressEvent> { onMousePress(it) }
@@ -398,7 +398,7 @@ object ElytraCombat : Module("Elytra Combat", Category.COMBAT) {
         }
     }
 
-    private fun onPacketReceive(event: PacketEvent.Receive) {
+    private fun onPacketReceive(event: PacketEvent.ReceiveMain) {
         when (val packet = event.packet) {
             is ClientboundDamageEventPacket -> this.hitTracker.onDamagePacket(packet)
             is ClientboundEntityEventPacket -> this.hitTracker.onEntityStatusPacket(packet)

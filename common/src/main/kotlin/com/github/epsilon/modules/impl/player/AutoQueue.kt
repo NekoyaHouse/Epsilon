@@ -23,7 +23,7 @@ object AutoQueue : Module("Auto Queue", Category.PLAYER) {
     private val questions: JsonObject = loadQuestions()
 
     init {
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             if (mode != Mode.XIN_2B2T) return@safeEventHandler
             val packet = event.packet
             if (packet !is ClientboundSystemChatPacket) return@safeEventHandler

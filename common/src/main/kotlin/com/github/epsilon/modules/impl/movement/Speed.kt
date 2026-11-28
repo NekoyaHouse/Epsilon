@@ -82,7 +82,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             stage = 4
         }
 
-        safeEventHandler<PacketEvent.Receive>(EventPriority.HIGH) { event ->
+        safeEventHandler<PacketEvent.ReceiveMain>(EventPriority.HIGH) { event ->
             val packet = event.packet
 
             if (mode == Mode.Strafe) {

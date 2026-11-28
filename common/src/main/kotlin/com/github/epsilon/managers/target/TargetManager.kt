@@ -3,8 +3,7 @@ package com.github.epsilon.managers.target
 import com.github.epsilon.events.api.AlwaysListening
 import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.impl.ClientTickEvent
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.getEyeDistanceToEntity
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.isInFov
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafeOrElse
 import com.github.epsilon.kernel.jvm.runSafeOrFalse
@@ -84,7 +83,7 @@ object TargetManager : AlwaysListening {
             targets.add(entity)
         }
 
-        targets.sortWith(Comparator.comparingDouble { entity -> getEyeDistanceToEntity(entity) })
+        targets.sortWith(Comparator.comparingDouble { entity -> RotationUtils.getEyeDistanceToEntity(entity) })
         return targets
     }
 
@@ -104,10 +103,10 @@ object TargetManager : AlwaysListening {
             return false
         }
 
-        val dist = getEyeDistanceToEntity(entity)
+        val dist = RotationUtils.getEyeDistanceToEntity(entity)
         if (dist > request.range) return false
 
-        if (request.fov < 360.0f && !isInFov(entity, request.fov)) return false
+        if (request.fov < 360.0f && !RotationUtils.isInFov(entity, request.fov)) return false
 
         if (entity is Player) {
             if (!request.allowFriends && FriendManager.isFriend(entity)) return false

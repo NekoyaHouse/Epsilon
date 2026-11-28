@@ -124,8 +124,8 @@ object Blink : Module("Blink", Category.MOVEMENT) {
         }
 
         safeEventHandler<SendPositionEvent> {
-            if (mc.gui.screen() is RecoverWorldDataScreen && isEnabled) {
-                isEnabled = false
+            if (mc.gui.screen() is RecoverWorldDataScreen) {
+                toggle()
             }
 
             if (SlowRelease) {

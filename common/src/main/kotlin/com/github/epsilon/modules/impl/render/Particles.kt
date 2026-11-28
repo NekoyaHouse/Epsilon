@@ -54,7 +54,7 @@ object Particles : Module("Particles", Category.RENDER) {
     private val mode by enumSetting("Mode", Mode.SnowFlake)
     private val colorMode by enumSetting("Color Mode", ColorMode.Sync)
     private val physics by enumSetting("Physics", Physics.Fly)
-    private val color by colorSetting("Color", Color.WHITE, true, { colorMode == ColorMode.Custom })
+    private val color by colorSetting("Color", Color.WHITE, visible = { colorMode == ColorMode.Custom })
     private val amount by intSetting("Amount", 10, 1..50, 1)
     private val lifetime by intSetting("Time", 256, 5..80, 1)
     private val size by doubleSetting("Size", 1.0, 0.1..1.5, 0.1)

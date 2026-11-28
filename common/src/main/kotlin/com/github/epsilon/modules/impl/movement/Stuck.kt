@@ -44,7 +44,7 @@ object Stuck : Module("Stuck", Category.MOVEMENT) {
 
         safeEventHandler<PlayerTickEvent.Pre> { event ->
             if (player.onGround()) {
-                isEnabled = false
+                toggle()
                 return@safeEventHandler
             }
             when (stage) {

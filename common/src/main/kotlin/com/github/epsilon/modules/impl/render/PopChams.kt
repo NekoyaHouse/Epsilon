@@ -41,7 +41,7 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
             }
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             val packet = event.packet
             if (packet !is ClientboundEntityEventPacket || packet.eventId != EntityEvent.PROTECTED_FROM_DEATH) {
                 return@safeEventHandler
@@ -74,7 +74,6 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
         player: Player,
         private val minecraft: Minecraft,
     ) : RemotePlayer(level, GameProfile(player.gameProfile.id(), player.gameProfile.name())) {
-
         private var timer = 0.0
         private val walkPosition: Float
         private val walkSpeed: Float
@@ -149,7 +148,6 @@ object PopChams : Module("Pop Chams", Category.RENDER) {
         override fun shouldShowName(): Boolean = false
 
         override fun belowNameDisplay(): Component? = null
-
     }
 
 }

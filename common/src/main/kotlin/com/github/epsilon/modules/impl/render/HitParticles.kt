@@ -45,7 +45,7 @@ object HitParticles : Module("Hit Particles", Category.RENDER) {
     private val mode by enumSetting("Mode", Mode.Stars)
     private val physics by enumSetting("Physics", Physics.Fall)
     private val colorMode by enumSetting("Color Mode", ColorMode.Sync)
-    private val color by colorSetting("Color", Color(255, 255, 255, 53), true, { colorMode == ColorMode.Custom })
+    private val color by colorSetting("Color", Color(255, 255, 255, 53), visible = { colorMode == ColorMode.Custom })
     private val onlySelf by boolSetting("Only Self", false)
     private val amount by intSetting("Amount", 2, 1..5, 1)
     private val lifeTime by intSetting("Life Time", 2, 1..10, 1)

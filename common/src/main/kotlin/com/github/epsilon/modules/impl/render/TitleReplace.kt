@@ -24,10 +24,10 @@ object TitleReplace : Module("Title Replace", Category.PLAYER) {
     private val PATTERN: Pattern = Pattern.compile("(祝你好运\\s*)[^!！\\n]*")
 
     init {
-        handler<PacketEvent.Receive> { onPacketReceive(it) }
+        handler<PacketEvent.ReceiveNetty> { onPacketReceive(it) }
     }
 
-    private fun onPacketReceive(event: PacketEvent.Receive) {
+    private fun onPacketReceive(event: PacketEvent.ReceiveNetty) {
         when (val packet = event.packet) {
             is ClientboundSetTitleTextPacket -> {
                 val replaced = replace(packet.text)

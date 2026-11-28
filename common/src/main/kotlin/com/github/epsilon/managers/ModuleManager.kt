@@ -13,6 +13,7 @@ import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.ClientSetting
 import com.github.epsilon.modules.impl.GuiSetting
 import com.github.epsilon.modules.impl.combat.*
+import com.github.epsilon.modules.impl.combat.crystalaura.CrystalAura
 import com.github.epsilon.modules.impl.movement.*
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly
 import com.github.epsilon.modules.impl.player.*
@@ -49,9 +50,12 @@ object ModuleManager : AlwaysListening {
 
         // Combat
         addModule(AimBot)
+        addModule(SelfTrap)
         addModule(AutoMend)
         addModule(AutoTotem)
         addModule(Criticals)
+        addModule(CrystalAura)
+        addModule(FeetTrap)
         addModule(KillAura)
         addModule(KeyPearl)
         addModule(SilentAim)

@@ -20,7 +20,7 @@ object Filter : Module("Filter", Category.RENDER) {
     }
 
     private val mode by enumSetting("Mode", Mode.Shader)
-    private val baseColor by colorSetting("Base Color", Color(70, 70, 150, 50), true)
+    private val baseColor by colorSetting("Base Color", Color(70, 70, 150, 50))
 
     fun isLightMapMode(): Boolean = isEnabled && mode == Mode.LightMap
 

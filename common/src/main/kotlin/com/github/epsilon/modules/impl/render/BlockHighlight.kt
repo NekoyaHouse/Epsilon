@@ -70,15 +70,13 @@ object BlockHighlight : Module("Block Highlight", Category.RENDER) {
     private val mode by enumSetting("Mode", Mode.Outline)
     private val sideColor by colorSetting(
         "Color", Color(255, 255, 255, 100),
-        true,
-        {
+        visible = {
             mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Fill || mode == Mode.FilledSide
         }
     )
     private val lineColor by colorSetting(
         "Line Color", Color(255, 255, 255, 255),
-        true,
-        {
+        visible = {
             mode == Mode.Both || mode == Mode.BothSide || mode == Mode.Outline || mode == Mode.OutlinedSide
         }
     )

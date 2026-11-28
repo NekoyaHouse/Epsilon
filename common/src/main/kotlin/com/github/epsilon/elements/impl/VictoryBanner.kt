@@ -102,7 +102,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         }
 
         setAnchorState(HorizontalAnchor.Center, VerticalAnchor.Top, 0.0f, 72.0f)
-        handler<PacketEvent.Receive> { event -> onPacketReceive(event) }
+        handler<PacketEvent.ReceiveMain> { event -> onPacketReceive(event) }
         safeEventHandler<AttackEntityEvent> { event ->
             val target = event.entity
             if (triggerMode == TriggerMode.Kill && event.player === player && target is Player && target !== player && target.isAlive) {
@@ -199,7 +199,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
         }
     }
 
-    private fun onPacketReceive(event: PacketEvent.Receive) {
+    private fun onPacketReceive(event: PacketEvent.ReceiveMain) {
         val packet: Packet<*> = event.packet
         when (triggerMode) {
             TriggerMode.Title -> {
@@ -227,7 +227,7 @@ object VictoryBanner : HudModule("Victory Banner", 0.0f, 72.0f, IDEAL_WIDTH, BAS
 
             TriggerMode.Kill -> {
                 if (packet is ClientboundEntityEventPacket && packet.eventId == EntityEvent.DEATH) {
-                    mc.execute { confirmDeathEvent(packet) }
+                    confirmDeathEvent(packet)
                 }
             }
 

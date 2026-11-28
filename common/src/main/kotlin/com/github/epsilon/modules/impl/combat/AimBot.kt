@@ -41,8 +41,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     private val onlyWeapon by boolSetting("Only Weapon", false, { mode == Mode.AimAssist })
     private val lmbActivation by boolSetting("LMB Activation", false, { mode == Mode.AimAssist })
     private val ignoreWalls by boolSetting("Ignore Walls", true)
-    private val reactionTime by intSetting(
-        "Reaction Time", 80, 1..500, 1, { mode == Mode.AimAssist && !ignoreWalls })
+    private val reactionTime by intSetting("Reaction Time", 80, 1..500, 1, { mode == Mode.AimAssist && !ignoreWalls })
     private val ignoreInvisible by boolSetting("Ignore Invis", false, { mode == Mode.AimAssist })
 
     private val predictTicks by intSetting("Predict Ticks", 2, 0..20, 1, { mode == Mode.BowAim })
@@ -96,7 +95,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
     }
 
     private fun NonNullContext.updateBowAim() {
-        if (!isUsingBow()) {
+        if (player.useItem.item !is BowItem) {
             cancelBowAim()
             return
         }
@@ -187,8 +186,7 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
                         nearestTarget.eyePosition.z - player.z,
                         nearestTarget.eyePosition.x - player.x
                     )
-                )
-                    .toFloat() - 90.0f - rotationYaw
+                ).toFloat() - 90.0f - rotationYaw
             )
             var fixedDeltaYaw = deltaYaw
             if (fixedDeltaYaw > 180.0f) {
@@ -288,10 +286,6 @@ object AimBot : Module("Aim Bot", Category.COMBAT) {
         val motionY = entity.y - entity.yo
         val motionZ = entity.z - entity.zo
         return entity.position().add(motionX * ticks, motionY * ticks, motionZ * ticks)
-    }
-
-    private fun NonNullContext.isUsingBow(): Boolean {
-        return player.useItem.item is BowItem
     }
 
 }

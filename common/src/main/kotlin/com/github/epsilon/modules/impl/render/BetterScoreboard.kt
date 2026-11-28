@@ -22,7 +22,7 @@ object BetterScoreboard : Module("Better Scoreboard", Category.RENDER) {
     private val blurStrength by doubleSetting("Blur Strength", 8.0, 1.0..20.0, 0.5, { backgroundBlur })
     private val drawShadow by boolSetting("Draw Shadow", false)
     private val shadowBlur by doubleSetting("Shadow Blur", 10.0, 2.0..24.0, 1.0, { drawShadow })
-    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), true, { drawShadow })
+    private val shadowColor by colorSetting("Shadow Color", Color(255, 255, 255, 110), visible = { drawShadow })
 
     private var pendingBounds: ScoreboardBounds? = null
 

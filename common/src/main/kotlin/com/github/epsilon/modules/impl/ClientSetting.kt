@@ -398,15 +398,13 @@ object ClientSetting : Module("Client Setting", null) {
     val chatPrefixColorStart by colorSetting(
         "Chat Prefix Color Start",
         Color(255, 175, 210),
-        true,
-        { animatedChatPrefix }
+        visible = { animatedChatPrefix }
     ).group(sgNotification)
 
     val chatPrefixColorEnd by colorSetting(
         "Chat Prefix Color End",
         Color(150, 220, 255),
-        true,
-        { animatedChatPrefix }
+        visible = { animatedChatPrefix }
     ).group(sgNotification)
 
     val chatPrefixGradientSpeed by doubleSetting(

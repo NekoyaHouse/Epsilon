@@ -143,18 +143,15 @@ object Shaders : Module("Shaders", Category.RENDER) {
         ).group(group)
         var glowColor by colorSetting(
             prefix + "Glow Color", Color(255, 183, 197),
-            true,
-            { glowAvailable() && glowColorMode == GlowColorMode.Solid }
+            visible = { glowAvailable() && glowColorMode == GlowColorMode.Solid }
         ).group(group)
         val glowColor1 by colorSetting(
             prefix + "Glow Color 1", Color(255, 183, 197),
-            true,
-            { glowAvailable() && glowColorMode == GlowColorMode.Gradient }
+            visible = { glowAvailable() && glowColorMode == GlowColorMode.Gradient }
         ).group(group)
         val glowColor2 by colorSetting(
             prefix + "Glow Color 2", Color(0, 255, 200),
-            true,
-            { glowAvailable() && glowColorMode == GlowColorMode.Gradient }
+            visible = { glowAvailable() && glowColorMode == GlowColorMode.Gradient }
         ).group(group)
         val glowGradientSpeed by doubleSetting(
             prefix + "Glow Gradient Speed", 2.0, 0.1..10.0, 0.1,
@@ -199,38 +196,32 @@ object Shaders : Module("Shaders", Category.RENDER) {
         ).group(group)
         val outlineColor by colorSetting(
             prefix + "Outline", Color(255, 255, 255, 136),
-            true,
-            {
+            visible = {
                 outlineAvailable() && mode != ShaderManager.Shader.Gradient && mode != ShaderManager.Shader.Snow
             }
         ).group(group)
         val smokeOutlineColor1 by colorSetting(
             prefix + "Smoke Outline", Color(255, 255, 255, 136),
-            true,
-            { outlineAvailable() && mode == ShaderManager.Shader.Smoke }
+            visible = { outlineAvailable() && mode == ShaderManager.Shader.Smoke }
         ).group(group)
         val smokeOutlineColor2 by colorSetting(
             prefix + "Smoke Outline 2", Color(250, 250, 250, 136),
-            true,
-            { outlineAvailable() && mode == ShaderManager.Shader.Smoke }
+            visible = { outlineAvailable() && mode == ShaderManager.Shader.Smoke }
         ).group(group)
         val fillColor1 by colorSetting(
             prefix + "Fill", Color(255, 255, 255, 136),
-            true,
-            { outlineAvailable() && mode != ShaderManager.Shader.Gradient }
+            visible = { outlineAvailable() && mode != ShaderManager.Shader.Gradient }
         ).group(group)
         val fillColor2 by colorSetting(
             prefix + "Smoke Fill", Color(255, 255, 255, 136),
-            true,
-            {
+            visible = {
                 outlineAvailable() &&
                         (mode == ShaderManager.Shader.Smoke || mode == ShaderManager.Shader.Fade)
             }
         ).group(group)
         val fillColor3 by colorSetting(
             prefix + "Smoke Fill 2", Color(255, 255, 255, 136),
-            true,
-            { outlineAvailable() && mode == ShaderManager.Shader.Smoke }
+            visible = { outlineAvailable() && mode == ShaderManager.Shader.Smoke }
         ).group(group)
 
     }

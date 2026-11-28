@@ -9,7 +9,7 @@ import com.github.epsilon.kernel.gameplay.inventory.InvUtils.swapBack
 import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.Rotation
 import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils.calculate
+import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.time.TimerUtils
 import com.github.epsilon.managers.NotificationManager
@@ -113,7 +113,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                             val hitX = eyesPos.x.coerceIn(waterPos.x.toDouble(), waterPos.x + 1.0)
                             val hitZ = eyesPos.z.coerceIn(waterPos.z.toDouble(), waterPos.z + 1.0)
                             val hitVec = Vec3(hitX, waterPos.y + 0.875, hitZ)
-                            val rotation = calculate(hitVec)
+                            val rotation = RotationUtils.calculate(hitVec)
                             RotationManager.setRotations(rotation, 180.0, RotationPriority.High)
                             grimCollectRotation = rotation
                             grimCollectSlot = bucket.slot
@@ -163,7 +163,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
 
                         if (dist < 10) {
                             val targetVec = Vec3(bestPos.x + 0.5, bestPos.y + 1.0, bestPos.z + 0.5)
-                            val rotation = calculate(targetVec)
+                            val rotation = RotationUtils.calculate(targetVec)
 
                             RotationManager.setRotations(rotation, 180.0, RotationPriority.High)
 
@@ -179,7 +179,7 @@ object AutoMLG : Module("Auto MLG", Category.PLAYER) {
                                     return@safeEventHandler
                                 }
 
-                                val preciseRotation = calculate(hitVec)
+                                val preciseRotation = RotationUtils.calculate(hitVec)
                                 RotationManager.setRotations(preciseRotation, 180.0, RotationPriority.High)
 
                                 val noSlowdown = NoSlowdown

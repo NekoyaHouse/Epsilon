@@ -1,16 +1,11 @@
 package com.github.epsilon.events.api
 
-import com.github.epsilon.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
-
-open class NamedProfilerEventBus(private val profilerName: String) : ProfilerEventBus()
-
-open class ProfilerEventBus : EventBus()
 
 open class EventBus : IPosting {
     final override val eventBus: EventBus
@@ -29,9 +24,8 @@ open class EventBus : IPosting {
         for (handler in handlers) {
             try {
                 handler.function(event)
-            } catch (exception: Exception) {
-                unsubscribe(handler)
-                logFailure(event, handler, exception)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
         invokeParallel(event)
@@ -42,12 +36,7 @@ open class EventBus : IPosting {
         runBlocking {
             for (handler in parallelHandlers) {
                 launch(Dispatchers.Default) {
-                    try {
-                        handler.function(event)
-                    } catch (exception: Exception) {
-                        unsubscribe(handler)
-                        logFailure(event, handler, exception)
-                    }
+                    handler.function(event)
                 }
             }
         }
@@ -75,13 +64,6 @@ open class EventBus : IPosting {
 
     fun unsubscribe(handler: ParallelHandler) {
         synchronized(parallelHandlers) { parallelHandlers.remove(handler) }
-    }
-
-    private fun logFailure(event: Any, handler: AbstractHandler<*>, exception: Exception) {
-        Constants.LOGGER.error(
-            "事件 {} 的监听器 {} (priority={}) 执行失败，已取消订阅",
-            event.javaClass.name, handler.ownerName, handler.priority, exception
-        )
     }
 
     companion object {

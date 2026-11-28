@@ -204,7 +204,7 @@ object PlayerAlarms : Module("Player Alarms", Category.PLAYER) {
             playersInRender.addAll(currentInRender)
         }
 
-        safeEventHandler<PacketEvent.Receive> { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             val packet = event.packet
 
             // Player Join
