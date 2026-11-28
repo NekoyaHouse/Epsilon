@@ -77,6 +77,7 @@ import kotlin.math.ceil
 import kotlin.math.round
 
 object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
+
     private enum class Sequential {
         None,
         Strict,
@@ -185,9 +186,11 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         1,
         { basePlace }).group(sgBasePlace)
     private var basePlaceAir by boolSetting("Base Place Air", false, { basePlace }).group(sgBasePlace)
+
     private var rotate by boolSetting("Rotate", true).group(sgRotate)
     private var rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(sgRotate)
     private var rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(sgRotate)
+
     private var facePlace by boolSetting("Face Place", true).group(sgFacePlace)
     private var facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(sgFacePlace)
     private var facePlaceArmorThreshold by intSetting("Face Place Armor Threshold", 26, 0..100, 1, { facePlace }).group(sgFacePlace)
@@ -196,6 +199,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         "Face Place Damage Sync",
         true,
         { facePlace }).group(sgFacePlace)
+
     private var prediction by boolSetting("Extrapolation", true).group(sgExtrapolation)
     private var predictionTicks by intSetting(
         "Extrapolation Ticks",
@@ -207,20 +211,17 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         "Extrapolation Draw",
         false,
         { prediction }).group(sgExtrapolation)
+
     private var render by boolSetting("Render", true).group(sgRender)
     private var fill by colorSetting(
         "Render Fill",
         Color(148, 161, 244, 32),
         true,
         { render }).group(sgRender)
-    private var outline by colorSetting("Render Outline", Color(148, 161, 244, 255), true, { render }).group(
-        settingGroup(
-            "Render"
-        )
-    )
+    private var outline by colorSetting("Render Outline", Color(148, 161, 244, 255), true, { render }).group(sgRender)
     private var lineWidth by doubleSetting(
         "Render Line Width",
-        1.0,
+        2.0,
         0.1..3.0,
         0.1,
         { render }).group(sgRender)
@@ -233,9 +234,11 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         0.1..1.5,
         0.1,
         { render }).group(sgRender)
+
     private var pauseMining by boolSetting("Pause Mining", false).group(sgPause)
     private var pauseEating by boolSetting("Pause Eating", true).group(sgPause)
     private var pauseMending by boolSetting("Pause Mending", false).group(sgPause)
+
     private var targetRange by doubleSetting(
         "Targeting Target Range",
         16.0,
@@ -266,6 +269,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         0.0..4.0,
         0.1
     ).group(sgTargeting)
+
     private var autoSwap by enumSetting("Misc Auto Swap", SwapMode.Silent).group(sgMisc)
     private var silent by enumSetting("Misc Silent", Silent.Normal).group(sgMisc)
     private var swapBack by boolSetting("Misc Swap Back", true).group(sgMisc)
@@ -515,7 +519,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
                         focus.boundingBox.setMinY(focus.boundingBox.center.y).inflate(0.5, 0.0, 0.5)
                     )
         }
-        // open-zio detects an arrow over the target's head (quiver exploit), not bow use.
         quiverThreat = antiQuiver && focus is Player && level.entitiesForRendering().filterIsInstance<Arrow>().any {
             val dx = it.x - focus.eyePosition.x;
             val dz = it.z - focus.eyePosition.z
@@ -555,6 +558,19 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         return box
     }
 
+    private fun NonNullContext.placementPredictions() = PlacementPredictionCache<LivingEntity>(
+        predictionTicks,
+        { it.boundingBox },
+        { entity, box ->
+            if (!prediction || entity !is Player) null
+            else {
+                val motion = if (entity === player) entity.deltaMovement else entity.knownSpeed
+                if (motion.x == 0.0 && motion.z == 0.0) null
+                else box.move(motion.x, 0.0, motion.z).takeIf { level.noCollision(entity, it) }
+            }
+        }
+    )
+
     private fun NonNullContext.minimum(entity: LivingEntity, hit: Boolean): Double {
         if (obsidianDropNearTarget || quiverThreat) return 0.1
         val armor = DamageUtils.armorSlots.map { entity.getItemBySlot(it) }.minOf {
@@ -587,9 +603,12 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         return lethal(entity, damage) || selfDamage <= if (hit) maxBreakSelfDamage else maxPlaceSelfDamage
     }
 
-    private fun NonNullContext.friendSafe(center: Vec3, ignored: Set<BlockPos>, solid: BlockPos?): Boolean =
+    private fun NonNullContext.friendSafe(
+        center: Vec3, ignored: Set<BlockPos>, solid: BlockPos?,
+        predictions: PlacementPredictionCache<LivingEntity>? = null
+    ): Boolean =
         !antiFriendKill || level.players().filter { FriendManager.isFriend(it) }.none {
-            DamageUtils.damage(level, center, it, predictedBounds(it), ignored, solid) >= health(it)
+            DamageUtils.damage(level, center, it, predictions?.bounds(it) ?: predictedBounds(it), ignored, solid) >= health(it)
         }
 
     private fun NonNullContext.visible(point: Vec3): Boolean = level.clip(
@@ -620,7 +639,10 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         }
     }
 
-    private fun NonNullContext.canPlace(base: BlockPos, needsBase: Boolean): Boolean {
+    private fun NonNullContext.canPlace(
+        base: BlockPos, needsBase: Boolean,
+        predictions: PlacementPredictionCache<LivingEntity> = placementPredictions()
+    ): Boolean {
         if (!level.hasChunk(base.x shr 4, base.z shr 4)) return false
         val ignored = ignoredBlocks()
         val above = base.above()
@@ -640,7 +662,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             if (entity is ItemEntity && ignoreMining() && entity.tickCount < 3) continue
             if (entity.boundingBox.intersects(box)) return false
             if (entity is Player && entity !== player && prediction) {
-                for (tick in 1..predictionTicks) if (predictedBounds(entity, tick).intersects(box)) return false
+                if (predictions.intersects(entity, box)) return false
             }
         }
         return true
@@ -651,11 +673,11 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         val candidates = targets()
         if (candidates.isEmpty()) return null
         val ignored = ignoredBlocks()
+        val predictions = placementPredictions()
         val eye = player.eyePosition
         val radius = ceil(placeRange).toInt()
         val origin = BlockPos.containing(eye)
         var best: Placement? = null
-        // The previous base wins ties after rounding, preventing jitter between equivalent positions.
         val oldBase = placement?.base
         val scan =
             BlockPos.betweenClosed(origin.offset(-radius, -radius, -radius), origin.offset(radius, radius, radius))
@@ -666,17 +688,17 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             val state = level.getBlockState(base)
             val needsBase = !state.`is`(Blocks.OBSIDIAN) && !state.`is`(Blocks.BEDROCK)
             if (needsBase && (!basePlace || now() - lastBase < basePlaceDelay)) continue
-            if (!canPlace(base, needsBase) || !baseVisible(base) && distance > placeWallRange) continue
+            if (!canPlace(base, needsBase, predictions) || !baseVisible(base) && distance > placeWallRange) continue
             if (needsBase && !basePlaceAir && supportHit(base) == null) continue
             val center = Vec3.upFromBottomCenterOf(base, 1.0)
             val solid = if (needsBase) base else null
-            if (!friendSafe(center, ignored, solid)) continue
-            val self = DamageUtils.damage(level, center, player, predictedBounds(player), ignored, solid)
+            if (!friendSafe(center, ignored, solid, predictions)) continue
+            val self = DamageUtils.damage(level, center, player, predictions.bounds(player), ignored, solid)
             for (candidate in candidates) {
-                if (needsBase && (base.y > candidate.y + 1.5 || predictedBounds(candidate).minmax(candidate.boundingBox)
+                if (needsBase && (base.y > candidate.y + 1.5 || predictions.bounds(candidate).minmax(candidate.boundingBox)
                         .intersects(AABB(base)))
                 ) continue
-                val bounds = predictedBounds(candidate)
+                val bounds = predictions.bounds(candidate)
                 val damage = DamageUtils.damage(level, center, candidate, bounds, ignored, solid, assumeBestArmor)
                 if (center.distanceTo(bounds.center) > crystalRange && !lethal(
                         candidate,
@@ -941,4 +963,36 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         Render3DScheduler.addFilledBox(box, color(fill))
         Render3DScheduler.addOutlineBox(box, color(outline), lineWidth.toFloat())
     }
+    
+    internal class PlacementPredictionCache<K : Any>(
+        private val ticks: Int,
+        private val initialBounds: (K) -> AABB,
+        private val advance: (K, AABB) -> AABB?
+    ) {
+        private val paths = mutableMapOf<K, List<AABB>>()
+
+        init {
+            require(ticks >= 0)
+        }
+
+        private fun path(entity: K): List<AABB> = paths.getOrPut(entity) {
+            val result = ArrayList<AABB>(ticks + 1)
+            var box = initialBounds(entity)
+            result.add(box)
+            for (tick in 1..ticks) {
+                box = advance(entity, box) ?: break
+                result.add(box)
+            }
+            result
+        }
+
+        fun bounds(entity: K): AABB = path(entity).last()
+
+        fun intersects(entity: K, box: AABB): Boolean {
+            val path = path(entity)
+            return if (path.size == 1) path[0].intersects(box)
+            else (1 until path.size).any { path[it].intersects(box) }
+        }
+    }
+
 }
