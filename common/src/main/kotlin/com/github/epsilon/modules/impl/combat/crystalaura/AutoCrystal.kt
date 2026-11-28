@@ -9,14 +9,10 @@ import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.dropAll
 import com.github.epsilon.kernel.gameplay.inventory.ContainerClicks.swap
 import com.github.epsilon.kernel.gameplay.player.DamageUtils
 import com.github.epsilon.kernel.gameplay.player.SwingMode
-import com.github.epsilon.kernel.gameplay.rotation.Rotation
-import com.github.epsilon.kernel.gameplay.rotation.RotationPriority
-import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.render.WorldToScreen
 import com.github.epsilon.managers.FriendManager
-import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.AutoMend
@@ -113,7 +109,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val sgPlace = settingGroup("Place")
     private val sgBreak = settingGroup("Break")
     private val sgBasePlace = settingGroup("Base Place")
-    private val sgRotate = settingGroup("Rotate")
     private val sgFacePlace = settingGroup("Face Place")
     private val sgExtrapolation = settingGroup("Extrapolation")
     private val sgRender = settingGroup("Render")
@@ -194,10 +189,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         { basePlace }).group(sgBasePlace)
     private val basePlaceAir by boolSetting("Base Place Air", false, { basePlace }).group(sgBasePlace)
 
-    private val rotate by boolSetting("Rotate", true).group(sgRotate)
-    private val rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(sgRotate)
-    private val rotatePlace2B2T by boolSetting("Place 2B2T", false, { rotate && rotatePlace }).group(sgRotate)
-    private val rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(sgRotate)
 
     private val facePlace by boolSetting("Face Place", true).group(sgFacePlace)
     private val facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(
@@ -325,7 +316,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private val predictedAttackIds = mutableMapOf<Int, Long>()
     private val marks = ArrayDeque<Mark>()
     private val placements = ArrayDeque<Long>()
-    private var rotationRequest: Rotation? = null
     private var strictFollowup = false
     private var obsidianDropNearTarget = false
     private var quiverThreat = false
@@ -375,7 +365,8 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             strictFollowup = false
             refreshTargets()
             if (shouldPause()) {
-                placement = null; clearRotation(); return@safeEventHandler
+                placement = null
+                return@safeEventHandler
             }
             if (forceSuicide && forceSuicideNoArmor && player.containerMenu === player.inventoryMenu) {
                 for (slot in 5..8) {
@@ -389,10 +380,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             placement = calculatePlacement()
             if (placement == null && previous != null && savedSlot >= 0) restoreSlot()
             placement?.let { target = it.target; previousTarget = it.target }
-            val crystal = chooseCrystal()
-            val point = if (crystal != null && rotateBreak) crystal.position()
-            else if (rotatePlace) placement?.base?.let { Vec3.upFromBottomCenterOf(it, 1.0) } else null
-            if (rotate && point != null) requestRotation(point, false) else clearRotation()
         }
 
         safeEventHandler<PlayerTickEvent.Post> {
@@ -486,14 +473,8 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         world = mc.level
     }
 
-    private fun clearRotation() {
-        rotationRequest?.let { RotationManager.clearRotations(it) }
-        rotationRequest = null
-    }
-
     private fun resetState() {
         generation++
-        clearRotation()
         placement = null; target = null; previousTarget = null; world = null
         lastPlace = 0; lastBreak = 0; lastBase = 0; lastSlotChange = 0
         savedSlot = -1; selectedSlot = -1; lastPlacedBase = null; previousPlacement = null
@@ -764,37 +745,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         return best
     }
 
-    private fun NonNullContext.requestRotation(point: Vec3, immediate: Boolean): Boolean {
-        val request = RotationUtils.calculate(point, false)
-        if (!RotationManager.setRotationsExact(request, RotationPriority.High)) return false
-        rotationRequest = request
-        if (immediate) {
-            if (rotatePlace2B2T) {
-                connection.send(
-                    ServerboundMovePlayerPacket.Rot(
-                        request.yaw,
-                        request.pitch,
-                        player.onGround(),
-                        player.horizontalCollision
-                    )
-                )
-            } else {
-                connection.send(
-                    ServerboundMovePlayerPacket.PosRot(
-                        player.x,
-                        player.y,
-                        player.z,
-                        request.yaw,
-                        request.pitch,
-                        player.onGround(),
-                        player.horizontalCollision
-                    )
-                )
-            }
-        }
-        return true
-    }
-
     private fun NonNullContext.supportHit(base: BlockPos): BlockHitResult? {
         for (direction in Direction.values()) {
             val support = base.relative(direction)
@@ -838,7 +788,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
                 data.base,
                 false
             ) else return
-            if (rotate && rotatePlace && !requestRotation(hit.location, true)) return
             if (withItem(Items.OBSIDIAN) { hand -> sendPlacement(hit, hand) }) lastBase = now()
             return // Wait for authoritative base state before placing the crystal.
         }
@@ -875,7 +824,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             ray.direction
         } else if (player.eyePosition.y > data.base.y + 1.0) Direction.UP else Direction.DOWN
         val point = Vec3.atCenterOf(data.base).add(direction.stepX * 0.5, direction.stepY * 0.5, direction.stepZ * 0.5)
-        if (rotate && rotatePlace && !requestRotation(point, true)) return
         if (withItem(Items.END_CRYSTAL) { hand ->
                 sendPlacement(
                     BlockHitResult(point, direction, data.base, false),
@@ -891,7 +839,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
 
     private fun NonNullContext.attack(id: Int, position: Vec3, spawned: Boolean): Boolean {
         if (!breaking || shouldPause() || id in attacks || !spawned && now() - lastBreak < breakDelay) return false
-        if (rotate && rotateBreak && !requestRotation(position, true)) return false
         val held = player.mainHandItem
         val weak = player.hasEffect(MobEffects.WEAKNESS) && !held.has(DataComponents.TOOL)
         val weapon = if (weak && weakness != Weakness.None) (0..8).firstOrNull {
