@@ -346,7 +346,7 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             miningPos = null
         }
 
-        safeEventHandler<PlayerTickEvent.Pre> {
+        safeEventHandler<ClientTickEvent.Pre> {
             val time = now()
             if (selectedSlot != player.inventory.selectedSlot) {
                 selectedSlot = player.inventory.selectedSlot; lastSlotChange = time
@@ -355,6 +355,17 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
             predictedAttackIds.entries.removeIf { time - it.value > 1000 }
             if (time - unconfirmedTime > 1000) unconfirmedBreak = null
             if (!gameMode.isDestroying) miningPos = null
+            if (shouldPause()) {
+                placement = null
+                return@safeEventHandler
+            }
+            val previous = placement
+            placement = calculatePlacement()
+            if (placement == null && previous != null && savedSlot >= 0) restoreSlot()
+            placement?.let { target = it.target; previousTarget = it.target }
+        }
+
+        safeEventHandler<SendPositionEvent> {
             strictFollowup = false
             refreshTargets()
             if (shouldPause()) {
@@ -369,17 +380,10 @@ object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
                     ) dropAll(slot)
                 }
             }
-            val previous = placement
-            placement = calculatePlacement()
-            if (placement == null && previous != null && savedSlot >= 0) restoreSlot()
-            placement?.let { target = it.target; previousTarget = it.target }
-        }
-
-        safeEventHandler<PlayerTickEvent.Post> {
-            if (!shouldPause()) {
-                chooseCrystal()?.let { attack(it.id, it.position(), false) }
-                runPlacement()
+            chooseCrystal()?.let {
+                attack(it.id, it.position(), false)
             }
+            runPlacement()
         }
 
         safeEventHandler<PacketEvent.ReceiveMain> { event ->

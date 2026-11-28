@@ -1,7 +1,6 @@
 package com.github.epsilon.kernel.network;
 
 import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.kernel.MinecraftWrapper;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.PacketProcessor;
 import net.minecraft.network.protocol.Packet;
@@ -11,6 +10,8 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 
 import java.util.function.BooleanSupplier;
+
+import static com.github.epsilon.kernel.MinecraftWrapper.mc;
 
 public class ClientboundPacketDispatcher {
     private ClientboundPacketDispatcher() {
@@ -25,7 +26,7 @@ public class ClientboundPacketDispatcher {
     }
 
     public static void replay(Packet<?> packet, ClientGamePacketListener listener) {
-        replay(packet, listener, MinecraftWrapper.mc.packetProcessor(), () -> listener instanceof ClientPacketListener gameListener && gameListener.getConnection().getPacketListener() == listener && gameListener.isAcceptingMessages());
+        replay(packet, listener, mc.packetProcessor(), () -> listener instanceof ClientPacketListener gameListener && gameListener.getConnection().getPacketListener() == listener && gameListener.isAcceptingMessages());
     }
 
     private static void replay(
