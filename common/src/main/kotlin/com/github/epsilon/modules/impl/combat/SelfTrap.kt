@@ -4,6 +4,7 @@ import com.github.epsilon.events.api.handler
 import com.github.epsilon.events.api.safeEventHandler
 import com.github.epsilon.events.impl.ClientEntityEvent
 import com.github.epsilon.events.impl.PacketEvent
+import com.github.epsilon.kernel.gameplay.player.SwingMode
 import com.github.epsilon.kernel.gameplay.rotation.RotationUtils
 import com.github.epsilon.kernel.jvm.NonNullContext
 import com.github.epsilon.kernel.jvm.runSafe
@@ -29,6 +30,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
+import kotlin.math.round
 
 object SelfTrap : Module("Self Trap", Category.COMBAT) {
     private enum class Timing {
@@ -94,6 +96,8 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
     private val disableOnYDiff by boolSetting("Disable On YDiff", false)
     private val disableOnJump by boolSetting("Disable On Jump", true)
     private val disableOnDeath by boolSetting("Disable On Death", true)
+    private val placeSwingHand by boolSetting("Place Swing Hand", true)
+    private val attackSwingHand by boolSetting("Attack Swing Hand", true)
 
     private val remoteMining = HashMap<Int, Mining>()
     private var localMining: BlockPos? = null
@@ -301,7 +305,7 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
     }
 
     private fun NonNullContext.placeTargets(targets: Set<BlockPos>, isFloor: Boolean = false) {
-        val underfoot = BlockPos.containing(player.x, Math.round(player.y).toDouble(), player.z).below()
+        val underfoot = BlockPos.containing(player.x, round(player.y), player.z).below()
         for (pos in targets) {
             if (placed >= bpt) break
             if (isFloor && mineDownward && pos == underfoot && localMining == pos) continue
@@ -344,11 +348,11 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
     }
 
     private fun NonNullContext.attackCrystal(crystal: EndCrystal): Boolean {
-        if (player.eyePosition.distanceToSqr(crystal.boundingBox.getCenter()) > breakRange * breakRange) return false
+        if (player.eyePosition.distanceToSqr(crystal.boundingBox.center) > breakRange * breakRange) return false
         if (attacked.add(crystal.id)) {
-            face(crystal.boundingBox.getCenter())
+            face(crystal.boundingBox.center)
             gameMode.attack(player, crystal)
-            player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true)
+            SwingMode.of(attackSwingHand).attackSwing(InteractionHand.MAIN_HAND)
             if (rotate) {
                 when (rotationMode) {
                     RotationMode.BBTT -> connection.send(
@@ -387,8 +391,7 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
             level.getEntities(
                 null as Entity?,
                 AABB(pos.x - 1.0, pos.y - 1.0, pos.z - 1.0, pos.x + 1.0, pos.y + 1.0, pos.z + 1.0)
-            )
-                .filterIsInstance<EndCrystal>().forEach { attackCrystal(it) }
+            ).filterIsInstance<EndCrystal>().forEach { attackCrystal(it) }
         }
         val hit = findHit(pos, airPlace) ?: return false
         val inventory = player.inventory
@@ -399,10 +402,8 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
                 !stack.isEmpty && (stack.item as? BlockItem)?.block == block
             }
         } ?: return false
-        // Use the selected block's actual collision shape, not always a full obsidian cube.
         val block = (inventory.getItem(slot).item as BlockItem).block
-        val shape = block.defaultBlockState().getCollisionShape(level, pos)
-            .move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        val shape = block.defaultBlockState().getCollisionShape(level, pos).move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         for (box in shape.toAabbs()) {
             for (entity in level.getEntities(
                 null as Entity?,
@@ -446,7 +447,7 @@ object SelfTrap : Module("Self Trap", Category.COMBAT) {
                     level.blockStatePredictionHandler.startPredicting().currentSequence()
                 )
             )
-            player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true)
+            SwingMode.of(placeSwingHand).interactSwing(InteractionHand.MAIN_HAND)
             pending[pos] = tick
             return true
         } finally {

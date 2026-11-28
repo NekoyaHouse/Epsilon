@@ -93,6 +93,8 @@ object Surround : Module("Surround", Category.COMBAT) {
     private val disableOnYDiff by boolSetting("Disable On YDiff", false)
     private val disableOnJump by boolSetting("Disable On Jump", true)
     private val disableOnDeath by boolSetting("Disable On Death", true)
+    private val placeSwingHand by boolSetting("Place Swing Hand", true)
+    private val attackSwingHand by boolSetting("Attack Swing Hand", true)
 
     private data class Mining(val pos: BlockPos, val started: Long, val completed: Boolean)
 
@@ -367,7 +369,7 @@ object Surround : Module("Surround", Category.COMBAT) {
                 } else {
                     if (!gameMode.useItemOn(player, hand, blockHit).consumesAction()) return@withRotation false
                 }
-                SwingMode.Both.interactSwing(hand)
+                SwingMode.of(placeSwingHand).interactSwing(hand)
                 true
             }.let { return it }
         } finally {
@@ -384,7 +386,7 @@ object Surround : Module("Surround", Category.COMBAT) {
         if (crystal.id in attacked) return true
         withRotation(crystal.boundingBox.center) {
             gameMode.attack(player, crystal)
-            SwingMode.Both.attackSwing(InteractionHand.MAIN_HAND)
+            SwingMode.of(attackSwingHand).attackSwing(InteractionHand.MAIN_HAND)
         }
         attacked.add(crystal.id)
         return true
