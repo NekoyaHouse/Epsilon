@@ -10,7 +10,7 @@ import com.github.epsilon.kernel.jvm.runSafe
 import com.github.epsilon.kernel.network.ClientboundPacketDispatcher
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
-import com.github.epsilon.modules.impl.combat.crystalaura.AutoCrystal
+import com.github.epsilon.modules.impl.combat.crystalaura.CrystalAura
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.RemotePlayer
@@ -130,7 +130,7 @@ object FakePlayer : Module("Fake Player", Category.PLAYER) {
                     level,
                     packet.center(),
                     fake,
-                    AutoCrystal.assumeBestArmor
+                    CrystalAura.assumeBestArmor
                 )
                 if (fake.isDeadOrDying) {
                     fake.health = 10f

@@ -30,7 +30,7 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.VoxelShape
 import kotlin.math.floor
 
-object Surround : Module("Surround", Category.COMBAT) {
+object FeetTrap : Module("Feet Trap", Category.COMBAT) {
     private enum class Timing {
         Vanilla,
         Sequential

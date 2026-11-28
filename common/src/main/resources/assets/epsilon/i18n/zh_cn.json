@@ -346,7 +346,66 @@
         "gamemode chat message": "警报"
       },
       "feet trap": {
-        "no_block_found": "未找到可用方块"
+        "_value": "脚部包围",
+        "no_block_found": "未找到可用方块",
+        "timing": {
+          "_value": "时机",
+          "vanilla": "原版",
+          "sequential": "依次"
+        },
+        "explosions": "爆炸触发",
+        "spawn": "生成触发",
+        "broke": "破坏触发",
+        "surround": "包围",
+        "stand head": "站立头部",
+        "crawl head": "爬行头部",
+        "mine downward": "向下挖掘",
+        "blocks": "方块",
+        "delay": "延迟",
+        "bpt": "每刻放置方块数",
+        "swap action": {
+          "_value": "切换方式",
+          "screen": "容器点击",
+          "hotbar": "快捷栏",
+          "pick": "选取物品"
+        },
+        "center": {
+          "_value": "居中",
+          "never": "从不",
+          "onactivate": "启用时",
+          "always": "始终"
+        },
+        "rotate": "转头",
+        "rotation mode": {
+          "_value": "转头模式",
+          "bbtt": "BBTT",
+          "grim": "Grim"
+        },
+        "place range": "放置范围",
+        "protect": "保护",
+        "break crystal": "破坏水晶",
+        "break range": "破坏范围",
+        "assume break": "假定已破坏",
+        "break time": "破坏时间",
+        "airplace": "空中放置",
+        "support": "支撑方块数",
+        "calc delay": "计算延迟",
+        "multi": "多点支撑",
+        "extend": {
+          "_value": "扩展",
+          "always": "始终",
+          "mining": "挖掘时",
+          "disable": "禁用"
+        },
+        "ground only": "仅在地面",
+        "pause on eat": "进食时暂停",
+        "pause on flying": "飞行时暂停",
+        "pause in fluid": "流体中暂停",
+        "disable on ydiff": "高度变化时禁用",
+        "disable on jump": "跳跃时禁用",
+        "disable on death": "死亡时禁用",
+        "place swing hand": "放置时挥手",
+        "attack swing hand": "攻击时挥手"
       },
       "auto trap": {
         "no_block_found": "未找到所选的困人方块"
@@ -540,185 +599,185 @@
         "bow smooth": "弓瞄平滑"
       },
       "self trap": {
-        "_value": "",
+        "_value": "自我封闭",
         "timing": {
-          "_value": "",
-          "tick": "",
-          "packet": ""
+          "_value": "时机",
+          "tick": "游戏刻",
+          "packet": "数据包"
         },
-        "explosions": "",
-        "spawn": "",
-        "broke": "",
-        "surround": "",
-        "trap": "",
-        "stand head": "",
-        "crawl head": "",
-        "mine downward": "",
-        "blocks": "",
-        "delay": "",
-        "bpt": "",
+        "explosions": "爆炸触发",
+        "spawn": "生成触发",
+        "broke": "破坏触发",
+        "surround": "包围",
+        "trap": "封闭",
+        "stand head": "站立头部",
+        "crawl head": "爬行头部",
+        "mine downward": "向下挖掘",
+        "blocks": "方块",
+        "delay": "延迟",
+        "bpt": "每刻放置方块数",
         "swap action": {
-          "_value": "",
-          "screen": "",
-          "hotbar": "",
-          "pick": ""
+          "_value": "切换方式",
+          "screen": "容器点击",
+          "hotbar": "快捷栏",
+          "pick": "选取物品"
         },
         "center": {
-          "_value": "",
-          "never": "",
-          "onactivate": "",
-          "always": ""
+          "_value": "居中",
+          "never": "从不",
+          "onactivate": "启用时",
+          "always": "始终"
         },
-        "rotate": "",
+        "rotate": "转头",
         "rotation mode": {
-          "_value": "",
-          "bbtt": "",
-          "grim": ""
+          "_value": "转头模式",
+          "bbtt": "BBTT",
+          "grim": "Grim"
         },
-        "place range": "",
-        "protect": "",
-        "break crystal": "",
-        "break range": "",
-        "assume break": "",
-        "break time": "",
-        "air place": "",
-        "support": "",
-        "calc delay": "",
-        "multi": "",
+        "place range": "放置范围",
+        "protect": "保护",
+        "break crystal": "破坏水晶",
+        "break range": "破坏范围",
+        "assume break": "假定已破坏",
+        "break time": "破坏时间",
+        "air place": "空中放置",
+        "support": "支撑方块数",
+        "calc delay": "计算延迟",
+        "multi": "多点支撑",
         "extend": {
-          "_value": "",
-          "always": "",
-          "mining": "",
-          "disable": ""
+          "_value": "扩展",
+          "always": "始终",
+          "mining": "挖掘时",
+          "disable": "禁用"
         },
         "trap extend": {
-          "_value": "",
-          "always": "",
-          "mining": "",
-          "disable": ""
+          "_value": "封闭扩展",
+          "always": "始终",
+          "mining": "挖掘时",
+          "disable": "禁用"
         },
-        "ground only": "",
-        "pause on eat": "",
-        "pause on flying": "",
-        "pause in fluid": "",
-        "disable on ydiff": "",
-        "disable on jump": "",
-        "disable on death": "",
-        "place swing hand": "",
-        "attack swing hand": ""
+        "ground only": "仅在地面",
+        "pause on eat": "进食时暂停",
+        "pause on flying": "飞行时暂停",
+        "pause in fluid": "流体中暂停",
+        "disable on ydiff": "高度变化时禁用",
+        "disable on jump": "跳跃时禁用",
+        "disable on death": "死亡时禁用",
+        "place swing hand": "放置时挥手",
+        "attack swing hand": "攻击时挥手"
       },
-      "auto crystal": {
-        "_value": "自动水晶",
+      "crystal aura": {
+        "_value": "水晶光环",
         "place": "放置",
         "break": "破坏",
-        "base place": "补底",
+        "base place": "底座放置",
         "face place": "贴脸放置",
-        "extrapolation": "运动预测",
+        "extrapolation": "位置预测",
         "render": "渲染",
         "pause": "暂停",
-        "targeting": "目标筛选",
+        "targeting": "目标选择",
         "misc": "杂项",
-        "place delay": "放置延迟（毫秒）",
+        "place delay": "放置延迟",
         "place range": "放置范围",
         "place wall range": "隔墙放置范围",
-        "place min damage": "最低放置伤害（20.1 为致命）",
-        "place max self damage": "最大放置自身伤害",
+        "place min damage": "放置最小伤害",
+        "place max self damage": "放置最大自身伤害",
         "place damage ratio": "放置伤害比",
         "place sequential": {
-          "_value": "顺序放置",
-          "none": "关闭",
+          "_value": "放置顺序模式",
+          "none": "无",
           "strict": "严格",
           "strong": "强力"
         },
         "place 1": {
-          "12": "1.12 双层空气检查"
+          "12": "1.12 放置规则"
         },
         "place strict direction": "严格放置方向",
-        "place lower hit box": "降低碰撞箱",
-        "place mine ignore": "忽略挖掘方块",
-        "place always": "始终忽略挖掘",
-        "place threshold": "挖掘剩余阶段阈值",
+        "place lower hit box": "降低放置碰撞箱",
+        "place mine ignore": "放置时忽略挖掘方块",
+        "place always": "始终忽略挖掘方块",
+        "place threshold": "忽略挖掘进度阈值",
         "place swing mode": {
-          "_value": "",
-          "both": "",
-          "packet": "",
-          "client": "",
-          "none": ""
+          "_value": "放置挥手模式",
+          "both": "两者",
+          "packet": "数据包",
+          "client": "客户端",
+          "none": "无"
         },
-        "break delay": "破坏延迟（毫秒）",
-        "break factor": "预测攻击数量",
+        "break delay": "破坏延迟",
+        "break factor": "破坏次数",
         "break range": "破坏范围",
         "break wall range": "隔墙破坏范围",
-        "break min damage": "最低破坏伤害",
-        "break max self damage": "最大破坏自身伤害",
+        "break min damage": "破坏最小伤害",
+        "break max self damage": "破坏最大自身伤害",
         "break anti suicide": "防止自杀",
         "break instant": {
-          "_value": "瞬爆",
-          "always": "总是",
+          "_value": "即时破坏",
+          "always": "始终",
           "strict": "严格",
-          "none": "关闭"
+          "none": "无"
         },
-        "break await": "等待挖掘确认",
+        "break await": "等待破坏确认",
         "break ticks existed": "水晶最小存活刻数",
         "break weakness": {
-          "_value": "虚弱处理",
-          "none": "关闭",
+          "_value": "抗虚弱模式",
+          "none": "无",
           "normal": "普通",
           "silent": "静默"
         },
         "break swing mode": {
-          "_value": "",
-          "both": "",
-          "packet": "",
-          "client": "",
-          "none": ""
+          "_value": "破坏挥手模式",
+          "both": "两者",
+          "packet": "数据包",
+          "client": "客户端",
+          "none": "无"
         },
-        "base place delay": "补底延迟（毫秒）",
-        "base place air": "允许无支撑补底",
-        "face place health": "贴脸血量阈值",
-        "face place armor threshold": "护甲耐久阈值（%）",
-        "face place shield breaker": "针对持盾目标",
-        "face place damage sync": "伤害同步",
+        "base place delay": "底座放置延迟",
+        "base place air": "空中放置底座",
+        "face place health": "贴脸放置生命值阈值",
+        "face place armor threshold": "贴脸放置护甲耐久阈值",
+        "face place shield breaker": "贴脸放置破盾",
+        "face place damage sync": "贴脸放置伤害同步",
         "extrapolation ticks": "预测刻数",
-        "extrapolation draw": "显示预测碰撞箱",
-        "render fill": "填充颜色",
-        "render outline": "轮廓颜色",
+        "extrapolation draw": "绘制预测位置",
+        "render fill": "填充",
+        "render outline": "轮廓",
         "render line width": "线宽",
         "render damage": "显示伤害",
         "render fade": "淡出",
         "render multi fade": "多位置淡出",
-        "render fade time": "淡出时间（秒）",
+        "render fade time": "淡出时间",
         "pause mining": "挖掘时暂停",
         "pause eating": "进食时暂停",
-        "pause mending": "自动修补时暂停",
+        "pause mending": "修补时暂停",
         "targeting target range": "目标范围",
-        "targeting crystal range": "水晶到目标范围",
-        "targeting anti friend kill": "避免击杀好友",
-        "targeting anti quiver": "反箭袋漏洞",
-        "targeting ignore nakeds": "忽略无甲目标",
-        "targeting assume best armor": "假定最佳防护",
+        "targeting crystal range": "水晶范围",
+        "targeting anti friend kill": "防止击杀好友",
+        "targeting anti quiver": "防范箭矢威胁",
+        "targeting ignore nakeds": "忽略无护甲目标",
+        "targeting assume best armor": "假定最佳护甲",
         "targeting bosses": "攻击首领",
         "targeting force suicide": "强制自杀",
-        "targeting no armor": "自杀时丢弃无绑定护甲",
-        "targeting assume invincibility": "假定加入无敌期",
-        "targeting self": "包括自身无敌期",
-        "targeting timeout": "无敌期时间（秒）",
+        "targeting no armor": "自杀时卸下护甲",
+        "targeting assume invincibility": "假定无敌帧",
+        "targeting self": "假定自身无敌帧",
+        "targeting timeout": "无敌帧超时",
         "misc auto swap": {
           "_value": "自动切换",
-          "none": "关闭",
+          "none": "无",
           "normal": "普通",
           "silent": "静默"
         },
         "misc silent": {
           "_value": "静默切换方式",
           "normal": "普通",
-          "alternative": "背包交换"
+          "alternative": "替代"
         },
-        "misc swap back": "切回原槽位",
-        "misc strict timing": "严格切换时序",
-        "misc swap delay": "切换延迟（刻）",
-        "misc swap penalty": "切换惩罚（刻）",
-        "misc multipoint": "多点可见性检查"
+        "misc swap back": "切换回原物品",
+        "misc strict timing": "严格切换时机",
+        "misc swap delay": "切换延迟",
+        "misc swap penalty": "切换惩罚时间",
+        "misc multipoint": "多点检测"
       },
       "auto mend": {
         "_value": "自动修补",
@@ -846,67 +905,6 @@
         "range": "范围",
         "fov": "视野角度"
       },
-      "surround": {
-        "_value": "自动围堵",
-        "timing": {
-          "_value": "补放时机",
-          "vanilla": "常规",
-          "sequential": "包触发"
-        },
-        "explosions": "爆炸预放置",
-        "spawn": "水晶生成预放置",
-        "broke": "破坏时补放",
-        "surround": "围堵四周",
-        "stand head": "",
-        "crawl head": "",
-        "mine downward": "",
-        "blocks": "围堵方块",
-        "delay": "放置间隔（刻）",
-        "bpt": "每刻放置数",
-        "swap action": {
-          "_value": "",
-          "screen": "",
-          "hotbar": "",
-          "pick": ""
-        },
-        "center": {
-          "_value": "自动居中",
-          "never": "从不",
-          "onactivate": "启用时",
-          "always": "始终"
-        },
-        "rotate": "放置转头",
-        "rotation mode": {
-          "_value": "",
-          "bbtt": "",
-          "grim": ""
-        },
-        "place range": "",
-        "protect": "水晶防护",
-        "break crystal": "",
-        "break range": "",
-        "assume break": "",
-        "break time": "",
-        "airplace": "空中放置",
-        "support": "最大支撑方块数",
-        "calc delay": "",
-        "multi": "多条支撑路径",
-        "extend": {
-          "_value": "扩展围堵",
-          "always": "始终",
-          "mining": "被挖掘时",
-          "disable": "禁用"
-        },
-        "ground only": "",
-        "pause on eat": "",
-        "pause on flying": "",
-        "pause in fluid": "",
-        "disable on ydiff": "",
-        "disable on jump": "",
-        "disable on death": "",
-        "place swing hand": "",
-        "attack swing hand": ""
-      },
       "auto armor": {
         "_value": "自动穿甲",
         "head": {
@@ -1026,8 +1024,8 @@
       },
       "fake player": {
         "_value": "假玩家",
-        "copy inventory": "复制装备",
         "name": "名称",
+        "copy inventory": "复制装备",
         "record / stop": "录制 / 停止",
         "play / stop": "回放 / 停止"
       },
@@ -1527,16 +1525,16 @@
         "line color": "线条颜色"
       },
       "custom sky": {
-        "_value": "",
+        "_value": "自定义天空",
         "shader": {
-          "_value": "",
-          "cine": "",
-          "euabe": "",
-          "local": ""
+          "_value": "着色器",
+          "cine": "Cine",
+          "euabe": "Euabe",
+          "local": "本地"
         },
-        "speed": "",
-        "color": "",
-        "background color (local)": ""
+        "speed": "速度",
+        "color": "颜色",
+        "background color (local)": "背景颜色（本地）"
       },
       "esp 2d": {
         "_value": "2D 透视",

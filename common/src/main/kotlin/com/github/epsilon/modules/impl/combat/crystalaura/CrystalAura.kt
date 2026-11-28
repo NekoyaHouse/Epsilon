@@ -17,7 +17,6 @@ import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.modules.impl.combat.AutoMend
 import com.github.epsilon.settings.group
-import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
@@ -76,7 +75,7 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.round
 
-object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
+object CrystalAura : Module("Crystal Aura", Category.COMBAT) {
     private enum class Sequential {
         None,
         Strict,
@@ -295,7 +294,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private var placement: Placement? = null
     private var target: LivingEntity? = null
     private var previousTarget: LivingEntity? = null
-    private var world: ClientLevel? = null
 
     @Volatile
     private var generation = 0
@@ -323,7 +321,9 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
 
     init {
         onEnable {
-            val times = joined.toMap(); resetState(); joined.putAll(times)
+            val times = joined.toMap()
+            resetState()
+            joined.putAll(times)
         }
 
         onDisable {
@@ -338,10 +338,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             forceSuicide = false
         }
 
-        handler<ClientTickEvent.Pre>(alwaysListening = true) {
-            observeWorld()
-        }
-
         safeEventHandler<StartDestroyBlockEvent> {
             miningPos = it.blockPos
         }
@@ -353,7 +349,6 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         }
 
         safeEventHandler<PlayerTickEvent.Pre> {
-            world = level
             val time = now()
             if (selectedSlot != player.inventory.selectedSlot) {
                 selectedSlot = player.inventory.selectedSlot; lastSlotChange = time
@@ -389,43 +384,39 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             }
         }
 
-        handler<PacketEvent.ReceiveMain>(alwaysListening = true) { event ->
+        safeEventHandler<PacketEvent.ReceiveMain> { event ->
             val packet = event.packet
             if (packet !is ClientboundAddEntityPacket && packet !is ClientboundRemoveEntitiesPacket &&
                 packet !is ClientboundEntityEventPacket && packet !is ClientboundPlayerInfoUpdatePacket &&
                 packet !is ClientboundPlayerInfoRemovePacket && packet !is ClientboundPlayerCombatKillPacket
-            ) return@handler
-            observeWorld()
-            runSafe {
-                if (packet is ClientboundPlayerInfoUpdatePacket || packet is ClientboundPlayerInfoRemovePacket) {
-                    if (packet is ClientboundPlayerInfoUpdatePacket && ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in packet.actions()) {
-                        for (entry in packet.entries()) {
-                            joined[entry.profileId()] = now()
-                        }
+            ) return@safeEventHandler
+            if (packet is ClientboundPlayerInfoUpdatePacket || packet is ClientboundPlayerInfoRemovePacket) {
+                if (packet is ClientboundPlayerInfoUpdatePacket && ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in packet.actions()) {
+                    for (entry in packet.entries()) {
+                        joined[entry.profileId()] = now()
                     }
-                    if (packet is ClientboundPlayerInfoRemovePacket) for (id in packet.profileIds()) {
-                        joined.remove(id)
-                    }
-                    return@runSafe
                 }
-                if (!isEnabled || world !== level) return@runSafe
-                when (packet) {
-                    is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
-                        onSpawn(packet)
-                    }
-
-                    is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach { id ->
-                        attacks.remove(id)
-                        dead.remove(id)
-                        predictedAttackIds.remove(id)
-                    }
-
-                    is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.DEATH) {
-                        packet.getEntity(level)?.let { dead.add(it.id) }
-                    }
-
-                    is ClientboundPlayerCombatKillPacket -> forceSuicide = false
+                if (packet is ClientboundPlayerInfoRemovePacket) for (id in packet.profileIds()) {
+                    joined.remove(id)
                 }
+                return@safeEventHandler
+            }
+            when (packet) {
+                is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
+                    onSpawn(packet)
+                }
+
+                is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach { id ->
+                    attacks.remove(id)
+                    dead.remove(id)
+                    predictedAttackIds.remove(id)
+                }
+
+                is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.DEATH) {
+                    packet.getEntity(level)?.let { dead.add(it.id) }
+                }
+
+                is ClientboundPlayerCombatKillPacket -> forceSuicide = false
             }
         }
 
@@ -465,17 +456,9 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
 
     override fun getInfo(): String? = target?.name?.string
 
-    /** Observe world changes even while disabled; never carry join timestamps across sessions. */
-    private fun observeWorld() {
-        if (world != null && mc.level !== world) {
-            resetState(); forceSuicide = false
-        }
-        world = mc.level
-    }
-
     private fun resetState() {
         generation++
-        placement = null; target = null; previousTarget = null; world = null
+        placement = null; target = null; previousTarget = null
         lastPlace = 0; lastBreak = 0; lastBase = 0; lastSlotChange = 0
         savedSlot = -1; selectedSlot = -1; lastPlacedBase = null; previousPlacement = null
         miningPos = null; unconfirmedBreak = null; strictFollowup = false
