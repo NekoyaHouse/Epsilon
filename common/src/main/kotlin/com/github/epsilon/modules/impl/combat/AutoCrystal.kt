@@ -20,6 +20,7 @@ import com.github.epsilon.managers.RotationManager
 import com.github.epsilon.modules.Category
 import com.github.epsilon.modules.Module
 import com.github.epsilon.settings.group
+import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
@@ -48,6 +49,7 @@ import net.minecraft.world.phys.Vec3
 import java.awt.Color
 import java.util.Locale
 import kotlin.collections.ArrayDeque
+import kotlin.collections.ArrayList
 import kotlin.collections.List
 import kotlin.collections.Set
 import kotlin.collections.any
@@ -58,7 +60,9 @@ import kotlin.collections.filterIsInstance
 import kotlin.collections.firstOrNull
 import kotlin.collections.flatMap
 import kotlin.collections.forEach
+import kotlin.collections.getOrPut
 import kotlin.collections.isNotEmpty
+import kotlin.collections.last
 import kotlin.collections.listOf
 import kotlin.collections.listOfNotNull
 import kotlin.collections.map
@@ -133,7 +137,9 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         0.1..20.1,
         0.1,
         { place }).group(sgPlace)
-    private val maxPlaceSelfDamage by doubleSetting("Place Max Self Damage", 20.0, 0.0..20.0, 0.1, { place }).group(sgPlace)
+    private val maxPlaceSelfDamage by doubleSetting("Place Max Self Damage", 20.0, 0.0..20.0, 0.1, { place }).group(
+        sgPlace
+    )
     private val placeDamageRatio by doubleSetting("Place Damage Ratio", 1.8, 0.5..2.0, 0.1, { place }).group(sgPlace)
     private val sequential by enumSetting("Place Sequential", Sequential.Strong, { place }).group(sgPlace)
     private val requireUpperAir by boolSetting("Place 1.12", false, { place }).group(sgPlace)
@@ -165,7 +171,9 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         0.1,
         { breaking }).group(sgBreak)
     private var minBreakDamage by doubleSetting("Break Min Damage", 3.0, 0.1..20.0, 0.1, { breaking }).group(sgBreak)
-    private var maxBreakSelfDamage by doubleSetting("Break Max Self Damage", 12.0, 0.0..20.0, 0.1, { breaking }).group(sgBreak)
+    private var maxBreakSelfDamage by doubleSetting("Break Max Self Damage", 12.0, 0.0..20.0, 0.1, { breaking }).group(
+        sgBreak
+    )
     private var antiSuicide by boolSetting("Break Anti Suicide", false, { breaking }).group(sgBreak)
     private var instant by enumSetting("Break Instant", Instant.Always, { breaking }).group(sgBreak)
     private var await by boolSetting("Break Await", false, { breaking }).group(sgBreak)
@@ -189,12 +197,19 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
 
     private var rotate by boolSetting("Rotate", true).group(sgRotate)
     private var rotatePlace by boolSetting("Rotate Place", true, { rotate }).group(sgRotate)
+    private val rotatePlace2B2T by boolSetting("Place 2B2T", false, { rotate }).group(sgRotate)
     private var rotateBreak by boolSetting("Rotate Break", true, { rotate }).group(sgRotate)
 
     private var facePlace by boolSetting("Face Place", true).group(sgFacePlace)
-    private var facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(sgFacePlace)
-    private var facePlaceArmorThreshold by intSetting("Face Place Armor Threshold", 26, 0..100, 1, { facePlace }).group(sgFacePlace)
-    private var facePlaceShieldBreaker by boolSetting("Face Place Shield Breaker", false, { facePlace }).group(sgFacePlace)
+    private var facePlaceHealth by doubleSetting("Face Place Health", 36.0, 0.0..36.0, 0.1, { facePlace }).group(
+        sgFacePlace
+    )
+    private var facePlaceArmorThreshold by intSetting("Face Place Armor Threshold", 26, 0..100, 1, { facePlace }).group(
+        sgFacePlace
+    )
+    private var facePlaceShieldBreaker by boolSetting("Face Place Shield Breaker", false, { facePlace }).group(
+        sgFacePlace
+    )
     private var damageSync by boolSetting(
         "Face Place Damage Sync",
         true,
@@ -290,7 +305,8 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     private var placement: Placement? = null
     private var target: LivingEntity? = null
     private var previousTarget: LivingEntity? = null
-    private var world: net.minecraft.client.multiplayer.ClientLevel? = null
+    private var world: ClientLevel? = null
+
     @Volatile
     private var generation = 0
     private var lastPlace = 0L
@@ -414,6 +430,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
                         is ClientboundAddEntityPacket -> if (packet.type == EntityTypes.END_CRYSTAL) {
                             onSpawn(packet)
                         }
+
                         is ClientboundRemoveEntitiesPacket -> packet.entityIds.forEach { id ->
                             attacks.remove(id)
                             dead.remove(id)
@@ -608,7 +625,14 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         predictions: PlacementPredictionCache<LivingEntity>? = null
     ): Boolean =
         !antiFriendKill || level.players().filter { FriendManager.isFriend(it) }.none {
-            DamageUtils.damage(level, center, it, predictions?.bounds(it) ?: predictedBounds(it), ignored, solid) >= health(it)
+            DamageUtils.damage(
+                level,
+                center,
+                it,
+                predictions?.bounds(it) ?: predictedBounds(it),
+                ignored,
+                solid
+            ) >= health(it)
         }
 
     private fun NonNullContext.visible(point: Vec3): Boolean = level.clip(
@@ -695,7 +719,8 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
             if (!friendSafe(center, ignored, solid, predictions)) continue
             val self = DamageUtils.damage(level, center, player, predictions.bounds(player), ignored, solid)
             for (candidate in candidates) {
-                if (needsBase && (base.y > candidate.y + 1.5 || predictions.bounds(candidate).minmax(candidate.boundingBox)
+                if (needsBase && (base.y > candidate.y + 1.5 || predictions.bounds(candidate)
+                        .minmax(candidate.boundingBox)
                         .intersects(AABB(base)))
                 ) continue
                 val bounds = predictions.bounds(candidate)
@@ -748,15 +773,30 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         val request = calculate(point, false)
         if (!RotationManager.setRotationsExact(request, RotationPriority.High)) return false
         rotationRequest = request
-        if (immediate) connection.send(
-            ServerboundMovePlayerPacket.PosRot(
-                player.x, player.y, player.z,
-                request.yaw,
-                request.pitch,
-                player.onGround(),
-                player.horizontalCollision
-            )
-        )
+        if (immediate) {
+            if (rotatePlace2B2T) {
+                connection.send(
+                    ServerboundMovePlayerPacket.Rot(
+                        request.yaw,
+                        request.pitch,
+                        player.onGround(),
+                        player.horizontalCollision
+                    )
+                )
+            } else {
+                connection.send(
+                    ServerboundMovePlayerPacket.PosRot(
+                        player.x,
+                        player.y,
+                        player.z,
+                        request.yaw,
+                        request.pitch,
+                        player.onGround(),
+                        player.horizontalCollision
+                    )
+                )
+            }
+        }
         return true
     }
 
@@ -774,7 +814,13 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
     }
 
     private fun NonNullContext.sendPlacement(hit: BlockHitResult, hand: InteractionHand) {
-        connection.send(ServerboundUseItemOnPacket(hand, hit, level.blockStatePredictionHandler.startPredicting().currentSequence()))
+        connection.send(
+            ServerboundUseItemOnPacket(
+                hand,
+                hit,
+                level.blockStatePredictionHandler.startPredicting().currentSequence()
+            )
+        )
         placeSwingMode.interactSwing(hand)
     }
 
@@ -963,7 +1009,7 @@ object AutoCrystal : Module("Auto Crystal", Category.COMBAT) {
         Render3DScheduler.addFilledBox(box, color(fill))
         Render3DScheduler.addOutlineBox(box, color(outline), lineWidth.toFloat())
     }
-    
+
     internal class PlacementPredictionCache<K : Any>(
         private val ticks: Int,
         private val initialBounds: (K) -> AABB,

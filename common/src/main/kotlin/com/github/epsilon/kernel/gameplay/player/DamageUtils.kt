@@ -33,7 +33,15 @@ internal object DamageUtils {
         return (impact * impact + impact) * 42.0 + 1.0
     }
 
-    fun damage(level: ClientLevel, center: Vec3, target: LivingEntity, bounds: AABB = target.boundingBox, ignored: Set<BlockPos> = emptySet(), solid: BlockPos? = null, bestArmor: Boolean = false): Double {
+    fun damage(
+        level: ClientLevel,
+        center: Vec3,
+        target: LivingEntity,
+        bounds: AABB = target.boundingBox,
+        ignored: Set<BlockPos> = emptySet(),
+        solid: BlockPos? = null,
+        bestArmor: Boolean = false
+    ): Double {
         if (target is Player && (target.isCreative || target.isSpectator)) return 0.0
         val bottom = Vec3((bounds.minX + bounds.maxX) / 2.0, bounds.minY, (bounds.minZ + bounds.maxZ) / 2.0)
         val distance = sqrt(bottom.distanceToSqr(center))
@@ -46,9 +54,11 @@ internal object DamageUtils {
             else -> amount
         }
         val source = level.damageSources().explosion(null as Explosion?)
-        var reduced = CombatRules.getDamageAfterAbsorb(target, amount.toFloat(), source,
+        var reduced = CombatRules.getDamageAfterAbsorb(
+            target, amount.toFloat(), source,
             target.armorValue.toFloat(),
-            target.getAttributeValue(Attributes.ARMOR_TOUGHNESS).toFloat())
+            target.getAttributeValue(Attributes.ARMOR_TOUGHNESS).toFloat()
+        )
         val resistance = target.getEffect(MobEffects.RESISTANCE)
         if (resistance != null || bestArmor) {
             val amplifier = resistance?.amplifier ?: 1
@@ -59,7 +69,10 @@ internal object DamageUtils {
             if (entry.key.`is`(Enchantments.PROTECTION)) protection += entry.intValue
             if (entry.key.`is`(Enchantments.BLAST_PROTECTION)) protection += entry.intValue * 2
         }
-        if (bestArmor) protection = ((1 + armorSlots.count { !target.getItemBySlot(it).isEmpty } - if (!target.getItemBySlot(EquipmentSlot.HEAD).isEmpty) 1 else 0) * 5).coerceAtMost(20)
+        if (bestArmor) protection =
+            ((1 + armorSlots.count { !target.getItemBySlot(it).isEmpty } - if (!target.getItemBySlot(EquipmentSlot.HEAD).isEmpty) 1 else 0) * 5).coerceAtMost(
+                20
+            )
         reduced = CombatRules.getDamageAfterMagicAbsorb(reduced, protection.toFloat()).coerceAtLeast(0f)
         val blocking = target.itemBlockingWith?.get(DataComponents.BLOCKS_ATTACKS)
         if (blocking != null) {
@@ -71,21 +84,31 @@ internal object DamageUtils {
         return reduced.coerceAtLeast(0f).toDouble()
     }
 
-    private fun exposure(level: ClientLevel, center: Vec3, entity: LivingEntity, bb: AABB, ignored: Set<BlockPos>, solid: BlockPos?): Double {
+    private fun exposure(
+        level: ClientLevel,
+        center: Vec3,
+        entity: LivingEntity,
+        bb: AABB,
+        ignored: Set<BlockPos>,
+        solid: BlockPos?
+    ): Double {
         val xs = 1.0 / ((bb.maxX - bb.minX) * 2.0 + 1.0)
         val ys = 1.0 / ((bb.maxY - bb.minY) * 2.0 + 1.0)
         val zs = 1.0 / ((bb.maxZ - bb.minZ) * 2.0 + 1.0)
         val ox = (1.0 - floor(1.0 / xs) * xs) / 2.0
         val oz = (1.0 - floor(1.0 / zs) * zs) / 2.0
-        var hits = 0; var count = 0
+        var hits = 0;
+        var count = 0
         var x = 0.0
         while (x <= 1.0) {
             var y = 0.0
             while (y <= 1.0) {
                 var z = 0.0
                 while (z <= 1.0) {
-                    val from = Vec3(bb.minX + x * (bb.maxX - bb.minX) + ox,
-                        bb.minY + y * (bb.maxY - bb.minY), bb.minZ + z * (bb.maxZ - bb.minZ) + oz)
+                    val from = Vec3(
+                        bb.minX + x * (bb.maxX - bb.minX) + ox,
+                        bb.minY + y * (bb.maxY - bb.minY), bb.minZ + z * (bb.maxZ - bb.minZ) + oz
+                    )
                     val context = object : ClipContext(from, center, Block.COLLIDER, Fluid.NONE, entity) {
                         override fun getBlockShape(state: BlockState, getter: BlockGetter, pos: BlockPos): VoxelShape {
                             if (pos == solid) return Shapes.block()
